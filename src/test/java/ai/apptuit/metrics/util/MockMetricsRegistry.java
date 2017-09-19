@@ -26,8 +26,7 @@ import com.codahale.metrics.Timer.Context;
 import org.powermock.api.mockito.PowerMockito;
 
 /**
- * @author <a href="mailto:rajiv.shivane@apptuit.ai">Rajiv</a>
- * @since 9/15/2017
+ * @author Rajiv Shivane
  */
 public class MockMetricsRegistry {
 

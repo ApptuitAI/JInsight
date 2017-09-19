@@ -39,8 +39,7 @@ import org.powermock.modules.testng.PowerMockTestCase;
 
 
 /**
- * @author <a href="mailto:rajiv.shivane@apptuit.ai">Rajiv</a>
- * @since 9/15/2017
+ * @author Rajiv Shivane
  */
 @PrepareForTest({RuleHelper.class})
 @PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*"})

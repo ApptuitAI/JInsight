@@ -29,8 +29,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author <a href="mailto:rajiv.shivane@apptuit.ai">Rajiv</a>
- * @since 8/24/2017
+ * @author Rajiv Shivane
  */
 public class ApptuitReporterFactory {
 

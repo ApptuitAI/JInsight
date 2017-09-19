@@ -35,8 +35,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 /**
- * @author <a href="mailto:rajiv.shivane@apptuit.ai">Rajiv</a>
- * @since 8/27/2017
+ * @author Rajiv Shivane
  */
 public class ApptuitPutClient implements ApptuitReporter.DataPointsReporter {
 

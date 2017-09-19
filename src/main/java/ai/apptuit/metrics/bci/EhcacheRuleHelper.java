@@ -26,8 +26,7 @@ import net.sf.ehcache.extension.CacheExtension;
 import org.jboss.byteman.rule.Rule;
 
 /**
- * @author <a href="mailto:rajiv.shivane@apptuit.ai">Rajiv</a>
- * @since 9/6/2017
+ * @author Rajiv Shivane
  */
 public class EhcacheRuleHelper extends RuleHelper {
 

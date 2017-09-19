@@ -25,8 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author <a href="mailto:rajiv.shivane@apptuit.ai">Rajiv</a>
- * @since 8/24/2017
+ * @author Rajiv Shivane
  */
 public class TagEncodedMetricName {
 

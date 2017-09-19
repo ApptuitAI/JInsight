@@ -29,8 +29,7 @@ import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
 
 /**
- * @author <a href="mailto:rajiv.shivane@apptuit.ai">Rajiv</a>
- * @since 9/5/2017
+ * @author Rajiv Shivane
  */
 public class RuleHelper extends Helper {
 

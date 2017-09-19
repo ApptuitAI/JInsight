@@ -26,8 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * @author <a href="mailto:rajiv.shivane@apptuit.ai">Rajiv</a>
- * @since 8/24/2017
+ * @author Rajiv Shivane
  */
 
 public class TagEncodedMetricNameTest {

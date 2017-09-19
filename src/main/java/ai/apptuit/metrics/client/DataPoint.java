@@ -23,8 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * @author <a href="mailto:rajiv.shivane@apptuit.ai">Rajiv</a>
- * @since 8/24/2017
+ * @author Rajiv Shivane
  */
 public class DataPoint {
 
