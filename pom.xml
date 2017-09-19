@@ -26,6 +26,33 @@ limitations under the License.
   <version>0.1</version>
   <packaging>jar</packaging>
 
+  <name>JInsight</name>
+  <url>https://github.com/ApptuitAI/JInsight/</url>
+  <inceptionYear>2017</inceptionYear>
+  <scm>
+    <url>https://github.com/ApptuitAI/JInsight</url>
+    <connection>scm:git:git://github.com/ApptuitAI/jinsight.git</connection>
+    <developerConnection>scm:git:git@github.com:ApptuitAI/jinsight.git</developerConnection>
+  </scm>
+  <issueManagement>
+    <url>https://github.com/ApptuitAI/JInsight/issues</url>
+    <system>GitHub Issues</system>
+  </issueManagement>
+  <licenses>
+    <license>
+      <name>Apache 2.0</name>
+      <url>https://github.com/ApptuitAI/JInsight/blob/master/LICENSE</url>
+    </license>
+  </licenses>
+
+  <distributionManagement>
+    <repository>
+      <id>bintray-apptuitai-jinsight</id>
+      <name>apptuitai-jinsight</name>
+      <url>https://api.bintray.com/maven/apptuitai/jinsight/jinsight/;publish=1</url>
+    </repository>
+  </distributionManagement>
+
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
