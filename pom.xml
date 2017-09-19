@@ -43,7 +43,7 @@ limitations under the License.
 
     <!-- Acceptance Criteria -->
     <enforce.code.style>false</enforce.code.style>
-    <ignore.license.checks>true</ignore.license.checks>
+    <ignore.license.checks>false</ignore.license.checks>
     <enforce.findbugs>true</enforce.findbugs>
     <minimum.coverage>0.25</minimum.coverage>
   </properties>
@@ -169,7 +169,7 @@ limitations under the License.
         <configuration>
           <ignoreErrors>${ignore.license.checks}</ignoreErrors>
           <reportStyle>xml</reportStyle>
-          <reportFile>${project.build.directory}/reports/check-license-results.xml</reportFile>
+          <reportFile>${project.build.directory}/reports/license-check-results.xml</reportFile>
         </configuration>
         <executions>
           <execution>
