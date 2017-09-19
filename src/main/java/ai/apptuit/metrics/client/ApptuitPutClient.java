@@ -16,7 +16,6 @@
 
 package ai.apptuit.metrics.client;
 
-import ai.apptuit.metrics.dropwizard.ApptuitReporter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,7 +36,7 @@ import org.apache.http.util.EntityUtils;
 /**
  * @author Rajiv Shivane
  */
-public class ApptuitPutClient implements ApptuitReporter.DataPointsReporter {
+public class ApptuitPutClient {
 
   private static final int CONNECT_TIMEOUT_MS = 5000;
   private static final int SOCKET_TIMEOUT_MS = 15000;

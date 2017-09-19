@@ -75,7 +75,9 @@ public class ApptuitReporter extends ScheduledReporter {
         break;
       case API_PUT:
       default:
-        this.dataPointsReporter = new ApptuitPutClient(key, globalTags);
+        this.dataPointsReporter = dataPoints -> {
+          new ApptuitPutClient(key, globalTags).put(dataPoints);
+        };
     }
   }
 
