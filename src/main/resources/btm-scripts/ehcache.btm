@@ -1,0 +1,86 @@
+#RULE ehcache clone constructor entry
+#CLASS net.sf.ehcache.Cache
+#METHOD <init>(net.sf.ehcache.Cache)
+#HELPER ai.apptuit.metrics.bci.RuleHelper
+#AT ENTRY
+#IF TRUE
+#DO traceThreadStack("main")
+#ENDRULE
+
+RULE ehcache clone constructor exit
+CLASS net.sf.ehcache.Cache
+METHOD <init>(net.sf.ehcache.Cache)
+HELPER ai.apptuit.metrics.bci.EhcacheRuleHelper
+AT EXIT
+IF TRUE
+DO monitor($this)
+ENDRULE
+
+RULE ehcache get entry
+CLASS net.sf.ehcache.Cache
+METHOD get(java.lang.Object)
+HELPER ai.apptuit.metrics.bci.EhcacheRuleHelper
+AT ENTRY
+BIND
+  tags = new String[]{"op", "get", "cache", $this.getName()}
+IF TRUE
+DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+ENDRULE
+
+# TODO Handle AT EXCEPTION EXIT
+RULE ehcache get exit
+CLASS net.sf.ehcache.Cache
+METHOD get(java.lang.Object)
+HELPER ai.apptuit.metrics.bci.EhcacheRuleHelper
+AT EXIT
+BIND
+  tags = new String[]{"op", "get", "cache", $this.getName()}
+IF TRUE
+DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+ENDRULE
+
+RULE ehcache put entry
+CLASS net.sf.ehcache.Cache
+METHOD put(net.sf.ehcache.Element, boolean)
+HELPER ai.apptuit.metrics.bci.EhcacheRuleHelper
+AT ENTRY
+BIND
+  tags = new String[]{"op", "put", "cache", $this.getName()}
+IF TRUE
+DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+ENDRULE
+
+# TODO Handle AT EXCEPTION EXIT
+RULE ehcache put exit
+CLASS net.sf.ehcache.Cache
+METHOD put(net.sf.ehcache.Element, boolean)
+HELPER ai.apptuit.metrics.bci.EhcacheRuleHelper
+AT EXIT
+BIND
+  tags = new String[]{"op", "put", "cache", $this.getName()}
+IF TRUE
+DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+ENDRULE
+
+RULE ehcache putIfAbsent entry
+CLASS net.sf.ehcache.Cache
+METHOD putIfAbsent(net.sf.ehcache.Element)
+HELPER ai.apptuit.metrics.bci.EhcacheRuleHelper
+AT ENTRY
+BIND
+  tags = new String[]{"op", "put", "cache", $this.getName()}
+IF TRUE
+DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+ENDRULE
+
+# TODO Handle AT EXCEPTION EXIT
+RULE ehcache putIfAbsent exit
+CLASS net.sf.ehcache.Cache
+METHOD putIfAbsent(net.sf.ehcache.Element)
+HELPER ai.apptuit.metrics.bci.EhcacheRuleHelper
+AT EXIT
+BIND
+  tags = new String[]{"op", "put", "cache", $this.getName()}
+IF TRUE
+DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+ENDRULE
