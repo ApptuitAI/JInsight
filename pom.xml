@@ -127,7 +127,7 @@
           </dependency>
         </dependencies>
         <configuration>
-          <configLocation>contrib/check_style_java.xml</configLocation>
+          <configLocation>google_checks.xml</configLocation>
           <encoding>UTF-8</encoding>
           <logViolationsToConsole>true</logViolationsToConsole>
           <failOnViolation>${enforce.code.style}</failOnViolation>
