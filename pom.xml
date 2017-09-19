@@ -181,7 +181,7 @@
             <jacoco-agent.destfile>${project.build.directory}/jacoco.exec</jacoco-agent.destfile>
           </systemPropertyVariables>
           <argLine>
-            -javaagent:${project.build.directory}/${project.build.finalName}.jar=script:D:\Apptuit\apptuit-java-agent\src\main\resources\btm-scripts\ehcache.btm
+            -javaagent:${project.build.directory}/${project.build.finalName}.jar=script:${project.basedir}/src/main/resources/btm-scripts/ehcache.btm
           </argLine>
         </configuration>
       </plugin>
