@@ -111,8 +111,7 @@ public class ApptuitPutClient {
     @Override
     public InputStream getContent() throws IOException, IllegalStateException {
       throw new UnsupportedOperationException(
-          "Can not getContent as stream. Use writeTo(OutputStream) "
-              + "instead.");
+          "Can not getContent as stream. Use writeTo(OutputStream) instead.");
     }
 
     @Override
@@ -123,8 +122,6 @@ public class ApptuitPutClient {
     @Override
     public void writeTo(OutputStream outputStream) throws IOException {
 
-      //ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      //PrintStream ps = new PrintStream(baos);
       PrintStream ps = new PrintStream(outputStream);
       ps.println("[");
       Iterator<DataPoint> iterator = dataPoints.iterator();
@@ -138,8 +135,6 @@ public class ApptuitPutClient {
       ps.println("]");
 
       ps.flush();
-      //ps.close();
-      //return new ByteArrayEntity(baos.toByteArray());
     }
   }
 }

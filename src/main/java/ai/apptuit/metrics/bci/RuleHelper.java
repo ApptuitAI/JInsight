@@ -41,7 +41,6 @@ public class RuleHelper extends Helper {
   protected static final MetricRegistry registry = new MetricRegistry();
 
   static {
-    System.out.println(">>>>INITING THE REGISTRY<<<<");
 
     String hostname;
     try {
@@ -59,11 +58,6 @@ public class RuleHelper extends Helper {
     ScheduledReporter reporter = factory.build(registry);
     reporter.start(5, TimeUnit.SECONDS);
 
-    try {
-      Thread.sleep(500);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
     /*
     final ConsoleReporter consoleReporter = ConsoleReporter.forRegistry(registry)
         .convertRatesTo(TimeUnit.SECONDS)
