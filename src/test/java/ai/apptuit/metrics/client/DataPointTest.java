@@ -99,7 +99,7 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     int value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(),
-        epoch, value, Collections.EMPTY_MAP);
+        epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     dataPoint.toTextLine(new PrintStream(out), tagEncodedMetricName.getTags());
