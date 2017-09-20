@@ -21,8 +21,6 @@ import static org.junit.Assert.assertEquals;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +49,7 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     int value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        Collections.EMPTY_MAP);
+        Collections.emptyMap());
 
     assertEquals("proc.stat.cpu " + epoch + " " + value, dataPoint.toString());
   }
@@ -72,7 +70,7 @@ public class DataPointTest {
     long epoch = System.currentTimeMillis();
     int value = 1515;
     DataPoint dataPoint = new DataPoint(tagEncodedMetricName.getMetricName(), epoch, value,
-        Collections.EMPTY_MAP);
+        Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     dataPoint.toTextLine(new PrintStream(out), null);
