@@ -47,7 +47,7 @@ public class ApptuitReporter extends ScheduledReporter {
   }
 
   private static final boolean DEBUG = false;
-  private static final ReportingMode REPORTING_MODE = ReportingMode.SYS_OUT;
+  private static final ReportingMode REPORTING_MODE = ReportingMode.API_PUT;
 
   private static final String REPORTER_NAME = "apptuit-reporter";
 
