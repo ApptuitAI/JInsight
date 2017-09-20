@@ -16,6 +16,8 @@
 
 package ai.apptuit.metrics.bci.ehcache;
 
+import static org.junit.Assert.assertEquals;
+
 import ai.apptuit.metrics.bci.RuleHelper;
 import ai.apptuit.metrics.util.MockMetricsRegistry;
 import java.util.ArrayList;
@@ -69,7 +71,15 @@ public class EHCacheInstrumentationTest extends PowerMockTestCase {
   public void testPut() throws Exception {
     int rnd = ThreadLocalRandom.current().nextInt(0, presetElements.size());
     String key = presetElementKeys.get(rnd);
+
+    String metricName = "ehcache.ops[op:put,cache:"+cacheName + "]";
+    assertEquals(0, metricsRegistry.getStartCount(metricName));
+    assertEquals(0, metricsRegistry.getStopCount(metricName));
+
     cache.put(new Element(key, presetElements.get(key)));
+
+    assertEquals(1, metricsRegistry.getStartCount(metricName));
+    assertEquals(1, metricsRegistry.getStopCount(metricName));
   }
 
   @After
