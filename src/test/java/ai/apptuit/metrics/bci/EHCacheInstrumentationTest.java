@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.bci.ehcache;
+package ai.apptuit.metrics.bci;
 
 import static org.junit.Assert.assertEquals;
 
@@ -61,7 +61,7 @@ public class EHCacheInstrumentationTest extends PowerMockTestCase {
 
     cacheManager = CacheManager.newInstance();
     cache = cacheManager.addCacheIfAbsent(cacheName);
-    presetElements = IntStream.range(0, 100000).boxed()
+    presetElements = IntStream.range(0, 1000).boxed()
         .collect(Collectors.toMap(i -> UUID.randomUUID().toString(), i -> i));
     presetElementKeys = new ArrayList<>(presetElements.keySet());
 
