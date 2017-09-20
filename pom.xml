@@ -72,7 +72,8 @@ limitations under the License.
     <enforce.code.style>false</enforce.code.style>
     <ignore.license.checks>false</ignore.license.checks>
     <enforce.findbugs>true</enforce.findbugs>
-    <minimum.coverage>0.25</minimum.coverage>
+    <minimum.complexity.coverage>0.40</minimum.complexity.coverage>
+    <minimum.instruction.coverage>0.60</minimum.instruction.coverage>
   </properties>
 
   <dependencies>
@@ -341,7 +342,12 @@ limitations under the License.
                     <limit>
                       <counter>COMPLEXITY</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>${minimum.coverage}</minimum>
+                      <minimum>${minimum.complexity.coverage}</minimum>
+                    </limit>
+                    <limit>
+                      <counter>INSTRUCTION</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${minimum.instruction.coverage}</minimum>
                     </limit>
                   </limits>
                 </rule>
