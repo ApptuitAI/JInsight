@@ -17,6 +17,8 @@
 package ai.apptuit.metrics.client;
 
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,6 +38,9 @@ public class DataPoint {
     this.metric = metricName;
     this.timestamp = epoch;
     this.value = value;
+    if (tags == null) {
+      throw new IllegalArgumentException("Tags cannot be null");
+    }
     this.tags = tags;
   }
 
@@ -58,15 +63,9 @@ public class DataPoint {
 
   @Override
   public String toString() {
-    StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append(metric).append(" ")
-        .append(timestamp).append(" ")
-        .append(value);
-    for (Entry<String, String> tag : tags.entrySet()) {
-      stringBuilder.append(" ").append(tag.getKey())
-          .append("=").append(tag.getValue());
-    }
-    return stringBuilder.toString();
+    StringWriter out = new StringWriter();
+    toTextPlain(new PrintWriter(out), null);
+    return out.toString();
   }
 
   public void toJson(PrintStream ps, Map<String, String> globalTags) {
@@ -78,7 +77,9 @@ public class DataPoint {
       ps.append(",\n\"tags\": {");
 
       Map<String, String> tagsToMarshall = new LinkedHashMap<>(getTags());
-      tagsToMarshall.putAll(globalTags);
+      if (globalTags != null) {
+        tagsToMarshall.putAll(globalTags);
+      }
       Iterator<Entry<String, String>> iterator = tagsToMarshall.entrySet().iterator();
       while (iterator.hasNext()) {
         Entry<String, String> tag = iterator.next();
@@ -94,13 +95,21 @@ public class DataPoint {
   }
 
   public void toTextLine(PrintStream ps, Map<String, String> globalTags) {
+    PrintWriter writer = new PrintWriter(ps);
+    toTextPlain(writer, globalTags);
+    writer.append('\n');
+    writer.flush();
+  }
+
+  private void toTextPlain(PrintWriter ps, Map<String, String> globalTags) {
     ps.append(getMetric()).append(" ")
         .append(Long.toString(getTimestamp())).append(" ")
         .append(String.valueOf(getValue()));
 
     Map<String, String> tagsToMarshall = new LinkedHashMap<>(getTags());
-    tagsToMarshall.putAll(globalTags);
+    if (globalTags != null) {
+      tagsToMarshall.putAll(globalTags);
+    }
     tagsToMarshall.forEach((key, value) -> ps.append(" ").append(key).append("=").append(value));
-    ps.append('\n');
   }
 }
