@@ -112,4 +112,36 @@ public class DataPoint {
     }
     tagsToMarshall.forEach((key, value) -> ps.append(" ").append(key).append("=").append(value));
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    DataPoint dataPoint = (DataPoint) o;
+
+    if (timestamp != dataPoint.timestamp) {
+      return false;
+    }
+    if (metric != null ? !metric.equals(dataPoint.metric) : dataPoint.metric != null) {
+      return false;
+    }
+    if (value != null ? !value.equals(dataPoint.value) : dataPoint.value != null) {
+      return false;
+    }
+    return tags != null ? tags.equals(dataPoint.tags) : dataPoint.tags == null;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = metric != null ? metric.hashCode() : 0;
+    result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
+    result = 31 * result + (value != null ? value.hashCode() : 0);
+    result = 31 * result + (tags != null ? tags.hashCode() : 0);
+    return result;
+  }
 }
