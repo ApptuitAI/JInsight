@@ -23,7 +23,6 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 import ai.apptuit.metrics.client.ApptuitPutClient;
 import ai.apptuit.metrics.client.DataPoint;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.mockito.stubbing.Answer;
