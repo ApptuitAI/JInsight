@@ -49,7 +49,7 @@ limitations under the License.
     <repository>
       <id>bintray-apptuitai-jinsight</id>
       <name>apptuitai-jinsight</name>
-      <url>https://api.bintray.com/maven/apptuitai/jinsight/jinsight/;publish=1</url>
+      <url>https://api.bintray.com/maven/apptuitai/maven/jinsight/;publish=1</url>
     </repository>
   </distributionManagement>
 
