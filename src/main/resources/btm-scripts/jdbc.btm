@@ -1,0 +1,95 @@
+#
+#  Copyright 2017 Agilx, Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
+RULE DataSource getConnection entry
+INTERFACE javax.sql.DataSource
+METHOD getConnection()
+HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+AT ENTRY
+#TODO add datasource name as a tag
+#BIND
+#  tags = new String[]{"op", "get", "cache", $this.getName()}
+IF TRUE
+DO startTimer(JdbcRuleHelper.GET_CONNECTION_NAME)
+ENDRULE
+
+# TODO Handle AT EXCEPTION EXIT
+RULE DataSource getConnection exit
+INTERFACE javax.sql.DataSource
+METHOD getConnection()
+HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+AT EXIT
+#TODO add datasource name as a tag
+#BIND
+#  tags = new String[]{"op", "get", "cache", $this.getName()}
+IF TRUE
+DO stopTimer(JdbcRuleHelper.GET_CONNECTION_NAME)
+ENDRULE
+
+
+RULE Connection prepareStatement entry
+INTERFACE java.sql.Connection
+METHOD prepareStatement
+HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+AT ENTRY
+#TODO add datasource name as a tag
+#BIND
+#  tags = new String[]{"op", "get", "cache", $this.getName()}
+IF TRUE
+DO startTimer(JdbcRuleHelper.PREPARE_STATEMENT_NAME)
+ENDRULE
+
+# TODO Handle AT EXCEPTION EXIT
+RULE Connection prepareStatement exit
+INTERFACE java.sql.Connection
+METHOD prepareStatement
+HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+AT EXIT
+#TODO add datasource name as a tag
+#BIND
+#  tags = new String[]{"op", "get", "cache", $this.getName()}
+IF TRUE
+DO stopTimer(JdbcRuleHelper.PREPARE_STATEMENT_NAME)
+ENDRULE
+
+RULE PreparedStatement execute entry
+INTERFACE java.sql.PreparedStatement
+METHOD execute()
+HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+AT ENTRY
+#TODO add datasource name & execution type (execute/executeUpdate/executeBath) as tags
+#BIND
+#  tags = new String[]{"op", "get", "cache", $this.getName()}
+IF TRUE
+DO startTimer(JdbcRuleHelper.EXECUTE_STATEMENT_NAME)
+ENDRULE
+
+# TODO Handle AT EXCEPTION EXIT
+RULE PreparedStatement execute exit
+INTERFACE java.sql.PreparedStatement
+METHOD execute()
+HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+AT EXIT
+#TODO add datasource name & execution type (execute/executeUpdate/executeBath) as tags
+#BIND
+#  tags = new String[]{"op", "get", "cache", $this.getName()}
+IF TRUE
+DO stopTimer(JdbcRuleHelper.EXECUTE_STATEMENT_NAME)
+ENDRULE
+
+#TODO instrument preparedStatement.executeQuery(); preparedStatement.executeUpdate();
+#TODO instrument preparedStatement.executeLargeUpdate(); preparedStatement.executeBatch();
+#TODO instrument preparedStatement.executeLargeBatch();

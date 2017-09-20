@@ -96,15 +96,25 @@ limitations under the License.
       <artifactId>metrics-core</artifactId>
       <version>3.2.4</version>
     </dependency>
+
+
+
     <!--
-    Needed only for instrumenting Ehcache
+    BCI Testing related dependencies
     -->
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>1.4.196</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>net.sf.ehcache</groupId>
       <artifactId>ehcache</artifactId>
       <version>2.10.4</version>
       <scope>provided</scope>
     </dependency>
+
     <!--
     Unit testing related dependencies
     -->
@@ -158,6 +168,18 @@ limitations under the License.
     </dependency>
   </dependencies>
   <build>
+
+    <resources>
+      <resource>
+        <directory>${project.basedir}/src/main/resources</directory>
+        <excludes>
+          <!-- Exclude btm files since we merge them and copy merged file in #merge-btm-files -->
+          <exclude>**/*.btm</exclude>
+        </excludes>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+
     <plugins>
 
       <!-- Plugins for validate phase -->
@@ -209,6 +231,31 @@ limitations under the License.
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.zcore.maven</groupId>
+        <artifactId>merge-maven-plugin</artifactId>
+        <version>0.0.3</version>
+        <executions>
+          <execution>
+            <id>merge-btm-files</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>merge</goal>
+            </goals>
+            <configuration>
+              <mergers>
+                <merger>
+                  <target>${project.build.outputDirectory}/btm-scripts/jinsight.btm</target>
+                  <sources>
+                    <source>${btm.script.sources}/ehcache.btm</source>
+                    <source>${btm.script.sources}/jdbc.btm</source>
+                  </sources>
+                </merger>
+              </mergers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
       <!-- Plugins for test phase -->
       <plugin>
@@ -227,7 +274,7 @@ limitations under the License.
             <jacoco-agent.destfile>${project.build.directory}/jacoco.exec</jacoco-agent.destfile>
           </systemPropertyVariables>
           <argLine>
-            -javaagent:${project.build.directory}/${project.build.finalName}.jar=script:${project.basedir}/src/main/resources/btm-scripts/ehcache.btm
+            -javaagent:${project.build.directory}/${project.build.finalName}.jar=script:${project.build.outputDirectory}/btm-scripts/jinsight.btm
           </argLine>
         </configuration>
       </plugin>
