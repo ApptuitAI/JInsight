@@ -23,9 +23,9 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.AbstractHttpEntity;
@@ -42,6 +42,8 @@ public class ApptuitPutClient {
   private static final int SOCKET_TIMEOUT_MS = 15000;
   private static final int CONNECTION_REQUEST_TIMEOUT_MS = 1000;
   private static final String PUT_API_URI = "https://api.apptuit.ai/api/put?details";
+  private static final boolean GZIP = true;
+
   private Map<String, String> globalTags;
   private String token;
   private CloseableHttpClient httpclient;
@@ -54,7 +56,7 @@ public class ApptuitPutClient {
 
   public void put(Collection<DataPoint> dataPoints) {
 
-    DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints);
+    DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags);
 
     HttpPost httpPost = new HttpPost(PUT_API_URI);
     httpPost.setEntity(entity);
@@ -68,34 +70,46 @@ public class ApptuitPutClient {
         .build()
     );
 
-    ResponseHandler<String> responseHandler = response -> {
-      HttpEntity respEntity = response.getEntity();
-      int status = response.getStatusLine().getStatusCode();
-      if (status >= 200 && status < 300) {
-        return respEntity != null ? EntityUtils.toString(respEntity) : null;
-      } else {
-        System.out.println(respEntity != null ? EntityUtils.toString(respEntity) : null);
-        throw new ClientProtocolException("Unexpected response status: " + status);
-      }
-    };
-
     try {
-      String responseBody = httpclient.execute(httpPost, responseHandler);
-      System.out.println("----------------------------------------");
+      HttpResponse response = httpclient.execute(httpPost);
+      int status = response.getStatusLine().getStatusCode();
+
+      System.out.println("-------------------" + status + "---------------------");
+      HttpEntity respEntity = response.getEntity();
+      String responseBody = respEntity != null ? EntityUtils.toString(respEntity) : null;
       System.out.println(responseBody);
     } catch (IOException e) {
+      System.err.println("Caught error:");
       e.printStackTrace();
     } finally {
       httpPost.releaseConnection();
     }
   }
 
-  private class DatapointsHttpEntity extends AbstractHttpEntity {
+  static class DatapointsHttpEntity extends AbstractHttpEntity {
+
+    public static final String APPLICATION_JSON = "application/json";
+    public static final String CONTENT_ENCODING_GZIP = "gzip";
 
     private final Collection<DataPoint> dataPoints;
+    private final Map<String, String> globalTags;
+    private final boolean doZip;
 
-    public DatapointsHttpEntity(Collection<DataPoint> dataPoints) {
+    public DatapointsHttpEntity(Collection<DataPoint> dataPoints,
+        Map<String, String> globalTags) {
+      this(dataPoints, globalTags, GZIP);
+    }
+
+    public DatapointsHttpEntity(Collection<DataPoint> dataPoints,
+        Map<String, String> globalTags, boolean doZip) {
       this.dataPoints = dataPoints;
+      this.globalTags = globalTags;
+      this.doZip = doZip;
+
+      setContentType(APPLICATION_JSON);
+      if (doZip) {
+        setContentEncoding(CONTENT_ENCODING_GZIP);
+      }
     }
 
     @Override
@@ -121,6 +135,9 @@ public class ApptuitPutClient {
 
     @Override
     public void writeTo(OutputStream outputStream) throws IOException {
+      if (doZip) {
+        outputStream = new GZIPOutputStream(outputStream);
+      }
 
       PrintStream ps = new PrintStream(outputStream);
       ps.println("[");
@@ -135,6 +152,10 @@ public class ApptuitPutClient {
       ps.println("]");
 
       ps.flush();
+
+      if (doZip) {
+        ((GZIPOutputStream) outputStream).finish();
+      }
     }
   }
 }

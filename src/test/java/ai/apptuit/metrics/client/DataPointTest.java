@@ -23,12 +23,6 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -176,7 +170,7 @@ public class DataPointTest {
     dataPoint.toJson(new PrintStream(out), null);
     String jsonTxt = out.toString();
 
-    DataPoint dp = jsonToDataPoint(jsonTxt);
+    DataPoint dp = Util.jsonToDataPoint(jsonTxt);
     assertEquals(dataPoint, dp);
   }
 
@@ -191,7 +185,7 @@ public class DataPointTest {
     dataPoint.toJson(new PrintStream(out), null);
     String jsonTxt = out.toString();
 
-    DataPoint dp = jsonToDataPoint(jsonTxt);
+    DataPoint dp = Util.jsonToDataPoint(jsonTxt);
     assertEquals(dataPoint, dp);
   }
 
@@ -206,26 +200,10 @@ public class DataPointTest {
     dataPoint.toJson(new PrintStream(out), tagEncodedMetricName.getTags());
     String jsonTxt = out.toString();
 
-    DataPoint dp = jsonToDataPoint(jsonTxt);
+    DataPoint dp = Util.jsonToDataPoint(jsonTxt);
     DataPoint expectedDataPoint = new DataPoint(tagEncodedMetricName.getMetricName(),
         epoch, value, tagEncodedMetricName.getTags());
     assertEquals(expectedDataPoint, dp);
   }
 
-  private DataPoint jsonToDataPoint(String jsonTxt) throws ParseException {
-    JSONParser parser = new JSONParser();
-    JSONObject jsonObject = (JSONObject) parser.parse(jsonTxt);
-    assertEquals(4, jsonObject.size());
-    String metricName = (String) jsonObject.get("metric");
-    long epoch = (Long) jsonObject.get("timestamp");
-    long value = (Long) jsonObject.get("value");
-    Map<String, String> tags = new HashMap<>();
-
-    JSONObject tagsObject = (JSONObject) jsonObject.get("tags");
-    Set keys = tagsObject.keySet();
-    for (Object key : keys) {
-      tags.put((String)key, (String)tagsObject.get(key));
-    }
-    return new DataPoint(metricName, epoch, value, tags);
-  }
 }
