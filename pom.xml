@@ -114,6 +114,18 @@ limitations under the License.
       <version>2.10.4</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <version>9.4.6.v20170531</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-core</artifactId>
+      <version>8.5.20</version>
+      <scope>provided</scope>
+    </dependency>
 
     <!--
     Unit testing related dependencies
@@ -250,6 +262,7 @@ limitations under the License.
                   <sources>
                     <source>${btm.script.sources}/ehcache.btm</source>
                     <source>${btm.script.sources}/jdbc.btm</source>
+                    <source>${btm.script.sources}/servlet.btm</source>
                   </sources>
                 </merger>
               </mergers>

@@ -23,7 +23,11 @@ import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Timer.Context;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
+import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
@@ -67,6 +71,9 @@ public class RuleHelper extends Helper {
     */
   }
 
+  private static final Map<Object, Map<String, String>> objectProperties = Collections
+      .synchronizedMap(new WeakHashMap<Object, Map<String, String>>());
+
   public RuleHelper(Rule rule) {
     super(rule);
   }
@@ -77,6 +84,20 @@ public class RuleHelper extends Helper {
 
   public void stopTimer(TagEncodedMetricName metric) {
     Timers.stop(metric);
+  }
+
+  public String setObjectProperty(Object o, String propertyName, String propertyValue) {
+    Map<String, String> props = objectProperties
+        .computeIfAbsent(o, k -> Collections.synchronizedMap(new HashMap<>()));
+    return props.put(propertyName, propertyValue);
+  }
+
+  public String getObjectProperty(Object o, String propertyName) {
+    Map<String, String> props = objectProperties.get(o);
+    if (props == null) {
+      return null;
+    }
+    return props.get(propertyName);
   }
 
   private static class Timers {
