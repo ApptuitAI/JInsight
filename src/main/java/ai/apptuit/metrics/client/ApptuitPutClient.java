@@ -44,13 +44,21 @@ public class ApptuitPutClient {
   private static final String PUT_API_URI = "https://api.apptuit.ai/api/put?details";
   private static final boolean GZIP = true;
 
+  private final String apiEndPoint;
+
   private Map<String, String> globalTags;
   private String token;
   private CloseableHttpClient httpclient;
 
   public ApptuitPutClient(String token, Map<String, String> globalTags) {
+    this(token, globalTags, PUT_API_URI);
+  }
+
+  ApptuitPutClient(String token, Map<String, String> globalTags, String apiEndPoint) {
     this.globalTags = globalTags;
     this.token = token;
+    this.apiEndPoint = apiEndPoint;
+
     this.httpclient = HttpClients.createDefault();
   }
 
@@ -58,7 +66,7 @@ public class ApptuitPutClient {
 
     DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags);
 
-    HttpPost httpPost = new HttpPost(PUT_API_URI);
+    HttpPost httpPost = new HttpPost(apiEndPoint);
     httpPost.setEntity(entity);
     httpPost.setHeader("Authorization", "Bearer " + token);
 

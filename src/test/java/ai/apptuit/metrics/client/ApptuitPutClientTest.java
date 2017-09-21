@@ -21,11 +21,19 @@ import static org.junit.Assert.assertNull;
 
 import ai.apptuit.metrics.client.ApptuitPutClient.DatapointsHttpEntity;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import com.sun.net.httpserver.Headers;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
@@ -88,7 +96,7 @@ public class ApptuitPutClientTest {
       assertEquals(DatapointsHttpEntity.CONTENT_ENCODING_GZIP,
           entity.getContentEncoding().getValue());
 
-      String jsonText = new Scanner(new GZIPInputStream(pis)).useDelimiter("\0").next();
+      String jsonText = streamToString(pis);
       DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(jsonText);
 
       assertEquals(numDataPoints, unmarshalledDPs.length);
@@ -96,6 +104,65 @@ public class ApptuitPutClientTest {
         assertEquals(getExpectedDataPoint(dataPoints.get(i), globalTags), unmarshalledDPs[i]);
       }
     }
+  }
+
+  @Test
+  public void testPut() throws Exception {
+    //Util.enableHttpClientTracing();
+
+    int numDataPoints = 10;
+    ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
+
+    int port = 9797;
+    String path = "/api/endpoint";
+    String token = "MOCK_APPTUIT_TOKEN";
+
+    HttpServer httpServer = HttpServer.create(new InetSocketAddress(port), 0);
+
+    List<HttpExchange> exchanges = new ArrayList<>();
+    List<String> requestBodies = new ArrayList<>();
+    httpServer.createContext(path, exchange -> {
+      exchanges.add(exchange);
+      requestBodies.add(streamToString(exchange.getRequestBody()));
+
+      byte[] response = "{\"success\":1,\"failed\":0,\"errors\":[]}".getBytes();
+      exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length);
+      exchange.getResponseBody().write(response);
+      exchange.close();
+    });
+
+    httpServer.start();
+
+    try {
+
+      String apiEndPoint = "http://localhost:" + port + path;
+      ApptuitPutClient client = new ApptuitPutClient(token, globalTags,
+          apiEndPoint);
+      client.put(dataPoints);
+
+    } finally {
+      httpServer.stop(0);
+    }
+
+    HttpExchange exchange = exchanges.get(0);
+    assertEquals("POST", exchange.getRequestMethod());
+    assertEquals(path, exchange.getRequestURI().getPath());
+
+    Headers headers = exchange.getRequestHeaders();
+    assertEquals("gzip", headers.getFirst("Content-Encoding"));
+    assertEquals("application/json", headers.getFirst("Content-Type"));
+    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+
+    DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(requestBodies.get(0));
+
+    assertEquals(numDataPoints, unmarshalledDPs.length);
+    for (int i = 0; i < numDataPoints; i++) {
+      assertEquals(getExpectedDataPoint(dataPoints.get(i), globalTags), unmarshalledDPs[i]);
+    }
+  }
+
+  private String streamToString(InputStream inputStream) throws IOException {
+    return new Scanner(new GZIPInputStream(inputStream)).useDelimiter("\0").next();
   }
 
   private ArrayList<DataPoint> createDataPoints(int numDataPoints) {
