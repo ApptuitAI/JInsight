@@ -60,6 +60,14 @@ limitations under the License.
     <!-- Aliases -->
     <btm.script.sources>${project.basedir}/src/main/resources/btm-scripts</btm.script.sources>
 
+    <!-- Debug flags -->
+    <!-- (comment the blank tag to enable the debug flag) -->
+    <jvm.debug.options>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5050</jvm.debug.options>
+    <jvm.debug.options/>
+    <byteman.debug.options>-Dorg.jboss.byteman.verbose</byteman.debug.options>
+    <byteman.debug.options/>
+
+
     <!-- Version Properties -->
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
@@ -288,7 +296,7 @@ limitations under the License.
             <jacoco-agent.destfile>${project.build.directory}/jacoco.exec</jacoco-agent.destfile>
           </systemPropertyVariables>
           <argLine>
-            -javaagent:${project.build.directory}/${project.build.finalName}.jar=script:${project.build.outputDirectory}/btm-scripts/jinsight.btm
+            ${jvm.debug.options} -javaagent:${project.build.directory}/${project.build.finalName}.jar ${byteman.debug.options}
           </argLine>
         </configuration>
       </plugin>
@@ -301,8 +309,8 @@ limitations under the License.
         <configuration>
           <archive>
             <manifestEntries>
-              <Premain-Class>org.jboss.byteman.agent.Main</Premain-Class>
-              <Agent-Class>org.jboss.byteman.agent.Main</Agent-Class>
+              <Premain-Class>ai.apptuit.metrics.jinsight.Agent</Premain-Class>
+              <Agent-Class>ai.apptuit.metrics.jinsight.Agent</Agent-Class>
               <Can-Redefine-Classes>true</Can-Redefine-Classes>
               <Can-Retransform-Classes>true</Can-Retransform-Classes>
             </manifestEntries>
@@ -391,6 +399,11 @@ limitations under the License.
             <goals>
               <goal>instrument</goal>
             </goals>
+            <configuration>
+              <excludes>
+                <exclude>ai/apptuit/metrics/jinsight/Agent.class</exclude>
+              </excludes>
+            </configuration>
           </execution>
           <execution>
             <id>default-restore-instrumented-classes</id>
