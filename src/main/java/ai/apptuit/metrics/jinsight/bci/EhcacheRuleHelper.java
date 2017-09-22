@@ -17,6 +17,7 @@
 package ai.apptuit.metrics.jinsight.bci;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Gauge;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
@@ -79,8 +80,8 @@ public class EhcacheRuleHelper extends RuleHelper {
     }
 
     private void register(String metric, Gauge<Number> gauge) {
-      registry
-          .register(ROOT_NAME.submetric(metric, "cache", cache.getName()).toString(), gauge);
+      String name = ROOT_NAME.submetric(metric).withTags("cache", this.cache.getName()).toString();
+      RegistryService.getMetricRegistry().register(name, gauge);
     }
 
     @Override

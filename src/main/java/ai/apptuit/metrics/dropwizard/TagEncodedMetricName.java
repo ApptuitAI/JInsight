@@ -93,6 +93,14 @@ public class TagEncodedMetricName {
     return submetric(suffix, null);
   }
 
+
+  public TagEncodedMetricName withTags(String... additionalTags) {
+    return submetric(null, additionalTags);
+  }
+
+  /**
+   * @deprecated Use {@link #submetric(String)} or {@link #withTags(String...)} or chain them
+   */
   public TagEncodedMetricName submetric(String suffix, String... additionalTags) {
     Map<String, String> t = tags;
     if (additionalTags != null && additionalTags.length > 0) {

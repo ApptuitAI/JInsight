@@ -17,6 +17,7 @@
 package ai.apptuit.metrics.jinsight.bci;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import java.io.IOException;
@@ -37,11 +38,11 @@ import org.jboss.byteman.rule.Rule;
  */
 public class ServletRuleHelper extends RuleHelper {
 
-  private static final String PROPERTY_VALUE_TRUE = "TRUE";
-  private static final String PROPERTY_NAME_IS_FILTER_ADDED = "isFilterAdded";
   public static final String TOMCAT_METRIC_PREFIX = "tomcat";
   public static final String JETTY_METRIC_PREFIX = "jetty";
   public static final String ROOT_CONTEXT_PATH = "ROOT";
+  private static final String PROPERTY_VALUE_TRUE = "TRUE";
+  private static final String PROPERTY_NAME_IS_FILTER_ADDED = "isFilterAdded";
 
   public ServletRuleHelper(Rule rule) {
     super(rule);
@@ -98,7 +99,7 @@ public class ServletRuleHelper extends RuleHelper {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
         FilterChain filterChain) throws IOException, ServletException {
       TagEncodedMetricName metricName = rootMetric;
-      Timer timer = registry.timer(metricName.toString());
+      Timer timer = RegistryService.getMetricRegistry().timer(metricName.toString());
       Context context = timer.time();
       try {
         filterChain.doFilter(servletRequest, servletResponse);

@@ -21,6 +21,7 @@ import static ai.apptuit.metrics.jinsight.bci.ServletRuleHelper.TOMCAT_METRIC_PR
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.util.MockMetricsRegistry;
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +50,7 @@ import org.powermock.modules.testng.PowerMockTestCase;
 /**
  * @author Rajiv Shivane
  */
-@PrepareForTest({RuleHelper.class})
+@PrepareForTest({RegistryService.class})
 @PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*",
     "com.sun.*", "org.xml.*", "javax.management.*", "javax.xml.*"})
 @RunWith(PowerMockRunner.class)

@@ -62,7 +62,9 @@ limitations under the License.
 
     <!-- Debug flags -->
     <!-- (comment the blank tag to enable the debug flag) -->
-    <jvm.debug.options>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5050</jvm.debug.options>
+    <jvm.debug.options>
+      -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5050
+    </jvm.debug.options>
     <jvm.debug.options/>
     <byteman.debug.options>-Dorg.jboss.byteman.verbose</byteman.debug.options>
     <byteman.debug.options/>
@@ -104,7 +106,6 @@ limitations under the License.
       <artifactId>metrics-core</artifactId>
       <version>3.2.4</version>
     </dependency>
-
 
 
     <!--
@@ -293,7 +294,11 @@ limitations under the License.
         </dependencies>
         <configuration>
           <argLine>
-            ${jvm.debug.options} -javaagent:${project.build.directory}/${project.build.finalName}.jar -Djacoco-agent.destfile=${project.build.directory}/jacoco.exec ${byteman.debug.options}
+            ${jvm.debug.options}
+            -javaagent:${project.build.directory}/${project.build.finalName}.jar
+            -Djacoco-agent.destfile=${project.build.directory}/jacoco.exec
+            -Djinsight.config=${project.build.testOutputDirectory}/jinsight-config-test.properties
+            ${byteman.debug.options}
           </argLine>
         </configuration>
       </plugin>
@@ -447,7 +452,7 @@ limitations under the License.
             <format>html</format>
             <format>xml</format>
           </formats>
-          <check />
+          <check/>
         </configuration>
       </plugin>
     </plugins>

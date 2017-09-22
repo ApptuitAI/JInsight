@@ -27,29 +27,38 @@ import org.jboss.byteman.agent.Main;
  */
 public class Agent {
 
-
   private static final String BTM_SCRIPTS_RESOURCE_PATH = "btm-scripts/jinsight.btm";
+  private static final String RESOURCE_SCRIPT_PARAM = "resourcescript:" + BTM_SCRIPTS_RESOURCE_PATH;
 
-  public static void premain(String agentArgs, Instrumentation inst) throws Exception {
-    String scriptsParam = getScriptsParam();
-    if (scriptsParam != null) {
-      Main.premain(scriptsParam, inst);
+  public static void premain(String agentArgs, Instrumentation instrumentation) throws Exception {
+    if (!canStartAgent()) {
+      return;
     }
+    Main.premain(RESOURCE_SCRIPT_PARAM, instrumentation);
   }
 
-  public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
-    String scriptsParam = getScriptsParam();
-    if (scriptsParam != null) {
-      Main.agentmain(scriptsParam, inst);
+  public static void agentmain(String agentArgs, Instrumentation instrumentation) throws Exception {
+    if (!canStartAgent()) {
+      return;
     }
+    Main.agentmain(RESOURCE_SCRIPT_PARAM, instrumentation);
   }
 
-  private static String getScriptsParam() {
+  private static boolean canStartAgent() {
     if (ClassLoader.getSystemResource(BTM_SCRIPTS_RESOURCE_PATH) == null) {
-      System.err.println("Could not find " + BTM_SCRIPTS_RESOURCE_PATH + " in class-path."
-          + " Agent will not be initialized");
-      return null;
+      System.err.println("Could not load " + BTM_SCRIPTS_RESOURCE_PATH + "."
+          + "Agent will not be started.");
+      return false;
     }
-    return "resourcescript:" + BTM_SCRIPTS_RESOURCE_PATH;
+
+    try {
+      ConfigService.initialize();
+    } catch (Exception e) {
+      System.err.println(e.getMessage());
+      System.err.println("Agent will not be started.");
+      return false;
+    }
+
+    return true;
   }
 }

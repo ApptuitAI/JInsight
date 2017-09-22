@@ -16,11 +16,12 @@
 
 package ai.apptuit.metrics.jinsight.bci;
 
-import static ai.apptuit.metrics.jinsight.bci.ServletRuleHelper.ROOT_CONTEXT_PATH;
 import static ai.apptuit.metrics.jinsight.bci.ServletRuleHelper.JETTY_METRIC_PREFIX;
+import static ai.apptuit.metrics.jinsight.bci.ServletRuleHelper.ROOT_CONTEXT_PATH;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.util.MockMetricsRegistry;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -47,7 +48,7 @@ import org.powermock.modules.testng.PowerMockTestCase;
 /**
  * @author Rajiv Shivane
  */
-@PrepareForTest({RuleHelper.class})
+@PrepareForTest({RegistryService.class})
 @PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*"})
 @RunWith(PowerMockRunner.class)
 public class JettyFilterInstrumentationTest extends PowerMockTestCase {
@@ -86,8 +87,8 @@ public class JettyFilterInstrumentationTest extends PowerMockTestCase {
 
   @Test
   public void testPingPong() throws IOException {
-    String metricName = TagEncodedMetricName.decode(JETTY_METRIC_PREFIX)
-        .submetric("requests", "context", ROOT_CONTEXT_PATH).toString();
+    String metricName = TagEncodedMetricName.decode(JETTY_METRIC_PREFIX).submetric("requests")
+        .withTags("context", ROOT_CONTEXT_PATH).toString();
     int expectStartCount = metricsRegistry.getStartCount(metricName) + 1;
     int expectedStopCount = metricsRegistry.getStopCount(metricName) + 1;
 

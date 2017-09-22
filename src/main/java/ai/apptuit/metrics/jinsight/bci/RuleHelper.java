@@ -16,19 +16,14 @@
 
 package ai.apptuit.metrics.jinsight.bci;
 
-import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.ScheduledReporter;
+import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Timer.Context;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 import java.util.WeakHashMap;
-import java.util.concurrent.TimeUnit;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
 
@@ -36,40 +31,6 @@ import org.jboss.byteman.rule.helper.Helper;
  * @author Rajiv Shivane
  */
 public class RuleHelper extends Helper {
-
-  private static final String APPTUIT_API_KEY = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9."
-      + "eyJzdWIiOiJwbGF5Z3JvdW5kIiwiaXNzIjoiYXBwdHVpdCIsIlRFTkFOVCI6ImMwYTZiNmFmLWU4M"
-      + "zAtNDhhMS1hMGE4LTRhNDBlYThhZTE5MyIsImlhdCI6MTUwMzMwNTI4OCwianRpIjoiMSJ9.vu88X"
-      + "K7MbpMJhwszWMaYZHgGVRsrCElPkiNL7eMBac0";
-
-  protected static final MetricRegistry registry = new MetricRegistry();
-
-  static {
-
-    String hostname;
-    try {
-      hostname = InetAddress.getLocalHost().getCanonicalHostName();
-    } catch (UnknownHostException e) {
-      hostname = "?";
-    }
-
-    ApptuitReporterFactory factory = new ApptuitReporterFactory();
-    factory.setRateUnit(TimeUnit.SECONDS);
-    factory.setDurationUnit(TimeUnit.MILLISECONDS);
-    factory.addGlobalTag("hostname", hostname);
-    factory.setApiKey(APPTUIT_API_KEY);
-
-    ScheduledReporter reporter = factory.build(registry);
-    reporter.start(5, TimeUnit.SECONDS);
-
-    /*
-    final ConsoleReporter consoleReporter = ConsoleReporter.forRegistry(registry)
-        .convertRatesTo(TimeUnit.SECONDS)
-        .convertDurationsTo(TimeUnit.MILLISECONDS)
-        .build();
-    consoleReporter.start(5, TimeUnit.SECONDS);
-    */
-  }
 
   private static final Map<Object, Map<String, String>> objectProperties = Collections
       .synchronizedMap(new WeakHashMap<Object, Map<String, String>>());
@@ -105,7 +66,7 @@ public class RuleHelper extends Helper {
     private static final ThreadLocal<Stack<Context>> TIMERS = ThreadLocal.withInitial(Stack::new);
 
     public static void start(TagEncodedMetricName metric) {
-      TIMERS.get().push(registry.timer(metric.toString()).time());
+      TIMERS.get().push(RegistryService.getMetricRegistry().timer(metric.toString()).time());
     }
 
     public static void stop(TagEncodedMetricName metric) {

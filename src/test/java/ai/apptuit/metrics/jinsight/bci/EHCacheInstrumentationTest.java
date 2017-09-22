@@ -18,6 +18,7 @@ package ai.apptuit.metrics.jinsight.bci;
 
 import static org.junit.Assert.assertEquals;
 
+import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.util.MockMetricsRegistry;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ import org.powermock.modules.testng.PowerMockTestCase;
 /**
  * @author Rajiv Shivane
  */
-@PrepareForTest({RuleHelper.class})
+@PrepareForTest({RegistryService.class})
 @PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*"})
 @RunWith(PowerMockRunner.class)
 public class EHCacheInstrumentationTest extends PowerMockTestCase {
@@ -71,7 +72,7 @@ public class EHCacheInstrumentationTest extends PowerMockTestCase {
     int rnd = ThreadLocalRandom.current().nextInt(0, presetElements.size());
     String key = presetElementKeys.get(rnd);
 
-    String metricName = "ehcache.ops[op:put,cache:"+cacheName + "]";
+    String metricName = "ehcache.ops[op:put,cache:" + cacheName + "]";
     assertEquals(0, metricsRegistry.getStartCount(metricName));
     assertEquals(0, metricsRegistry.getStopCount(metricName));
 

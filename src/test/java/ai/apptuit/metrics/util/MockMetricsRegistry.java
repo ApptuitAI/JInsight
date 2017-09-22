@@ -20,6 +20,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
+import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
@@ -31,12 +32,8 @@ import org.powermock.api.mockito.PowerMockito;
  * @author Rajiv Shivane
  */
 public class MockMetricsRegistry {
+
   private static final MockMetricsRegistry instance = new MockMetricsRegistry();
-
-  private Map<String, Integer> metricNameVsNumberOfStartCalls = new HashMap<>();
-  private Map<String, Integer> metricNameVsNumberOfStopCalls = new HashMap<>();
-
-
 
   static {
     try {
@@ -44,6 +41,12 @@ public class MockMetricsRegistry {
     } catch (Exception e) {
       throw new ExceptionInInitializerError(e);
     }
+  }
+
+  private Map<String, Integer> metricNameVsNumberOfStartCalls = new HashMap<>();
+  private Map<String, Integer> metricNameVsNumberOfStopCalls = new HashMap<>();
+
+  private MockMetricsRegistry() {
   }
 
   public static void initialize() throws Exception {
@@ -54,32 +57,31 @@ public class MockMetricsRegistry {
       String metricName = (String) invocationOnMock.getArguments()[0];
       Timer mock = mock(Timer.class);
       when(mock.time()).then(invocationOnMock1 -> {
-        instance.metricNameVsNumberOfStartCalls.put(metricName, instance.getStartCount(metricName)+1);
+        instance.metricNameVsNumberOfStartCalls
+            .put(metricName, instance.getStartCount(metricName) + 1);
         Context ctxt = mock(Context.class);
         when(ctxt.stop()).then(invocationOnMock2 -> {
-          instance.metricNameVsNumberOfStopCalls.put(metricName, instance.getStopCount(metricName)+1);
+          instance.metricNameVsNumberOfStopCalls
+              .put(metricName, instance.getStopCount(metricName) + 1);
           return 0;
         });
         return ctxt;
       });
       return mock;
     });
-  }
-
-  private MockMetricsRegistry() {
+    RegistryService.initialize("MOCK_TOKEN");
   }
 
   public static MockMetricsRegistry getInstance() {
     return instance;
   }
 
-  public int getStartCount(String metricName){
+  public int getStartCount(String metricName) {
     return metricNameVsNumberOfStartCalls.getOrDefault(metricName, 0);
   }
-  public int getStopCount(String metricName){
+
+  public int getStopCount(String metricName) {
     return metricNameVsNumberOfStopCalls.getOrDefault(metricName, 0);
   }
-
-
 
 }

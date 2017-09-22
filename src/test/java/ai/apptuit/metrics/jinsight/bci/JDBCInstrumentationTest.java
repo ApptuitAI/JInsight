@@ -17,8 +17,8 @@
 package ai.apptuit.metrics.jinsight.bci;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
+import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.util.MockMetricsRegistry;
 import java.io.StringReader;
 import java.sql.Connection;
@@ -46,7 +46,7 @@ import org.powermock.modules.testng.PowerMockTestCase;
 /**
  * @author Rajiv Shivane
  */
-@PrepareForTest({RuleHelper.class})
+@PrepareForTest({RegistryService.class})
 @PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*"})
 @RunWith(PowerMockRunner.class)
 public class JDBCInstrumentationTest extends PowerMockTestCase {
@@ -79,31 +79,41 @@ public class JDBCInstrumentationTest extends PowerMockTestCase {
 
   @Test
   public void testGetConnection() throws Exception {
-    int expectedStartCount = metricsRegistry.getStartCount(JdbcRuleHelper.GET_CONNECTION_NAME.toString())+1;
-    int expectedStopCount = metricsRegistry.getStopCount(JdbcRuleHelper.GET_CONNECTION_NAME.toString())+1;
+    int expectedStartCount =
+        metricsRegistry.getStartCount(JdbcRuleHelper.GET_CONNECTION_NAME.toString()) + 1;
+    int expectedStopCount =
+        metricsRegistry.getStopCount(JdbcRuleHelper.GET_CONNECTION_NAME.toString()) + 1;
 
     datasource.getConnection();
 
-    assertEquals(expectedStartCount, metricsRegistry.getStartCount(JdbcRuleHelper.GET_CONNECTION_NAME.toString()));
-    assertEquals(expectedStopCount, metricsRegistry.getStopCount(JdbcRuleHelper.GET_CONNECTION_NAME.toString()));
+    assertEquals(expectedStartCount,
+        metricsRegistry.getStartCount(JdbcRuleHelper.GET_CONNECTION_NAME.toString()));
+    assertEquals(expectedStopCount,
+        metricsRegistry.getStopCount(JdbcRuleHelper.GET_CONNECTION_NAME.toString()));
   }
 
   @Test
   public void testPrepareStatement() throws Exception {
-    int expectedStartCount = metricsRegistry.getStartCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME.toString())+1;
-    int expectedStopCount = metricsRegistry.getStopCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME.toString())+1;
+    int expectedStartCount =
+        metricsRegistry.getStartCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME.toString()) + 1;
+    int expectedStopCount =
+        metricsRegistry.getStopCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME.toString()) + 1;
 
     Connection connection = datasource.getConnection();
     connection.prepareStatement(SELECT_QUERY);
 
-    assertEquals(expectedStartCount, metricsRegistry.getStartCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME.toString()));
-    assertEquals(expectedStopCount, metricsRegistry.getStopCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME.toString()));
+    assertEquals(expectedStartCount,
+        metricsRegistry.getStartCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME.toString()));
+    assertEquals(expectedStopCount,
+        metricsRegistry.getStopCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME.toString()));
   }
 
   @Test
   public void testPreparedStatementExecute() throws Exception {
-    int expectedStartCount = metricsRegistry.getStartCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME.toString())+1;
-    int expectedStopCount = metricsRegistry.getStopCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME.toString())+1;
+    int expectedStartCount =
+        metricsRegistry.getStartCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME.toString()) + 1;
+    int expectedStopCount =
+        metricsRegistry.getStopCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME.toString()) + 1;
 
     Connection connection = datasource.getConnection();
     PreparedStatement preparedStatement = connection.prepareStatement(SELECT_QUERY);
@@ -111,7 +121,6 @@ public class JDBCInstrumentationTest extends PowerMockTestCase {
     int rnd = ThreadLocalRandom.current().nextInt(0, presetElements.size());
     String key = presetElementKeys.get(rnd);
     Integer value = presetElements.get(key);
-
 
     preparedStatement.setString(1, key);
 
@@ -121,7 +130,9 @@ public class JDBCInstrumentationTest extends PowerMockTestCase {
     resultSet.next();
     assertEquals(value.intValue(), resultSet.getInt(2));
 
-    assertEquals(expectedStartCount, metricsRegistry.getStartCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME.toString()));
-    assertEquals(expectedStopCount, metricsRegistry.getStopCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME.toString()));
+    assertEquals(expectedStartCount,
+        metricsRegistry.getStartCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME.toString()));
+    assertEquals(expectedStopCount,
+        metricsRegistry.getStopCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME.toString()));
   }
 }
