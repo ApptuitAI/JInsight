@@ -50,7 +50,7 @@ import org.powermock.modules.testng.PowerMockTestCase;
  * @author Rajiv Shivane
  */
 @PrepareForTest({RuleHelper.class})
-@PowerMockIgnore({"org.jboss.byteman.*",
+@PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*",
     "com.sun.*", "org.xml.*", "javax.management.*", "javax.xml.*"})
 @RunWith(PowerMockRunner.class)
 public class TomcatFilterInstrumentationTest extends PowerMockTestCase {
