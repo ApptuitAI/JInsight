@@ -63,6 +63,7 @@ public class ApptuitReporter extends ScheduledReporter {
 
     this.buildReportTimer = registry.timer("apptuit.reporter.report.build");
     this.sendReportTimer = registry.timer("apptuit.reporter.report.send");
+
     switch (REPORTING_MODE) {
       case NO_OP:
         this.dataPointsReporter = dataPoints -> {
@@ -75,9 +76,8 @@ public class ApptuitReporter extends ScheduledReporter {
         break;
       case API_PUT:
       default:
-        this.dataPointsReporter = dataPoints -> {
-          new ApptuitPutClient(key, globalTags).put(dataPoints);
-        };
+        ApptuitPutClient putClient = new ApptuitPutClient(key, globalTags);
+        this.dataPointsReporter = putClient::put;
     }
   }
 
@@ -229,6 +229,7 @@ public class ApptuitReporter extends ScheduledReporter {
   }
 
   public interface DataPointsReporter {
+
     void put(Collection<DataPoint> dataPoints);
   }
 }
