@@ -292,11 +292,8 @@ limitations under the License.
           </dependency>
         </dependencies>
         <configuration>
-          <systemPropertyVariables>
-            <jacoco-agent.destfile>${project.build.directory}/jacoco.exec</jacoco-agent.destfile>
-          </systemPropertyVariables>
           <argLine>
-            ${jvm.debug.options} -javaagent:${project.build.directory}/${project.build.finalName}.jar ${byteman.debug.options}
+            ${jvm.debug.options} -javaagent:${project.build.directory}/${project.build.finalName}.jar -Djacoco-agent.destfile=${project.build.directory}/jacoco.exec ${byteman.debug.options}
           </argLine>
         </configuration>
       </plugin>
@@ -399,11 +396,6 @@ limitations under the License.
             <goals>
               <goal>instrument</goal>
             </goals>
-            <configuration>
-              <excludes>
-                <exclude>ai/apptuit/metrics/jinsight/Agent.class</exclude>
-              </excludes>
-            </configuration>
           </execution>
           <execution>
             <id>default-restore-instrumented-classes</id>
