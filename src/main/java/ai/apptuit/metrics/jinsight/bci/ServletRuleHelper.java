@@ -87,9 +87,9 @@ public class ServletRuleHelper extends RuleHelper {
         serverName = serverInfo.substring(0, slash);
       }
 
-      if (serverName.toLowerCase().indexOf("tomcat") > 1) {
+      if (serverName.toLowerCase().contains("tomcat")) {
         return TOMCAT_METRIC_PREFIX;
-      } else if (serverName.toLowerCase().indexOf("jetty") > 1) {
+      } else if (serverName.toLowerCase().contains("jetty")) {
         return JETTY_METRIC_PREFIX;
       } else {
         return serverName;
