@@ -25,9 +25,12 @@ import org.jboss.byteman.rule.Rule;
 public class JdbcRuleHelper extends RuleHelper {
 
   public static final TagEncodedMetricName ROOT_NAME = TagEncodedMetricName.decode("jdbc");
-  public static final TagEncodedMetricName GET_CONNECTION_NAME = ROOT_NAME.submetric("ds.getConnection");
-  public static final TagEncodedMetricName PREPARE_STATEMENT_NAME = ROOT_NAME.submetric("conn.prepareStatement");
-  public static final TagEncodedMetricName EXECUTE_STATEMENT_NAME = ROOT_NAME.submetric("ps.execute");
+  public static final TagEncodedMetricName GET_CONNECTION_NAME = ROOT_NAME
+      .submetric("ds.getConnection");
+  public static final TagEncodedMetricName PREPARE_STATEMENT_NAME = ROOT_NAME
+      .submetric("conn.prepareStatement");
+  public static final TagEncodedMetricName EXECUTE_STATEMENT_NAME = ROOT_NAME
+      .submetric("ps.execute");
 
   public JdbcRuleHelper(Rule rule) {
     super(rule);

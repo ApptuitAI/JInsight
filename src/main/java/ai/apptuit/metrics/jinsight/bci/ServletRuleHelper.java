@@ -73,7 +73,7 @@ public class ServletRuleHelper extends RuleHelper {
         contextPathTag = ROOT_CONTEXT_PATH;
       }
       rootMetric = TagEncodedMetricName.decode(getServerName(context.getServerInfo()))
-          .submetric("requests").submetric(null, "context", contextPathTag);
+          .submetric("requests").withTags("context", contextPathTag);
     }
 
     private String getServerName(String serverInfo) {

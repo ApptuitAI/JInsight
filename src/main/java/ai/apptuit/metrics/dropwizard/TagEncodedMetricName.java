@@ -90,18 +90,11 @@ public class TagEncodedMetricName {
   }
 
   public TagEncodedMetricName submetric(String suffix) {
-    return submetric(suffix, null);
+    return new TagEncodedMetricName(MetricRegistry.name(metricName, suffix), null);
   }
 
 
   public TagEncodedMetricName withTags(String... additionalTags) {
-    return submetric(null, additionalTags);
-  }
-
-  /**
-   * @deprecated Use {@link #submetric(String)} or {@link #withTags(String...)} or chain them
-   */
-  public TagEncodedMetricName submetric(String suffix, String... additionalTags) {
     Map<String, String> t = tags;
     if (additionalTags != null && additionalTags.length > 0) {
       if (additionalTags.length % 2 != 0) {
@@ -112,8 +105,7 @@ public class TagEncodedMetricName {
         t.put(additionalTags[i], additionalTags[i + 1]);
       }
     }
-    String name = MetricRegistry.name(metricName, suffix);
-    return new TagEncodedMetricName(name, t);
+    return new TagEncodedMetricName(metricName, t);
   }
 
   public String toString() {

@@ -37,7 +37,7 @@ public class DataPointTest {
   @Before
   public void setUp() throws Exception {
     tagEncodedMetricName = TagEncodedMetricName.decode("proc.stat.cpu")
-        .submetric(null, "host", "myhost", "type", "idle");
+        .withTags("host", "myhost", "type", "idle");
   }
 
   @Test

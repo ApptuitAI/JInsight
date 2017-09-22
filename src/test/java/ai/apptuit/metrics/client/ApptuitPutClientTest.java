@@ -52,7 +52,7 @@ public class ApptuitPutClientTest {
   @Before
   public void setUp() throws Exception {
     tagEncodedMetricName = TagEncodedMetricName.decode("proc.stat.cpu")
-        .submetric(null, "type", "idle");
+        .withTags("type", "idle");
 
     globalTags = new HashMap<>();
     globalTags.put("host", "rajiv");

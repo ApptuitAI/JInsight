@@ -40,7 +40,7 @@ AT ENTRY
 BIND
   tags = new String[]{"op", "get", "cache", $this.getName()}
 IF TRUE
-DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
 ENDRULE
 
 # TODO Handle AT EXCEPTION EXIT
@@ -52,7 +52,7 @@ AT EXIT
 BIND
   tags = new String[]{"op", "get", "cache", $this.getName()}
 IF TRUE
-DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
 ENDRULE
 
 RULE ehcache put entry
@@ -63,7 +63,7 @@ AT ENTRY
 BIND
   tags = new String[]{"op", "put", "cache", $this.getName()}
 IF TRUE
-DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
 ENDRULE
 
 # TODO Handle AT EXCEPTION EXIT
@@ -75,7 +75,7 @@ AT EXIT
 BIND
   tags = new String[]{"op", "put", "cache", $this.getName()}
 IF TRUE
-DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
 ENDRULE
 
 RULE ehcache putIfAbsent entry
@@ -86,7 +86,7 @@ AT ENTRY
 BIND
   tags = new String[]{"op", "put", "cache", $this.getName()}
 IF TRUE
-DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
 ENDRULE
 
 # TODO Handle AT EXCEPTION EXIT
@@ -98,5 +98,5 @@ AT EXIT
 BIND
   tags = new String[]{"op", "put", "cache", $this.getName()}
 IF TRUE
-DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops", tags))
+DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
 ENDRULE

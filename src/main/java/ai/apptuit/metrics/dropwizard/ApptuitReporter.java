@@ -173,26 +173,26 @@ public class ApptuitReporter extends ScheduledReporter {
       addDataPoint(metric.submetric("duration.max"), convertDuration(snapshot.getMax()));
       addDataPoint(metric.submetric("duration.mean"), convertDuration(snapshot.getMean()));
       addDataPoint(metric.submetric("duration.stddev"), convertDuration(snapshot.getStdDev()));
-      addDataPoint(metric.submetric("duration", "quantile", "p50"),
+      addDataPoint(metric.submetric("duration").withTags("quantile", "p50"),
           convertDuration(snapshot.getMedian()));
-      addDataPoint(metric.submetric("duration", "quantile", "p75"),
+      addDataPoint(metric.submetric("duration").withTags("quantile", "p75"),
           convertDuration(snapshot.get75thPercentile()));
-      addDataPoint(metric.submetric("duration", "quantile", "p95"),
+      addDataPoint(metric.submetric("duration").withTags("quantile", "p95"),
           convertDuration(snapshot.get95thPercentile()));
-      addDataPoint(metric.submetric("duration", "quantile", "p98"),
+      addDataPoint(metric.submetric("duration").withTags("quantile", "p98"),
           convertDuration(snapshot.get98thPercentile()));
-      addDataPoint(metric.submetric("duration", "quantile", "p99"),
+      addDataPoint(metric.submetric("duration").withTags("quantile", "p99"),
           convertDuration(snapshot.get99thPercentile()));
-      addDataPoint(metric.submetric("duration", "quantile", "p999"),
+      addDataPoint(metric.submetric("duration").withTags("quantile", "p999"),
           convertDuration(snapshot.get999thPercentile()));
     }
 
     private void printMetered(TagEncodedMetricName metric, Metered meter) {
-      addDataPoint(metric.submetric("rate", "window", "1m"),
+      addDataPoint(metric.submetric("rate").withTags("window", "1m"),
           convertRate(meter.getOneMinuteRate()));
-      addDataPoint(metric.submetric("rate", "window", "5m"),
+      addDataPoint(metric.submetric("rate").withTags("window", "5m"),
           convertRate(meter.getFiveMinuteRate()));
-      addDataPoint(metric.submetric("rate", "window", "15m"),
+      addDataPoint(metric.submetric("rate").withTags("window", "15m"),
           convertRate(meter.getFifteenMinuteRate()));
       //addDataPoint(rootMetric.submetric("rate", "window", "all"), epoch, meter.getMeanRate());
     }

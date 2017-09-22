@@ -20,6 +20,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
+import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
@@ -57,12 +58,10 @@ public class MockMetricsRegistry {
       String metricName = (String) invocationOnMock.getArguments()[0];
       Timer mock = mock(Timer.class);
       when(mock.time()).then(invocationOnMock1 -> {
-        instance.metricNameVsNumberOfStartCalls
-            .put(metricName, instance.getStartCount(metricName) + 1);
+        instance.incrementStartCount(metricName);
         Context ctxt = mock(Context.class);
         when(ctxt.stop()).then(invocationOnMock2 -> {
-          instance.metricNameVsNumberOfStopCalls
-              .put(metricName, instance.getStopCount(metricName) + 1);
+          instance.incrementStopCount(metricName);
           return 0;
         });
         return ctxt;
@@ -76,12 +75,23 @@ public class MockMetricsRegistry {
     return instance;
   }
 
-  public int getStartCount(String metricName) {
-    return metricNameVsNumberOfStartCalls.getOrDefault(metricName, 0);
+  public int getStartCount(TagEncodedMetricName metricName) {
+    return metricNameVsNumberOfStartCalls.getOrDefault(metricName.toString(), 0);
   }
 
-  public int getStopCount(String metricName) {
-    return metricNameVsNumberOfStopCalls.getOrDefault(metricName, 0);
+  public int getStopCount(TagEncodedMetricName metricName) {
+    return metricNameVsNumberOfStopCalls.getOrDefault(metricName.toString(), 0);
+  }
+
+
+  private int incrementStartCount(String metricName) {
+    return metricNameVsNumberOfStartCalls
+        .compute(metricName, (metric, count) -> count == null ? 1 : count + 1);
+  }
+
+  private int incrementStopCount(String metricName) {
+    return metricNameVsNumberOfStopCalls
+        .compute(metricName, (metric, count) -> count == null ? 1 : count + 1);
   }
 
 }

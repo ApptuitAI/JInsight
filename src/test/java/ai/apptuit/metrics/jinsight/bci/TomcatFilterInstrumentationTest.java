@@ -97,8 +97,8 @@ public class TomcatFilterInstrumentationTest extends PowerMockTestCase {
 
   @Test
   public void testPingPong() throws IOException {
-    String metricName = TagEncodedMetricName.decode(TOMCAT_METRIC_PREFIX)
-        .submetric("requests", "context", ROOT_CONTEXT_PATH).toString();
+    TagEncodedMetricName metricName = TagEncodedMetricName.decode(TOMCAT_METRIC_PREFIX)
+        .submetric("requests").withTags("context", ROOT_CONTEXT_PATH);
     int expectStartCount = metricsRegistry.getStartCount(metricName) + 1;
     int expectedStopCount = metricsRegistry.getStopCount(metricName) + 1;
 
