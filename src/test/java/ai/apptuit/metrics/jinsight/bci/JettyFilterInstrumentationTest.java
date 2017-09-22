@@ -14,28 +14,26 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.bci;
+package ai.apptuit.metrics.jinsight.bci;
 
-import static ai.apptuit.metrics.bci.ServletRuleHelper.ROOT_CONTEXT_PATH;
-import static ai.apptuit.metrics.bci.ServletRuleHelper.TOMCAT_METRIC_PREFIX;
+import static ai.apptuit.metrics.jinsight.bci.ServletRuleHelper.ROOT_CONTEXT_PATH;
+import static ai.apptuit.metrics.jinsight.bci.ServletRuleHelper.JETTY_METRIC_PREFIX;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.util.MockMetricsRegistry;
-import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Scanner;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.catalina.Context;
-import org.apache.catalina.startup.Tomcat;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,53 +48,45 @@ import org.powermock.modules.testng.PowerMockTestCase;
  * @author Rajiv Shivane
  */
 @PrepareForTest({RuleHelper.class})
-@PowerMockIgnore({"org.jboss.byteman.*",
-    "com.sun.*", "org.xml.*", "javax.management.*", "javax.xml.*"})
+@PowerMockIgnore({"org.jboss.byteman.*"})
 @RunWith(PowerMockRunner.class)
-public class TomcatFilterInstrumentationTest extends PowerMockTestCase {
+public class JettyFilterInstrumentationTest extends PowerMockTestCase {
 
-  private static final int SERVER_PORT = 9898;
+  private int serverPort;
+
+  private Server jetty;
 
   private MockMetricsRegistry metricsRegistry;
-  private Tomcat tomcatServer;
 
   @Before
   public void setup() throws Exception {
     metricsRegistry = MockMetricsRegistry.getInstance();
 
-    System.out.println("Tomcat [Configuring]");
-    tomcatServer = new Tomcat();
-    tomcatServer.setPort(SERVER_PORT);
+    System.out.println("Jetty [Configuring]");
 
-    Path tempDirectory = Files.createTempDirectory(this.getClass().getSimpleName());
-    File baseDir = new File(tempDirectory.toFile(), "tomcat");
-    tomcatServer.setBaseDir(baseDir.getAbsolutePath());
+    ServletContextHandler servletContext = new ServletContextHandler();
+    servletContext.setContextPath("/");
+    servletContext.addServlet(PingPongServlet.class, PingPongServlet.PATH);
 
-    File applicationDir = new File(baseDir + "/webapps", "/ROOT");
-    if (!applicationDir.exists()) {
-      applicationDir.mkdirs();
-    }
-
-    Context appContext = tomcatServer.addWebapp("", applicationDir.getAbsolutePath());
-    PingPongServlet servlet = new PingPongServlet();
-    Tomcat.addServlet(appContext, servlet.getClass().getSimpleName(), servlet);
-    appContext.addServletMappingDecoded(PingPongServlet.PATH, servlet.getClass().getSimpleName());
-
-    System.out.println("Tomcat [Starting]");
-    tomcatServer.start();
-    System.out.println("Tomcat [Started]");
+    jetty = new Server(0);
+    jetty.setHandler(servletContext);
+    System.out.println("Jetty [Starting]");
+    jetty.start();
+    System.out.println("Jetty [Started]");
+    serverPort = ((ServerConnector) jetty.getConnectors()[0]).getLocalPort();
   }
 
   @After
   public void destroy() throws Exception {
-    System.out.println("Tomcat [Stopping]");
-    tomcatServer.stop();
-    System.out.println("Tomcat [Stopped]");
+    System.out.println("Jetty [Stopping]");
+    jetty.stop();
+    jetty.join();
+    System.out.println("Jetty [Stopped]");
   }
 
   @Test
   public void testPingPong() throws IOException {
-    String metricName = TagEncodedMetricName.decode(TOMCAT_METRIC_PREFIX)
+    String metricName = TagEncodedMetricName.decode(JETTY_METRIC_PREFIX)
         .submetric("requests", "context", ROOT_CONTEXT_PATH).toString();
     int expectStartCount = metricsRegistry.getStartCount(metricName) + 1;
     int expectedStopCount = metricsRegistry.getStopCount(metricName) + 1;
@@ -114,13 +104,13 @@ public class TomcatFilterInstrumentationTest extends PowerMockTestCase {
   }
 
   private URL pathToURL(String path) throws MalformedURLException {
-    return new URL("http://localhost:" + SERVER_PORT + path);
+    return new URL("http://localhost:" + serverPort + path);
   }
 
-  private static class PingPongServlet extends HttpServlet {
+  public static class PingPongServlet extends HttpServlet {
 
-    static final String PONG = "pong";
-    static final String PATH = "/ping";
+    public static final String PONG = "pong";
+    public static final String PATH = "/ping";
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)

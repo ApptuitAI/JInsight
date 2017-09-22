@@ -17,7 +17,7 @@
 RULE DataSource getConnection entry
 INTERFACE javax.sql.DataSource
 METHOD getConnection()
-HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+HELPER ai.apptuit.metrics.jinsight.bci.JdbcRuleHelper
 AT ENTRY
 #TODO add datasource name as a tag
 #BIND
@@ -30,7 +30,7 @@ ENDRULE
 RULE DataSource getConnection exit
 INTERFACE javax.sql.DataSource
 METHOD getConnection()
-HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+HELPER ai.apptuit.metrics.jinsight.bci.JdbcRuleHelper
 AT EXIT
 #TODO add datasource name as a tag
 #BIND
@@ -43,7 +43,7 @@ ENDRULE
 RULE Connection prepareStatement entry
 INTERFACE java.sql.Connection
 METHOD prepareStatement
-HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+HELPER ai.apptuit.metrics.jinsight.bci.JdbcRuleHelper
 AT ENTRY
 #TODO add datasource name as a tag
 #BIND
@@ -56,7 +56,7 @@ ENDRULE
 RULE Connection prepareStatement exit
 INTERFACE java.sql.Connection
 METHOD prepareStatement
-HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+HELPER ai.apptuit.metrics.jinsight.bci.JdbcRuleHelper
 AT EXIT
 #TODO add datasource name as a tag
 #BIND
@@ -68,7 +68,7 @@ ENDRULE
 RULE PreparedStatement execute entry
 INTERFACE java.sql.PreparedStatement
 METHOD execute()
-HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+HELPER ai.apptuit.metrics.jinsight.bci.JdbcRuleHelper
 AT ENTRY
 #TODO add datasource name & execution type (execute/executeUpdate/executeBath) as tags
 #BIND
@@ -81,7 +81,7 @@ ENDRULE
 RULE PreparedStatement execute exit
 INTERFACE java.sql.PreparedStatement
 METHOD execute()
-HELPER ai.apptuit.metrics.bci.JdbcRuleHelper
+HELPER ai.apptuit.metrics.jinsight.bci.JdbcRuleHelper
 AT EXIT
 #TODO add datasource name & execution type (execute/executeUpdate/executeBath) as tags
 #BIND

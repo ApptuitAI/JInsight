@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.bci;
+package ai.apptuit.metrics.jinsight.bci;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import com.codahale.metrics.Gauge;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.Status;
-import net.sf.ehcache.extension.CacheExtension;
 import org.jboss.byteman.rule.Rule;
 
 /**

@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.bci;
+package ai.apptuit.metrics.jinsight.bci;
 
 import static org.junit.Assert.assertEquals;
 
-import ai.apptuit.metrics.bci.RuleHelper;
 import ai.apptuit.metrics.util.MockMetricsRegistry;
 import java.util.ArrayList;
 import java.util.List;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.bci;
+package ai.apptuit.metrics.jinsight.bci;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;

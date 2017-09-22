@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.bci;
+package ai.apptuit.metrics.jinsight.bci;
 
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
