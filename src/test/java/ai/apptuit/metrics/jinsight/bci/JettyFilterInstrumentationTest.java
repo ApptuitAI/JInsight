@@ -87,8 +87,8 @@ public class JettyFilterInstrumentationTest extends PowerMockTestCase {
 
   @Test
   public void testPingPong() throws IOException {
-    TagEncodedMetricName metricName = TagEncodedMetricName.decode(JETTY_METRIC_PREFIX).submetric("requests")
-        .withTags("context", ROOT_CONTEXT_PATH);
+    TagEncodedMetricName metricName = TagEncodedMetricName.decode(JETTY_METRIC_PREFIX)
+        .submetric("requests").withTags("context", ROOT_CONTEXT_PATH, "method", "GET");
     int expectStartCount = metricsRegistry.getStartCount(metricName) + 1;
     int expectedStopCount = metricsRegistry.getStopCount(metricName) + 1;
 

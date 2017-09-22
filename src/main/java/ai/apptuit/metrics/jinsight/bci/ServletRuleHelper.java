@@ -31,6 +31,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import org.jboss.byteman.rule.Rule;
 
 /**
@@ -98,7 +99,12 @@ public class ServletRuleHelper extends RuleHelper {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
         FilterChain filterChain) throws IOException, ServletException {
+
       TagEncodedMetricName metricName = rootMetric;
+      if (servletRequest instanceof HttpServletRequest) {
+        metricName = metricName
+            .withTags("method", ((HttpServletRequest) servletRequest).getMethod());
+      }
       Timer timer = RegistryService.getMetricRegistry().timer(metricName.toString());
       Context context = timer.time();
       try {
