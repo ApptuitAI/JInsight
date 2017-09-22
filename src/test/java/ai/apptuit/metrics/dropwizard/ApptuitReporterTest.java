@@ -28,6 +28,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -42,12 +44,16 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 public class ApptuitReporterTest {
 
-  @Test
-  public void testReporter() throws Exception {
+  private MockApptuitPutClient putClient;
+  private MetricRegistry registry;
+  private int period = 5;
+  private ScheduledReporter reporter;
 
-    MockApptuitPutClient putClient = MockApptuitPutClient.getInstance();
+  @Before
+  public void setUp() throws Exception {
+    putClient = MockApptuitPutClient.getInstance();
 
-    MetricRegistry registry = new MetricRegistry();
+    registry = new MetricRegistry();
 
     ApptuitReporterFactory factory = new ApptuitReporterFactory();
     factory.setRateUnit(TimeUnit.SECONDS);
@@ -55,9 +61,17 @@ public class ApptuitReporterTest {
     factory.addGlobalTag("globalTag1", "globalValue1");
     factory.setApiKey("dummy");
 
-    ScheduledReporter reporter = factory.build(registry);
-    int period = 5;
+    reporter = factory.build(registry);
     reporter.start(period, TimeUnit.SECONDS);
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    reporter.close();
+  }
+
+  @Test
+  public void testReporter() throws Exception {
 
     UUID uuid = UUID.randomUUID();
     String metricName = "ApptuitReporterTest.testReporter." + uuid.toString();
