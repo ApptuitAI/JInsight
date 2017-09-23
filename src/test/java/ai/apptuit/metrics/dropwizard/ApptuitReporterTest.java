@@ -40,7 +40,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
  * @author Rajiv Shivane
  */
 @PrepareForTest({ApptuitReporter.class})
-@PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*"})
+@PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*",
+    "com.sun.management.*", "javax.management.*"})
 @RunWith(PowerMockRunner.class)
 public class ApptuitReporterTest {
 

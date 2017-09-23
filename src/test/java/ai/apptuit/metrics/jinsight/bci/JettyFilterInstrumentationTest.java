@@ -49,7 +49,8 @@ import org.powermock.modules.testng.PowerMockTestCase;
  * @author Rajiv Shivane
  */
 @PrepareForTest({RegistryService.class})
-@PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*"})
+@PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*",
+    "com.sun.management.*", "javax.management.*"})
 @RunWith(PowerMockRunner.class)
 public class JettyFilterInstrumentationTest extends PowerMockTestCase {
 

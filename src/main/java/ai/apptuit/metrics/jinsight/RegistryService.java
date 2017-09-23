@@ -17,6 +17,7 @@
 package ai.apptuit.metrics.jinsight;
 
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
+import ai.apptuit.metrics.jinsight.core.JvmMetricsMonitor;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import java.net.InetAddress;
@@ -37,6 +38,11 @@ public class RegistryService {
 
   private RegistryService(MetricRegistry registry) {
     this.registry = registry;
+    new JvmMetricsMonitor(registry);
+  }
+
+  public static MetricRegistry getMetricRegistry() {
+    return getRegistryService().registry;
   }
 
   public static RegistryService getRegistryService() {
@@ -72,19 +78,7 @@ public class RegistryService {
     ScheduledReporter reporter = factory.build(metricRegistry);
     reporter.start(5, TimeUnit.SECONDS);
 
-    /*
-    final ConsoleReporter consoleReporter = ConsoleReporter.forRegistry(registry)
-        .convertRatesTo(TimeUnit.SECONDS)
-        .convertDurationsTo(TimeUnit.MILLISECONDS)
-        .build();
-    consoleReporter.start(5, TimeUnit.SECONDS);
-    */
-
     singleton = new RegistryService(metricRegistry);
-  }
-
-  public static MetricRegistry getMetricRegistry() {
-    return getRegistryService().registry;
   }
 
 }
