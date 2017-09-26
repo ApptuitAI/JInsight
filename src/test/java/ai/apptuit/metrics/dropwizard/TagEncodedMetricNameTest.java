@@ -123,4 +123,11 @@ public class TagEncodedMetricNameTest {
     assertFalse(encodedMetricName.equals(TagEncodedMetricName.decode("asdf.pqr")));
     assertFalse(encodedMetricName.equals(TagEncodedMetricName.decode("asdf[k:v]")));
   }
+
+
+  @Test
+  public void testSubmetricForMetricWithTags() throws Exception {
+    assertEquals(encodedMetricName.withTags("k1", "v1").submetric("pqr"),
+        encodedMetricName.submetric("pqr").withTags("k1", "v1"));
+  }
 }

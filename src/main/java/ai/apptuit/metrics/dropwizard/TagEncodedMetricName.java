@@ -90,7 +90,7 @@ public class TagEncodedMetricName {
   }
 
   public TagEncodedMetricName submetric(String suffix) {
-    return new TagEncodedMetricName(MetricRegistry.name(metricName, suffix), null);
+    return new TagEncodedMetricName(MetricRegistry.name(metricName, suffix), tags);
   }
 
 
