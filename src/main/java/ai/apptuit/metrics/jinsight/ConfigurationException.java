@@ -16,22 +16,12 @@
 
 package ai.apptuit.metrics.jinsight;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
 /**
  * This exception is thrown when there is a configuration problem.
  *
  * @author Rajiv Shivane
  */
-public class ConfigurationException extends Exception{
+public class ConfigurationException extends Exception {
 
   public ConfigurationException(String message) {
     super(message);

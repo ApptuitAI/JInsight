@@ -18,8 +18,10 @@ package ai.apptuit.metrics.jinsight.bci;
 
 import static org.junit.Assert.assertEquals;
 
+import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
-import ai.apptuit.metrics.jinsight.MockMetricsRegistry;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,33 +38,25 @@ import org.h2.jdbcx.JdbcConnectionPool;
 import org.h2.tools.RunScript;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.modules.testng.PowerMockTestCase;
 
 
 /**
  * @author Rajiv Shivane
  */
-@PrepareForTest({RegistryService.class})
-@PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*",
-    "com.sun.management.*", "javax.management.*"})
-@RunWith(PowerMockRunner.class)
-public class JDBCInstrumentationTest extends PowerMockTestCase {
+public class JDBCInstrumentationTest {
 
   private static final String CREATE_TABLE_STRING = "CREATE TABLE TEST(ID  VARCHAR(255) PRIMARY KEY, VALUE INT);";
   private static final String SELECT_QUERY = "SELECT * FROM TEST where ID=?";
 
-  private MockMetricsRegistry metricsRegistry;
+  private MetricRegistry registry;
   private Map<String, Integer> presetElements;
   private List<String> presetElementKeys;
   private DataSource datasource;
 
   @Before
   public void setUp() throws Exception {
-    metricsRegistry = MockMetricsRegistry.getInstance();
+    registry = RegistryService.getMetricRegistry();
+
     presetElements = IntStream.range(0, 1000).boxed()
         .collect(Collectors.toMap(i -> UUID.randomUUID().toString(), i -> i));
     presetElementKeys = new ArrayList<>(presetElements.keySet());
@@ -80,41 +74,27 @@ public class JDBCInstrumentationTest extends PowerMockTestCase {
 
   @Test
   public void testGetConnection() throws Exception {
-    int expectedStartCount =
-        metricsRegistry.getStartCount(JdbcRuleHelper.GET_CONNECTION_NAME) + 1;
-    int expectedStopCount =
-        metricsRegistry.getStopCount(JdbcRuleHelper.GET_CONNECTION_NAME) + 1;
+    long expectedCount = getTimerCount(JdbcRuleHelper.GET_CONNECTION_NAME) + 1;
 
     datasource.getConnection();
 
-    assertEquals(expectedStartCount,
-        metricsRegistry.getStartCount(JdbcRuleHelper.GET_CONNECTION_NAME));
-    assertEquals(expectedStopCount,
-        metricsRegistry.getStopCount(JdbcRuleHelper.GET_CONNECTION_NAME));
+    assertEquals(expectedCount, getTimerCount(JdbcRuleHelper.GET_CONNECTION_NAME));
   }
 
   @Test
   public void testPrepareStatement() throws Exception {
-    int expectedStartCount =
-        metricsRegistry.getStartCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME) + 1;
-    int expectedStopCount =
-        metricsRegistry.getStopCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME) + 1;
+    long expectedCount = getTimerCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME) + 1;
 
     Connection connection = datasource.getConnection();
     connection.prepareStatement(SELECT_QUERY);
 
-    assertEquals(expectedStartCount,
-        metricsRegistry.getStartCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME));
-    assertEquals(expectedStopCount,
-        metricsRegistry.getStopCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME));
+    assertEquals(expectedCount,
+        getTimerCount(JdbcRuleHelper.PREPARE_STATEMENT_NAME));
   }
 
   @Test
   public void testPreparedStatementExecute() throws Exception {
-    int expectedStartCount =
-        metricsRegistry.getStartCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME) + 1;
-    int expectedStopCount =
-        metricsRegistry.getStopCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME) + 1;
+    long expectedCount = getTimerCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME) + 1;
 
     Connection connection = datasource.getConnection();
     PreparedStatement preparedStatement = connection.prepareStatement(SELECT_QUERY);
@@ -131,9 +111,12 @@ public class JDBCInstrumentationTest extends PowerMockTestCase {
     resultSet.next();
     assertEquals(value.intValue(), resultSet.getInt(2));
 
-    assertEquals(expectedStartCount,
-        metricsRegistry.getStartCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME));
-    assertEquals(expectedStopCount,
-        metricsRegistry.getStopCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME));
+    assertEquals(expectedCount,
+        getTimerCount(JdbcRuleHelper.EXECUTE_STATEMENT_NAME));
+  }
+
+  private long getTimerCount(TagEncodedMetricName name) {
+    Timer timer = registry.getTimers().get(name.toString());
+    return timer != null ? timer.getCount() : 0;
   }
 }

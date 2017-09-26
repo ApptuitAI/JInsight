@@ -22,8 +22,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -36,38 +34,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class RegistryService {
 
-  private static RegistryService singleton = null;
+  private static final RegistryService singleton = new RegistryService();
   private MetricRegistry registry = null;
 
-  private RegistryService(MetricRegistry registry) {
-    this.registry = registry;
-    new JvmMetricsMonitor(registry);
-  }
-
-  public static MetricRegistry getMetricRegistry() {
-    return getRegistryService().registry;
-  }
-
-  public static RegistryService getRegistryService() {
-    if (singleton != null) {
-      return singleton;
-    }
-
-    synchronized (RegistryService.class) {
-      if (singleton != null) {
-        return singleton;
-      }
-      ConfigService configService = ConfigService.getInstance();
-      initialize(configService);
-    }
-    return singleton;
-  }
-
-  static void initialize(ConfigService configService) {
-    initialize(configService.getApiToken(), configService.getGlobalTags());
-  }
-
-  private static void initialize(String apiToken, Map<String, String> globalTags) {
+  private RegistryService() {
+    this.registry = new MetricRegistry();
 
     String hostname;
     try {
@@ -76,6 +47,25 @@ public class RegistryService {
       hostname = "?";
     }
 
+    ConfigService configService = ConfigService.getInstance();
+
+    ScheduledReporter reporter = getScheduledReporter(hostname, configService.getGlobalTags(),
+        configService.getApiToken());
+    reporter.start(5, TimeUnit.SECONDS);
+
+    new JvmMetricsMonitor(registry);
+  }
+
+  public static MetricRegistry getMetricRegistry() {
+    return getRegistryService().registry;
+  }
+
+  public static RegistryService getRegistryService() {
+    return singleton;
+  }
+
+  private ScheduledReporter getScheduledReporter(String hostname, Map<String, String> globalTags,
+      String apiToken) {
     ApptuitReporterFactory factory = new ApptuitReporterFactory();
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
@@ -83,11 +73,6 @@ public class RegistryService {
     globalTags.forEach(factory::addGlobalTag);
     factory.setApiKey(apiToken);
 
-    MetricRegistry metricRegistry = new MetricRegistry();
-    ScheduledReporter reporter = factory.build(metricRegistry);
-    reporter.start(5, TimeUnit.SECONDS);
-
-    singleton = new RegistryService(metricRegistry);
+    return factory.build(registry);
   }
-
 }

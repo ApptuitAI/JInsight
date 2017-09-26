@@ -54,35 +54,27 @@ public class ConfigService {
 
   }
 
-  private void loadGlobalTags(Properties config) throws ConfigurationException {
-    String tagsString = config.getProperty(GLOBAL_TAGS_PROPERTY_NAME);
-    if (tagsString != null) {
-      String[] tvPairs = tagsString.split(",");
-      for (String tvPair : tvPairs) {
-        String[] tagAndValue = tvPair.split(":");
-        if (tagAndValue.length == 2) {
-          String tag = tagAndValue[0].trim();
-          String value = tagAndValue[1].trim();
-          if (tag.length() > 0 && value.length() > 0) {
-            globalTags.put(tag, value);
-            continue;
-          }
-        }
-        throw new ConfigurationException("Error parsing " + GLOBAL_TAGS_PROPERTY_NAME
-            + " property: [" + tvPair + "].\n"
-            + "Expected format: "+GLOBAL_TAGS_PROPERTY_NAME+"=key1:value1,key2:value2,key3:value3");
-      }
-    }
-  }
-
   public static ConfigService getInstance() {
     if (singleton == null) {
-      throw new IllegalStateException(ConfigService.class.getSimpleName() + " not initialized.");
+      synchronized (ConfigService.class) {
+        if (singleton == null) {
+          try {
+            initialize();
+          } catch (IOException | ConfigurationException e) {
+            throw new IllegalStateException(e);
+          }
+        }
+      }
     }
     return singleton;
   }
 
   static void initialize() throws IOException, ConfigurationException {
+
+    if (singleton != null) {
+      throw new IllegalStateException(
+          ConfigService.class.getSimpleName() + " already initialized.");
+    }
 
     Properties config;
     String configFilePath = System.getProperty(CONFIG_SYSTEM_PROPERTY);
@@ -119,11 +111,33 @@ public class ConfigService {
     return config;
   }
 
+  private void loadGlobalTags(Properties config) throws ConfigurationException {
+    String tagsString = config.getProperty(GLOBAL_TAGS_PROPERTY_NAME);
+    if (tagsString != null) {
+      String[] tvPairs = tagsString.split(",");
+      for (String tvPair : tvPairs) {
+        String[] tagAndValue = tvPair.split(":");
+        if (tagAndValue.length == 2) {
+          String tag = tagAndValue[0].trim();
+          String value = tagAndValue[1].trim();
+          if (tag.length() > 0 && value.length() > 0) {
+            globalTags.put(tag, value);
+            continue;
+          }
+        }
+        throw new ConfigurationException("Error parsing " + GLOBAL_TAGS_PROPERTY_NAME
+            + " property: [" + tvPair + "].\n"
+            + "Expected format: " + GLOBAL_TAGS_PROPERTY_NAME
+            + "=key1:value1,key2:value2,key3:value3");
+      }
+    }
+  }
+
   String getApiToken() {
     return apiToken;
   }
 
-  Map<String, String> getGlobalTags(){
+  Map<String, String> getGlobalTags() {
     return Collections.unmodifiableMap(globalTags);
   }
 }

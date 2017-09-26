@@ -22,7 +22,8 @@ import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
-import ai.apptuit.metrics.jinsight.MockMetricsRegistry;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -40,30 +41,21 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.modules.testng.PowerMockTestCase;
 
 
 /**
  * @author Rajiv Shivane
  */
-@PrepareForTest({RegistryService.class})
-@PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*",
-    "com.sun.*", "org.xml.*", "javax.management.*", "javax.xml.*"})
-@RunWith(PowerMockRunner.class)
-public class TomcatFilterInstrumentationTest extends PowerMockTestCase {
+public class TomcatFilterInstrumentationTest {
 
   private static final int SERVER_PORT = 9898;
 
-  private MockMetricsRegistry metricsRegistry;
+  private MetricRegistry registry;
   private Tomcat tomcatServer;
 
   @Before
   public void setup() throws Exception {
-    metricsRegistry = MockMetricsRegistry.getInstance();
+    registry = RegistryService.getMetricRegistry();
 
     System.out.println("Tomcat [Configuring]");
     tomcatServer = new Tomcat();
@@ -99,8 +91,7 @@ public class TomcatFilterInstrumentationTest extends PowerMockTestCase {
   public void testPingPong() throws IOException {
     TagEncodedMetricName metricName = TagEncodedMetricName.decode(TOMCAT_METRIC_PREFIX)
         .submetric("requests").withTags("context", ROOT_CONTEXT_PATH, "method", "GET");
-    int expectStartCount = metricsRegistry.getStartCount(metricName) + 1;
-    int expectedStopCount = metricsRegistry.getStopCount(metricName) + 1;
+    long expectedCount = getTimerCount(metricName) + 1;
 
     URL url = pathToURL(PingPongServlet.PATH);
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -110,12 +101,17 @@ public class TomcatFilterInstrumentationTest extends PowerMockTestCase {
     assertEquals(PingPongServlet.PONG,
         new Scanner(connection.getInputStream()).useDelimiter("\0").next());
 
-    assertEquals(expectStartCount, metricsRegistry.getStartCount(metricName));
-    assertEquals(expectedStopCount, metricsRegistry.getStopCount(metricName));
+    assertEquals(expectedCount, getTimerCount(metricName));
   }
 
   private URL pathToURL(String path) throws MalformedURLException {
     return new URL("http://localhost:" + SERVER_PORT + path);
+  }
+
+
+  private long getTimerCount(TagEncodedMetricName name) {
+    Timer timer = registry.getTimers().get(name.toString());
+    return timer != null ? timer.getCount() : 0;
   }
 
   private static class PingPongServlet extends HttpServlet {

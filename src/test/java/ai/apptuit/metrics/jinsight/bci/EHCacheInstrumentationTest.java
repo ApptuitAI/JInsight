@@ -20,7 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
-import ai.apptuit.metrics.jinsight.MockMetricsRegistry;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,32 +35,24 @@ import net.sf.ehcache.Element;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.modules.testng.PowerMockTestCase;
 
 
 /**
  * @author Rajiv Shivane
  */
-@PrepareForTest({RegistryService.class})
-@PowerMockIgnore({"org.jboss.byteman.*", "javax.net.ssl.*",
-    "com.sun.management.*", "javax.management.*"})
-@RunWith(PowerMockRunner.class)
-public class EHCacheInstrumentationTest extends PowerMockTestCase {
+public class EHCacheInstrumentationTest {
 
   private String cacheName = "testCache." + UUID.randomUUID().toString();
+
+  private MetricRegistry registry;
   private CacheManager cacheManager;
   private Ehcache cache;
   private Map<String, Object> presetElements;
   private List<String> presetElementKeys;
-  private MockMetricsRegistry metricsRegistry;
 
   @Before
   public void setUp() throws Exception {
-    metricsRegistry = MockMetricsRegistry.getInstance();
+    registry = RegistryService.getMetricRegistry();
 
     cacheManager = CacheManager.newInstance();
     cache = cacheManager.addCacheIfAbsent(cacheName);
@@ -76,18 +69,22 @@ public class EHCacheInstrumentationTest extends PowerMockTestCase {
 
     TagEncodedMetricName metricName = TagEncodedMetricName.decode(
         "ehcache.ops[op:put,cache:" + cacheName + "]");
-    assertEquals(0, metricsRegistry.getStartCount(metricName));
-    assertEquals(0, metricsRegistry.getStopCount(metricName));
+    long expectedCount = getTimerCount(metricName) + 1;
 
     cache.put(new Element(key, presetElements.get(key)));
 
-    assertEquals(1, metricsRegistry.getStartCount(metricName));
-    assertEquals(1, metricsRegistry.getStopCount(metricName));
+    assertEquals(expectedCount, getTimerCount(metricName));
   }
 
   @After
   public void tearDown() throws Exception {
     cacheManager.removeCache(cacheName);
     cacheManager.shutdown();
+  }
+
+
+  private long getTimerCount(TagEncodedMetricName name) {
+    Timer timer = registry.getTimers().get(name.toString());
+    return timer != null ? timer.getCount() : 0;
   }
 }
