@@ -23,8 +23,11 @@ import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -60,6 +63,24 @@ public class EHCacheInstrumentationTest {
         .collect(Collectors.toMap(i -> UUID.randomUUID().toString(), i -> i));
     presetElementKeys = new ArrayList<>(presetElements.keySet());
 
+  }
+
+  @Test
+  public void testDefaultMetricsRegistration() throws Exception {
+    Set<String> registeredGauges = registry.getGauges((name, metric) -> {
+      return name.startsWith("ehcache.") && name.contains(cacheName);
+    }).keySet();
+
+    TagEncodedMetricName base = TagEncodedMetricName.decode("ehcache").withTags("cache", cacheName);
+    String[] expectedGaugeNames = new String[]{"hits", "in_memory_hits", "off_heap_hits",
+        "on_disk_hits", "misses", "in_memory_misses", "off_heap_misses", "on_disk_misses",
+        "objects", "in_memory_objects", "off_heap_objects", "on_disk_objects", "mean_get_time",
+        "mean_search_time", "eviction_count", "searches_per_second", "writer_queue_size"};
+    Set<String> expectedGauges = new TreeSet<>();
+    Arrays.asList(expectedGaugeNames)
+        .forEach(gauge -> expectedGauges.add(base.submetric(gauge).toString()));
+
+    assertEquals(expectedGauges, registeredGauges);
   }
 
   @Test
