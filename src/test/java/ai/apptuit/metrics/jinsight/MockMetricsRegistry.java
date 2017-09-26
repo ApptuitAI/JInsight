@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.util;
+package ai.apptuit.metrics.jinsight;
 
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mock;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
@@ -68,7 +67,9 @@ public class MockMetricsRegistry {
       });
       return mock;
     });
-    RegistryService.initialize("MOCK_TOKEN");
+
+    ConfigService.initialize();
+    RegistryService.initialize(ConfigService.getInstance());
   }
 
   public static MockMetricsRegistry getInstance() {

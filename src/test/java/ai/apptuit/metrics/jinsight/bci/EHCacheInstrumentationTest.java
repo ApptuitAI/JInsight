@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
-import ai.apptuit.metrics.util.MockMetricsRegistry;
+import ai.apptuit.metrics.jinsight.MockMetricsRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

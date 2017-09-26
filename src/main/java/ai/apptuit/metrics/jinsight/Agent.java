@@ -16,6 +16,7 @@
 
 package ai.apptuit.metrics.jinsight;
 
+import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import org.jboss.byteman.agent.Main;
 
@@ -53,7 +54,7 @@ public class Agent {
 
     try {
       ConfigService.initialize();
-    } catch (Exception e) {
+    } catch (ConfigurationException | IOException | RuntimeException e) {
       System.err.println(e.getMessage());
       System.err.println("Agent will not be started.");
       return false;

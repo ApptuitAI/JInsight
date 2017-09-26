@@ -19,7 +19,7 @@ package ai.apptuit.metrics.jinsight.bci;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.jinsight.RegistryService;
-import ai.apptuit.metrics.util.MockMetricsRegistry;
+import ai.apptuit.metrics.jinsight.MockMetricsRegistry;
 import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

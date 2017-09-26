@@ -21,6 +21,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -32,7 +35,9 @@ public class ConfigService {
 
   private static final String CONFIG_SYSTEM_PROPERTY = "jinsight.config";
   private static final String DEFAULT_CONFIG_FILE_NAME = "jinsight-config.properties";
+
   private static final String ACCESS_TOKEN_PROPERTY_NAME = "apptuit.access_token";
+  private static final String GLOBAL_TAGS_PROPERTY_NAME = "global_tags";
 
   private static final File DEFAULT_CONFIG_FILE = new File(System.getProperty("user.home"),
       DEFAULT_CONFIG_FILE_NAME);
@@ -40,9 +45,34 @@ public class ConfigService {
 
   private static ConfigService singleton = null;
   private final String apiToken;
+  private final Map<String, String> globalTags = new HashMap<>();
 
-  private ConfigService(String apiToken) {
-    this.apiToken = apiToken;
+  ConfigService(Properties config) throws ConfigurationException {
+    this.apiToken = config.getProperty(ACCESS_TOKEN_PROPERTY_NAME);
+
+    loadGlobalTags(config);
+
+  }
+
+  private void loadGlobalTags(Properties config) throws ConfigurationException {
+    String tagsString = config.getProperty(GLOBAL_TAGS_PROPERTY_NAME);
+    if (tagsString != null) {
+      String[] tvPairs = tagsString.split(",");
+      for (String tvPair : tvPairs) {
+        String[] tagAndValue = tvPair.split(":");
+        if (tagAndValue.length == 2) {
+          String tag = tagAndValue[0].trim();
+          String value = tagAndValue[1].trim();
+          if (tag.length() > 0 && value.length() > 0) {
+            globalTags.put(tag, value);
+            continue;
+          }
+        }
+        throw new ConfigurationException("Error parsing " + GLOBAL_TAGS_PROPERTY_NAME
+            + " property: [" + tvPair + "].\n"
+            + "Expected format: "+GLOBAL_TAGS_PROPERTY_NAME+"=key1:value1,key2:value2,key3:value3");
+      }
+    }
   }
 
   public static ConfigService getInstance() {
@@ -52,9 +82,9 @@ public class ConfigService {
     return singleton;
   }
 
-  static void initialize() throws IOException, IllegalArgumentException {
+  static void initialize() throws IOException, ConfigurationException {
 
-    Properties config = null;
+    Properties config;
     String configFilePath = System.getProperty(CONFIG_SYSTEM_PROPERTY);
     if (configFilePath != null && configFilePath.trim().length() > 0) {
       File configFile = new File(configFilePath);
@@ -67,18 +97,18 @@ public class ConfigService {
       configFilePath = DEFAULT_CONFIG_FILE.getAbsolutePath();
       config = loadProperties(DEFAULT_CONFIG_FILE);
     } else {
-      throw new IllegalArgumentException("Could not find configuration file. "
+      throw new ConfigurationException("Could not find configuration file. "
           + "Set the path to configuration file using the system property \""
           + CONFIG_SYSTEM_PROPERTY + "\"");
     }
     String token = config.getProperty(ACCESS_TOKEN_PROPERTY_NAME);
 
     if (token == null) {
-      throw new IllegalArgumentException("Could not find the property ["
+      throw new ConfigurationException("Could not find the property ["
           + ACCESS_TOKEN_PROPERTY_NAME + "] in the file ["
           + configFilePath + "]");
     }
-    singleton = new ConfigService(token);
+    singleton = new ConfigService(config);
   }
 
   private static Properties loadProperties(File configFilePath) throws IOException {
@@ -91,5 +121,9 @@ public class ConfigService {
 
   String getApiToken() {
     return apiToken;
+  }
+
+  Map<String, String> getGlobalTags(){
+    return Collections.unmodifiableMap(globalTags);
   }
 }

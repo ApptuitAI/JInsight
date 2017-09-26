@@ -22,6 +22,9 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -54,12 +57,17 @@ public class RegistryService {
       if (singleton != null) {
         return singleton;
       }
-      initialize(ConfigService.getInstance().getApiToken());
+      ConfigService configService = ConfigService.getInstance();
+      initialize(configService);
     }
     return singleton;
   }
 
-  public static void initialize(String apiToken) {
+  static void initialize(ConfigService configService) {
+    initialize(configService.getApiToken(), configService.getGlobalTags());
+  }
+
+  private static void initialize(String apiToken, Map<String, String> globalTags) {
 
     String hostname;
     try {
@@ -72,6 +80,7 @@ public class RegistryService {
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
     factory.addGlobalTag("hostname", hostname);
+    globalTags.forEach(factory::addGlobalTag);
     factory.setApiKey(apiToken);
 
     MetricRegistry metricRegistry = new MetricRegistry();
