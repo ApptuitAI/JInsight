@@ -62,7 +62,7 @@ public class MockMetricsRegistry {
         Context ctxt = mock(Context.class);
         when(ctxt.stop()).then(invocationOnMock2 -> {
           instance.incrementStopCount(metricName);
-          return 0;
+          return 0L;
         });
         return ctxt;
       });
