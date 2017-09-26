@@ -140,7 +140,24 @@ limitations under the License.
       <version>8.5.20</version>
       <scope>provided</scope>
     </dependency>
-
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.9.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.9.1</version>
+      <scope>provided</scope>
+    </dependency>
     <!--
     Unit testing related dependencies
     -->
@@ -277,6 +294,7 @@ limitations under the License.
                     <source>${btm.script.sources}/ehcache.btm</source>
                     <source>${btm.script.sources}/jdbc.btm</source>
                     <source>${btm.script.sources}/servlet.btm</source>
+                    <source>${btm.script.sources}/log4j.btm</source>
                   </sources>
                 </merger>
               </mergers>
