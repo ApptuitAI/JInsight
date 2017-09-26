@@ -58,8 +58,6 @@ public class ApptuitPutClient {
     this.globalTags = globalTags;
     this.token = token;
     this.apiEndPoint = apiEndPoint;
-
-    this.httpclient = HttpClients.createDefault();
   }
 
   public void put(Collection<DataPoint> dataPoints) {
@@ -79,7 +77,7 @@ public class ApptuitPutClient {
     );
 
     try {
-      HttpResponse response = httpclient.execute(httpPost);
+      HttpResponse response = getHttpclient().execute(httpPost);
       int status = response.getStatusLine().getStatusCode();
 
       System.out.println("-------------------" + status + "---------------------");
@@ -92,6 +90,13 @@ public class ApptuitPutClient {
     } finally {
       httpPost.releaseConnection();
     }
+  }
+
+  private CloseableHttpClient getHttpclient() {
+    if(httpclient ==null)
+      httpclient = HttpClients.createDefault();
+
+    return httpclient;
   }
 
   static class DatapointsHttpEntity extends AbstractHttpEntity {
