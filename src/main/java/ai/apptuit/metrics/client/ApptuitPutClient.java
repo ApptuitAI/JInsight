@@ -93,8 +93,9 @@ public class ApptuitPutClient {
   }
 
   private CloseableHttpClient getHttpclient() {
-    if(httpclient ==null)
+    if (httpclient == null) {
       httpclient = HttpClients.createDefault();
+    }
 
     return httpclient;
   }
