@@ -21,6 +21,8 @@ import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import java.io.IOException;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -78,14 +80,54 @@ class MetricsFilter implements Filter {
     }
     Timer timer = RegistryService.getMetricRegistry().timer(metricName.toString());
     Context context = timer.time();
+    boolean cleanRun = false;
     try {
       filterChain.doFilter(servletRequest, servletResponse);
+      cleanRun = true;
     } finally {
-      context.stop();
+      if (cleanRun && servletRequest.isAsyncStarted()) {
+        servletRequest.getAsyncContext().addListener(new AsyncCompletionListener(context));
+      } else {
+        context.stop();
+      }
     }
   }
 
   @Override
   public void destroy() {
+  }
+
+  private class AsyncCompletionListener implements AsyncListener {
+
+    private Context context;
+    private boolean processed = false;
+
+    public AsyncCompletionListener(Context context) {
+      this.context = context;
+    }
+
+    @Override
+    public void onComplete(AsyncEvent event) throws IOException {
+      if (processed) {
+        return;
+      }
+      context.stop();
+    }
+
+    @Override
+    public void onTimeout(AsyncEvent event) throws IOException {
+      context.stop();
+      processed = true;
+    }
+
+    @Override
+    public void onError(AsyncEvent event) throws IOException {
+      context.stop();
+      processed = true;
+    }
+
+    @Override
+    public void onStartAsync(AsyncEvent event) throws IOException {
+    }
   }
 }

@@ -46,6 +46,7 @@ public class ServletRuleHelper extends RuleHelper {
 
     MetricsFilter filter = new MetricsFilter();
     Dynamic dynamic = context.addFilter(filter.getClass().getName(), filter);
+    dynamic.setAsyncSupported(true);
     dynamic.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
 
     setObjectProperty(context, PROPERTY_NAME_IS_FILTER_ADDED, PROPERTY_VALUE_TRUE);

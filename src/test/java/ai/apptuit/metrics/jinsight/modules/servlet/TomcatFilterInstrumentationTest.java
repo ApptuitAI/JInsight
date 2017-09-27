@@ -21,9 +21,6 @@ import static ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper.TOMC
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import ai.apptuit.metrics.jinsight.RegistryService;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -31,7 +28,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Scanner;
+import java.util.Map;
+import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
@@ -43,16 +41,18 @@ import org.junit.Test;
 /**
  * @author Rajiv Shivane
  */
-public class TomcatFilterInstrumentationTest {
+public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
 
   private static final int SERVER_PORT = 9898;
-
-  private MetricRegistry registry;
   private Tomcat tomcatServer;
 
   @Before
   public void setup() throws Exception {
-    registry = RegistryService.getMetricRegistry();
+
+    setupMetrics(TagEncodedMetricName.decode(TOMCAT_METRIC_PREFIX)
+        .submetric("requests")
+        .withTags("context", ROOT_CONTEXT_PATH)
+    );
 
     System.out.println("Tomcat [Configuring]");
     tomcatServer = new Tomcat();
@@ -68,9 +68,9 @@ public class TomcatFilterInstrumentationTest {
     }
 
     Context appContext = tomcatServer.addWebapp("", applicationDir.getAbsolutePath());
-    PingPongServlet servlet = new PingPongServlet();
-    Tomcat.addServlet(appContext, servlet.getClass().getSimpleName(), servlet);
-    appContext.addServletMappingDecoded(PingPongServlet.PATH, servlet.getClass().getSimpleName());
+    registerServlet(appContext, new PingPongServlet());
+    registerServlet(appContext, new ExceptionServlet());
+    registerServlet(appContext, new AsyncServlet());
 
     System.out.println("Tomcat [Starting]");
     tomcatServer.start();
@@ -81,33 +81,97 @@ public class TomcatFilterInstrumentationTest {
   public void destroy() throws Exception {
     System.out.println("Tomcat [Stopping]");
     tomcatServer.stop();
+    tomcatServer.destroy();
     System.out.println("Tomcat [Stopped]");
   }
 
   @Test
   public void testPingPong() throws IOException {
-    TagEncodedMetricName metricName = TagEncodedMetricName.decode(TOMCAT_METRIC_PREFIX)
-        .submetric("requests").withTags("context", ROOT_CONTEXT_PATH, "method", "GET");
-    long expectedCount = getTimerCount(metricName) + 1;
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
 
     URL url = pathToURL(PingPongServlet.PATH);
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.connect();
 
     assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
-    assertEquals(PingPongServlet.PONG,
-        new Scanner(connection.getInputStream()).useDelimiter("\0").next());
+    assertEquals(PingPongServlet.PONG, getText(connection));
 
-    assertEquals(expectedCount, getTimerCount(metricName));
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+  @Test
+  public void testAsync() throws IOException {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
+
+    String uuid = UUID.randomUUID().toString();
+    URL url = pathToURL(AsyncServlet.PATH + "?" + AsyncServlet.UUID_PARAM + "=" + uuid);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
+    assertEquals(uuid, getText(connection));
+
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+
+  @Test
+  public void testAsyncWithError() throws IOException {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
+
+    URL url = pathToURL(AsyncServlet.PATH);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+  @Test
+  public void testPost() throws IOException {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("POST", (s, aLong) -> aLong + 1);
+
+    String content = UUID.randomUUID().toString();
+
+    URL url = pathToURL(PingPongServlet.PATH);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setRequestMethod("POST");
+    connection.setDoOutput(true);
+    connection.getOutputStream().write(content.getBytes());
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
+    assertEquals(content, getText(connection));
+
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+
+  @Test
+  public void testExceptionResponse() throws IOException {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
+
+    URL url = pathToURL(ExceptionServlet.PATH);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+  private <T extends BaseTestServlet> T registerServlet(Context context, T servlet) {
+    Tomcat.addServlet(context, servlet.getClass().getSimpleName(), servlet);
+    context.addServletMappingDecoded(servlet.getPath(), servlet.getClass().getSimpleName());
+    return servlet;
   }
 
   private URL pathToURL(String path) throws MalformedURLException {
     return new URL("http://localhost:" + SERVER_PORT + path);
   }
 
-
-  private long getTimerCount(TagEncodedMetricName name) {
-    Timer timer = registry.getTimers().get(name.toString());
-    return timer != null ? timer.getCount() : 0;
-  }
 }

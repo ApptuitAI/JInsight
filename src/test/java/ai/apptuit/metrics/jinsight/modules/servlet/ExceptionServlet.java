@@ -17,33 +17,23 @@
 package ai.apptuit.metrics.jinsight.modules.servlet;
 
 import java.io.IOException;
-import java.util.Scanner;
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Rajiv Shivane
  */
-public class PingPongServlet extends BaseTestServlet {
+public class ExceptionServlet extends BaseTestServlet {
 
-  public static final String PONG = "pong";
-  public static final String PATH = "/ping";
+  static final String PATH = "/fail";
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)
       throws ServletException, IOException {
-    response.setStatus(HttpServletResponse.SC_OK);
-    response.getWriter().append(PONG);
-  }
-
-  @Override
-  protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-      throws ServletException, IOException {
-    ServletInputStream inputStream = req.getInputStream();
-    String content = new Scanner(inputStream).useDelimiter("\0").next();
-    resp.getWriter().append(content);
+    RuntimeException exception = new RuntimeException("Always fail");
+    exception.setStackTrace(new StackTraceElement[0]);
+    throw exception;
   }
 
   @Override

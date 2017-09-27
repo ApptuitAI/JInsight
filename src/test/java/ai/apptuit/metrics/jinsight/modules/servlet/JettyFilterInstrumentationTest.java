@@ -21,18 +21,17 @@ import static ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper.ROOT
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import ai.apptuit.metrics.jinsight.RegistryService;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Scanner;
+import java.util.Map;
+import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,23 +39,26 @@ import org.junit.Test;
 /**
  * @author Rajiv Shivane
  */
-public class JettyFilterInstrumentationTest {
+public class JettyFilterInstrumentationTest extends AbstractWebServerTest {
 
   private int serverPort;
-
   private Server jetty;
-
-  private MetricRegistry registry;
 
   @Before
   public void setup() throws Exception {
-    registry = RegistryService.getMetricRegistry();
+    setupMetrics(TagEncodedMetricName.decode(JETTY_METRIC_PREFIX)
+        .submetric("requests")
+        .withTags("context", ROOT_CONTEXT_PATH)
+    );
 
     System.out.println("Jetty [Configuring]");
 
     ServletContextHandler servletContext = new ServletContextHandler();
     servletContext.setContextPath("/");
     servletContext.addServlet(PingPongServlet.class, PingPongServlet.PATH);
+    servletContext.addServlet(ExceptionServlet.class, ExceptionServlet.PATH);
+    ServletHolder servletHolder = servletContext.addServlet(AsyncServlet.class, AsyncServlet.PATH);
+    servletHolder.setAsyncSupported(true);
 
     jetty = new Server(0);
     jetty.setHandler(servletContext);
@@ -76,28 +78,86 @@ public class JettyFilterInstrumentationTest {
 
   @Test
   public void testPingPong() throws IOException {
-    TagEncodedMetricName metricName = TagEncodedMetricName.decode(JETTY_METRIC_PREFIX)
-        .submetric("requests").withTags("context", ROOT_CONTEXT_PATH, "method", "GET");
-    long expectedCount = getTimerCount(metricName) + 1;
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
 
     URL url = pathToURL(PingPongServlet.PATH);
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.connect();
 
     assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
-    assertEquals(PingPongServlet.PONG,
-        new Scanner(connection.getInputStream()).useDelimiter("\0").next());
+    assertEquals(PingPongServlet.PONG, getText(connection));
 
-    assertEquals(expectedCount, getTimerCount(metricName));
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+
+  @Test
+  public void testAsync() throws IOException {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
+
+    String uuid = UUID.randomUUID().toString();
+    URL url = pathToURL(AsyncServlet.PATH + "?" + AsyncServlet.UUID_PARAM + "=" + uuid);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
+    assertEquals(uuid, getText(connection));
+
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+
+  @Test
+  public void testAsyncWithError() throws IOException {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
+
+    URL url = pathToURL(AsyncServlet.PATH);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+  @Test
+  public void testPost() throws IOException {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("POST", (s, aLong) -> aLong + 1);
+
+    String content = UUID.randomUUID().toString();
+
+    URL url = pathToURL(PingPongServlet.PATH);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setRequestMethod("POST");
+    connection.setDoOutput(true);
+    connection.getOutputStream().write(content.getBytes());
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
+    assertEquals(content, getText(connection));
+
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+
+  @Test
+  public void testExceptionResponse() throws IOException {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
+
+    URL url = pathToURL(ExceptionServlet.PATH);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setRequestMethod("GET");
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
+    assertEquals(expectedCounts, getCurrentCounts());
   }
 
   private URL pathToURL(String path) throws MalformedURLException {
     return new URL("http://localhost:" + serverPort + path);
   }
-
-  private long getTimerCount(TagEncodedMetricName name) {
-    Timer timer = registry.getTimers().get(name.toString());
-    return timer != null ? timer.getCount() : 0;
-  }
-
 }
