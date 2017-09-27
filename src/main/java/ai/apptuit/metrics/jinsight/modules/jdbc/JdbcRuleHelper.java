@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.jinsight.bci;
+package ai.apptuit.metrics.jinsight.modules.jdbc;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
 import org.jboss.byteman.rule.Rule;
 
 /**

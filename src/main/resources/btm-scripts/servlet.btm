@@ -17,7 +17,7 @@
 RULE Jetty ServletContextHandler constructor exit
 CLASS org.eclipse.jetty.servlet.ServletContextHandler
 METHOD <init>
-HELPER ai.apptuit.metrics.jinsight.bci.ServletRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper
 AT EXIT
 IF TRUE
 DO instrumentServletContextOnce($0.getServletContext())
@@ -26,7 +26,7 @@ ENDRULE
 RULE Tomcat ApplicationContext constructor exit
 CLASS org.apache.catalina.core.ApplicationContext
 METHOD <init>
-HELPER ai.apptuit.metrics.jinsight.bci.ServletRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper
 AT EXIT
 IF TRUE
 DO instrumentServletContextOnce($0)

@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.jinsight.core;
+package ai.apptuit.metrics.jinsight.modules.jvm;
 
 import static org.junit.Assert.assertEquals;
 
+import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricsMonitor;
 import com.codahale.metrics.MetricRegistry;
 import java.util.Arrays;
 import java.util.List;

@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.jinsight.bci;
+package ai.apptuit.metrics.jinsight.modules.servlet;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
+import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import java.io.IOException;

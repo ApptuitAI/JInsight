@@ -17,7 +17,7 @@
 #RULE ehcache clone constructor entry
 #CLASS net.sf.ehcache.Cache
 #METHOD <init>(net.sf.ehcache.Cache)
-#HELPER ai.apptuit.metrics.jinsight.bci.RuleHelper
+#HELPER ai.apptuit.metrics.jinsight.modules.common.RuleHelper
 #AT ENTRY
 #IF TRUE
 #DO traceThreadStack("main")
@@ -26,7 +26,7 @@
 RULE ehcache clone constructor exit
 CLASS net.sf.ehcache.Cache
 METHOD <init>(net.sf.ehcache.Cache)
-HELPER ai.apptuit.metrics.jinsight.bci.EhcacheRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT EXIT
 IF TRUE
 DO monitor($this)
@@ -35,7 +35,7 @@ ENDRULE
 RULE ehcache get entry
 CLASS net.sf.ehcache.Cache
 METHOD get(java.lang.Object)
-HELPER ai.apptuit.metrics.jinsight.bci.EhcacheRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT ENTRY
 BIND
   tags = new String[]{"op", "get", "cache", $this.getName()}
@@ -47,7 +47,7 @@ ENDRULE
 RULE ehcache get exit
 CLASS net.sf.ehcache.Cache
 METHOD get(java.lang.Object)
-HELPER ai.apptuit.metrics.jinsight.bci.EhcacheRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT EXIT
 BIND
   tags = new String[]{"op", "get", "cache", $this.getName()}
@@ -58,7 +58,7 @@ ENDRULE
 RULE ehcache put entry
 CLASS net.sf.ehcache.Cache
 METHOD put(net.sf.ehcache.Element, boolean)
-HELPER ai.apptuit.metrics.jinsight.bci.EhcacheRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT ENTRY
 BIND
   tags = new String[]{"op", "put", "cache", $this.getName()}
@@ -70,7 +70,7 @@ ENDRULE
 RULE ehcache put exit
 CLASS net.sf.ehcache.Cache
 METHOD put(net.sf.ehcache.Element, boolean)
-HELPER ai.apptuit.metrics.jinsight.bci.EhcacheRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT EXIT
 BIND
   tags = new String[]{"op", "put", "cache", $this.getName()}
@@ -81,7 +81,7 @@ ENDRULE
 RULE ehcache putIfAbsent entry
 CLASS net.sf.ehcache.Cache
 METHOD putIfAbsent(net.sf.ehcache.Element)
-HELPER ai.apptuit.metrics.jinsight.bci.EhcacheRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT ENTRY
 BIND
   tags = new String[]{"op", "put", "cache", $this.getName()}
@@ -93,7 +93,7 @@ ENDRULE
 RULE ehcache putIfAbsent exit
 CLASS net.sf.ehcache.Cache
 METHOD putIfAbsent(net.sf.ehcache.Element)
-HELPER ai.apptuit.metrics.jinsight.bci.EhcacheRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT EXIT
 BIND
   tags = new String[]{"op", "put", "cache", $this.getName()}

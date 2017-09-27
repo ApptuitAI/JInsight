@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.jinsight.bci;
+package ai.apptuit.metrics.jinsight.modules.ehcache;
 
 import static org.junit.Assert.assertEquals;
 

@@ -17,7 +17,7 @@
 RULE Log4J Hierarchy constructor exit
 CLASS org.apache.log4j.Hierarchy
 METHOD <init>
-HELPER ai.apptuit.metrics.jinsight.bci.Log4JRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.log4j.Log4JRuleHelper
 AT EXIT
 IF TRUE
 DO instrumentRootLogger($1)
@@ -26,7 +26,7 @@ ENDRULE
 RULE Log4J2 LoggerConfig constructor exit
 CLASS org.apache.logging.log4j.core.config.LoggerConfig
 METHOD <init>()
-HELPER ai.apptuit.metrics.jinsight.bci.Log4J2RuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.log4j2.Log4J2RuleHelper
 AT EXIT
 IF TRUE
 DO instrument($0)

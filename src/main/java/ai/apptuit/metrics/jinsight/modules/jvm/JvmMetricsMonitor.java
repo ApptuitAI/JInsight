@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.jinsight.core;
+package ai.apptuit.metrics.jinsight.modules.jvm;
 
 import static java.lang.management.ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME;
 import static java.lang.management.ManagementFactory.getOperatingSystemMXBean;

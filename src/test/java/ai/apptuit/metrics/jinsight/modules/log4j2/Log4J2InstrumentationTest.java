@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.jinsight.bci;
+package ai.apptuit.metrics.jinsight.modules.log4j2;
 
 import static org.junit.Assert.assertEquals;
 
@@ -24,8 +24,12 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,32 +37,33 @@ import org.junit.Test;
 /**
  * @author Rajiv Shivane
  */
-public class Log4JInstrumentationTest {
+public class Log4J2InstrumentationTest {
 
   private MetricRegistry registry;
-  private Map<String, Meter> meters;
   private Logger logger;
+  private Map<String, Meter> meters;
 
   @Before
   public void setUp() throws Exception {
     registry = RegistryService.getMetricRegistry();
 
     meters = new HashMap<>();
-    meters.put("total", getMeter(Log4JRuleHelper.ROOT_NAME.submetric("total")));
-    meters.put("trace", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "trace")));
-    meters.put("debug", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "debug")));
-    meters.put("info", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "info")));
-    meters.put("warn", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "warn")));
-    meters.put("error", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "error")));
-    meters.put("fatal", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "fatal")));
-    meters.put("throwCount", getMeter(Log4JRuleHelper.THROWABLES_BASE_NAME.submetric("total")));
+    meters.put("total", getMeter(Log4J2RuleHelper.ROOT_NAME.submetric("total")));
+    meters.put("trace", getMeter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "trace")));
+    meters.put("debug", getMeter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "debug")));
+    meters.put("info", getMeter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "info")));
+    meters.put("warn", getMeter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "warn")));
+    meters.put("error", getMeter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "error")));
+    meters.put("fatal", getMeter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "fatal")));
+    meters.put("throwCount", getMeter(Log4J2RuleHelper.THROWABLES_BASE_NAME.submetric("total")));
     meters.put("throw[RuntimeException]", getMeter(
-        Log4JRuleHelper.THROWABLES_BASE_NAME
+        Log4J2RuleHelper.THROWABLES_BASE_NAME
             .withTags("class", RuntimeException.class.getName())
     ));
 
-    logger = Logger.getLogger(Log4JInstrumentationTest.class.getName());
-    logger.setLevel(Level.ALL);
+    logger = LogManager.getLogger(Log4J2InstrumentationTest.class.getName());
+    setLogLevelAll(logger);
+
   }
 
   @Test
@@ -142,6 +147,23 @@ public class Log4JInstrumentationTest {
     logger.fatal("FATAL!");
 
     assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+
+  private void setLogLevelAll(Logger logger) {
+    LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+    Configuration config = ctx.getConfiguration();
+    LoggerConfig loggerConfig = config.getLoggerConfig(logger.getName());
+
+    LoggerConfig specificConfig = loggerConfig;
+    if (!loggerConfig.getName().equals(logger.getName())) {
+      specificConfig = new LoggerConfig(logger.getName(), Level.ALL, true);
+      specificConfig.setParent(loggerConfig);
+      config.addLogger(logger.getName(), specificConfig);
+    }
+
+    specificConfig.setLevel(Level.ALL);
+    ctx.updateLoggers();
   }
 
   private Meter getMeter(TagEncodedMetricName name) {

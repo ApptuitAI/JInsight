@@ -17,7 +17,7 @@
 package ai.apptuit.metrics.jinsight;
 
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
-import ai.apptuit.metrics.jinsight.core.JvmMetricsMonitor;
+import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricsMonitor;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import java.net.InetAddress;

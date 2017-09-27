@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.jinsight.bci;
+package ai.apptuit.metrics.jinsight.modules.servlet;
 
-import static ai.apptuit.metrics.jinsight.bci.ServletRuleHelper.ROOT_CONTEXT_PATH;
-import static ai.apptuit.metrics.jinsight.bci.ServletRuleHelper.TOMCAT_METRIC_PREFIX;
+import static ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper.ROOT_CONTEXT_PATH;
+import static ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper.TOMCAT_METRIC_PREFIX;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
