@@ -22,6 +22,8 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Before;
@@ -34,15 +36,21 @@ import org.junit.Test;
 public class Log4JInstrumentationTest {
 
   private MetricRegistry registry;
+  private Map<String, Meter> meters;
   private Logger logger;
-  private TagEncodedMetricName rootMetric;
-  private TagEncodedMetricName totalMetric;
 
   @Before
   public void setUp() throws Exception {
     registry = RegistryService.getMetricRegistry();
-    rootMetric = Log4JRuleHelper.ROOT_NAME;
-    totalMetric = rootMetric.submetric("total");
+
+    meters = new HashMap<>();
+    meters.put("total", getMeter(Log4JRuleHelper.ROOT_NAME.submetric("total")));
+    meters.put("trace", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "trace")));
+    meters.put("debug", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "debug")));
+    meters.put("info", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "info")));
+    meters.put("warn", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "warn")));
+    meters.put("error", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "error")));
+    meters.put("fatal", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "fatal")));
 
     logger = Logger.getLogger(Log4JInstrumentationTest.class.getName());
     logger.setLevel(Level.ALL);
@@ -50,88 +58,83 @@ public class Log4JInstrumentationTest {
 
   @Test
   public void testLogTrace() throws Exception {
-
-    TagEncodedMetricName levelMetric = rootMetric.withTags("level", "trace");
-    long expectedCount = getMeterCount(levelMetric) + 1;
-    long expectedCountTotal = getMeterCount(totalMetric) + 1;
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong+1);
+    expectedCounts.compute("trace", (s, aLong) -> aLong+1);
 
     logger.trace("TRACE!");
 
-    assertEquals(expectedCountTotal, getMeterCount(totalMetric));
-    assertEquals(expectedCount, getMeterCount(levelMetric));
+    assertEquals(expectedCounts, getCurrentCounts());
   }
 
 
   @Test
   public void testLogDebug() throws Exception {
-
-    TagEncodedMetricName levelMetric = rootMetric.withTags("level", "debug");
-    long expectedCount = getMeterCount(levelMetric) + 1;
-    long expectedCountTotal = getMeterCount(totalMetric) + 1;
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong+1);
+    expectedCounts.compute("debug", (s, aLong) -> aLong+1);
 
     logger.debug("DEBUG!");
 
-    assertEquals(expectedCountTotal, getMeterCount(totalMetric));
-    assertEquals(expectedCount, getMeterCount(levelMetric));
+    assertEquals(expectedCounts, getCurrentCounts());
   }
 
 
   @Test
   public void testLogInfo() throws Exception {
-
-    TagEncodedMetricName levelMetric = rootMetric.withTags("level", "info");
-    long expectedCount = getMeterCount(levelMetric) + 1;
-    long expectedCountTotal = getMeterCount(totalMetric) + 1;
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong+1);
+    expectedCounts.compute("info", (s, aLong) -> aLong+1);
 
     logger.info("INFO!");
 
-    assertEquals(expectedCountTotal, getMeterCount(totalMetric));
-    assertEquals(expectedCount, getMeterCount(levelMetric));
+    assertEquals(expectedCounts, getCurrentCounts());
   }
 
 
   @Test
   public void testLogWarn() throws Exception {
-
-    TagEncodedMetricName levelMetric = rootMetric.withTags("level", "warn");
-    long expectedCount = getMeterCount(levelMetric) + 1;
-    long expectedCountTotal = getMeterCount(totalMetric) + 1;
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong+1);
+    expectedCounts.compute("warn", (s, aLong) -> aLong+1);
 
     logger.warn("WARN!");
 
-    assertEquals(expectedCountTotal, getMeterCount(totalMetric));
-    assertEquals(expectedCount, getMeterCount(levelMetric));
+    assertEquals(expectedCounts, getCurrentCounts());
   }
 
   @Test
   public void testLogError() throws Exception {
-
-    TagEncodedMetricName levelMetric = rootMetric.withTags("level", "error");
-    long expectedCount = getMeterCount(levelMetric) + 1;
-    long expectedCountTotal = getMeterCount(totalMetric) + 1;
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong+1);
+    expectedCounts.compute("error", (s, aLong) -> aLong+1);
 
     logger.error("ERROR!");
 
-    assertEquals(expectedCountTotal, getMeterCount(totalMetric));
-    assertEquals(expectedCount, getMeterCount(levelMetric));
+    assertEquals(expectedCounts, getCurrentCounts());
   }
 
 
   @Test
   public void testLogFatal() throws Exception {
-
-    TagEncodedMetricName levelMetric = rootMetric.withTags("level", "fatal");
-    long expectedCount = getMeterCount(levelMetric) + 1;
-    long expectedCountTotal = getMeterCount(totalMetric) + 1;
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong+1);
+    expectedCounts.compute("fatal", (s, aLong) -> aLong+1);
 
     logger.fatal("FATAL!");
 
-    assertEquals(expectedCountTotal, getMeterCount(totalMetric));
-    assertEquals(expectedCount, getMeterCount(levelMetric));
+    assertEquals(expectedCounts, getCurrentCounts());
   }
 
-  private long getMeterCount(TagEncodedMetricName name) {
-    Meter meter = registry.getMeters().get(name.toString());
-    return meter != null ? meter.getCount() : 0;
+  private Meter getMeter(TagEncodedMetricName name) {
+    return registry.meter(name.toString());
+  }
+
+  private Map<String, Long> getCurrentCounts(){
+    Map<String, Long> currentValues = new HashMap<>(meters.size());
+    meters.forEach((k, meter)->{
+      currentValues.put(k, meter.getCount());
+    });
+    return currentValues;
   }
 }
