@@ -31,12 +31,15 @@ public class Log4J2RuleHelper extends RuleHelper {
 
   public static final TagEncodedMetricName ROOT_NAME = TagEncodedMetricName.decode("log4j.appends");
 
-  public void instrument(org.apache.logging.log4j.core.config.LoggerConfig config){
-    config.addAppender(new InstrumentedAppender(), null, null);
-  }
-
   public Log4J2RuleHelper(Rule rule) {
     super(rule);
+  }
+
+  public void instrument(org.apache.logging.log4j.core.config.LoggerConfig config) {
+    InstrumentedAppender appender = new InstrumentedAppender();
+    appender.start();
+
+    config.addAppender(appender, null, null);
   }
 
   private static class InstrumentedAppender extends AbstractAppender {
