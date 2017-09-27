@@ -74,7 +74,9 @@ public class Log4J2InstrumentationTest {
     expectedCounts.compute("throwCount", (s, aLong) -> aLong + 1);
     expectedCounts.compute("throw[RuntimeException]", (s, aLong) -> aLong + 1);
 
-    logger.error("Error with throwable", new RuntimeException());
+    RuntimeException exception = new RuntimeException();
+    exception.setStackTrace(new StackTraceElement[0]);
+    logger.error("Error with throwable", exception);
 
     assertEquals(expectedCounts, getCurrentCounts());
   }
