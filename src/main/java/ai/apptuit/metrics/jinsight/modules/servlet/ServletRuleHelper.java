@@ -16,23 +16,11 @@
 
 package ai.apptuit.metrics.jinsight.modules.servlet;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
-import com.codahale.metrics.Timer;
-import com.codahale.metrics.Timer.Context;
-import java.io.IOException;
 import java.util.EnumSet;
 import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.FilterRegistration.Dynamic;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 import org.jboss.byteman.rule.Rule;
 
 /**
@@ -63,60 +51,4 @@ public class ServletRuleHelper extends RuleHelper {
     setObjectProperty(context, PROPERTY_NAME_IS_FILTER_ADDED, PROPERTY_VALUE_TRUE);
   }
 
-  private static class MetricsFilter implements Filter {
-
-    private TagEncodedMetricName rootMetric;
-
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-      ServletContext context = filterConfig.getServletContext();
-      String contextPathTag = context.getContextPath();
-      if (contextPathTag.trim().equals("")) {
-        contextPathTag = ROOT_CONTEXT_PATH;
-      }
-      rootMetric = TagEncodedMetricName.decode(getServerName(context.getServerInfo()))
-          .submetric("requests").withTags("context", contextPathTag);
-    }
-
-    private String getServerName(String serverInfo) {
-
-      String serverName;
-      int slash = serverInfo.indexOf('/');
-      if (slash == -1) {
-        serverName = serverInfo;
-      } else {
-        serverName = serverInfo.substring(0, slash);
-      }
-
-      if (serverName.toLowerCase().contains("tomcat")) {
-        return TOMCAT_METRIC_PREFIX;
-      } else if (serverName.toLowerCase().contains("jetty")) {
-        return JETTY_METRIC_PREFIX;
-      } else {
-        return serverName;
-      }
-    }
-
-    @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
-        FilterChain filterChain) throws IOException, ServletException {
-
-      TagEncodedMetricName metricName = rootMetric;
-      if (servletRequest instanceof HttpServletRequest) {
-        metricName = metricName
-            .withTags("method", ((HttpServletRequest) servletRequest).getMethod());
-      }
-      Timer timer = RegistryService.getMetricRegistry().timer(metricName.toString());
-      Context context = timer.time();
-      try {
-        filterChain.doFilter(servletRequest, servletResponse);
-      } finally {
-        context.stop();
-      }
-    }
-
-    @Override
-    public void destroy() {
-    }
-  }
 }

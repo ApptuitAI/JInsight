@@ -17,13 +17,7 @@
 package ai.apptuit.metrics.jinsight.modules.log4j2;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
-import org.apache.logging.log4j.core.LogEvent;
-import org.apache.logging.log4j.core.appender.AbstractAppender;
-import org.apache.logging.log4j.core.impl.ThrowableProxy;
 import org.jboss.byteman.rule.Rule;
 
 /**
@@ -46,61 +40,4 @@ public class Log4J2RuleHelper extends RuleHelper {
     config.addAppender(appender, null, null);
   }
 
-  private static class InstrumentedAppender extends AbstractAppender {
-
-    private static final MetricRegistry registry = RegistryService.getMetricRegistry();
-
-    private static Meter total = registry.meter(ROOT_NAME.submetric("total").toString());
-
-    private static Meter trace = registry.meter(ROOT_NAME.withTags("level", "trace").toString());
-    private static Meter debug = registry.meter(ROOT_NAME.withTags("level", "debug").toString());
-    private static Meter info = registry.meter(ROOT_NAME.withTags("level", "info").toString());
-    private static Meter warn = registry.meter(ROOT_NAME.withTags("level", "warn").toString());
-    private static Meter error = registry.meter(ROOT_NAME.withTags("level", "error").toString());
-    private static Meter fatal = registry.meter(ROOT_NAME.withTags("level", "fatal").toString());
-    private static Meter totalThrowables = registry
-        .meter(THROWABLES_BASE_NAME.submetric("total").toString());
-
-    public InstrumentedAppender() {
-      super(InstrumentedAppender.class.getName(), null, null);
-    }
-
-    @Override
-    public void append(LogEvent event) {
-      total.mark();
-      switch (event.getLevel().getStandardLevel()) {
-        case TRACE:
-          trace.mark();
-          break;
-        case DEBUG:
-          debug.mark();
-          break;
-        case INFO:
-          info.mark();
-          break;
-        case WARN:
-          warn.mark();
-          break;
-        case ERROR:
-          error.mark();
-          break;
-        case FATAL:
-          fatal.mark();
-          break;
-        default:
-          break;
-      }
-
-
-      ThrowableProxy throwableInformation = event.getThrownProxy();
-      if (throwableInformation != null) {
-        totalThrowables.mark();
-        Throwable throwable = throwableInformation.getThrowable();
-        if (throwable != null) {
-          String className = throwable.getClass().getName();
-          registry.meter(THROWABLES_BASE_NAME.withTags("class", className).toString()).mark();
-        }
-      }
-    }
-  }
 }

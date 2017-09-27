@@ -14,27 +14,22 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.jinsight.modules.ehcache;
+package ai.apptuit.metrics.jinsight.modules.jvm;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
-import net.sf.ehcache.Cache;
-import org.jboss.byteman.rule.Rule;
+import static java.lang.management.ManagementFactory.getRuntimeMXBean;
+
+import com.codahale.metrics.Gauge;
+import java.lang.management.RuntimeMXBean;
 
 /**
  * @author Rajiv Shivane
  */
-public class EhcacheRuleHelper extends RuleHelper {
+class UptimeGauge implements Gauge<Long> {
 
-  public static final TagEncodedMetricName ROOT_NAME = TagEncodedMetricName.decode("ehcache");
+  private final RuntimeMXBean rtMxBean = getRuntimeMXBean();
 
-  public EhcacheRuleHelper(Rule rule) {
-    super(rule);
+  @Override
+  public Long getValue() {
+    return rtMxBean.getUptime();
   }
-
-  public void monitor(Cache cache) {
-    cache.registerCacheExtension(new CacheLifecycleListener(cache));
-
-  }
-
 }
