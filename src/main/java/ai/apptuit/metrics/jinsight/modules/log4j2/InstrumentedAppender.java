@@ -30,14 +30,21 @@ class InstrumentedAppender extends AbstractAppender {
 
   private static final MetricRegistry registry = RegistryService.getMetricRegistry();
 
-  private static Meter total = registry.meter(Log4J2RuleHelper.ROOT_NAME.submetric("total").toString());
+  private static Meter total = registry
+      .meter(Log4J2RuleHelper.ROOT_NAME.submetric("total").toString());
 
-  private static Meter trace = registry.meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "trace").toString());
-  private static Meter debug = registry.meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "debug").toString());
-  private static Meter info = registry.meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "info").toString());
-  private static Meter warn = registry.meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "warn").toString());
-  private static Meter error = registry.meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "error").toString());
-  private static Meter fatal = registry.meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "fatal").toString());
+  private static Meter trace = registry
+      .meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "trace").toString());
+  private static Meter debug = registry
+      .meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "debug").toString());
+  private static Meter info = registry
+      .meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "info").toString());
+  private static Meter warn = registry
+      .meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "warn").toString());
+  private static Meter error = registry
+      .meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "error").toString());
+  private static Meter fatal = registry
+      .meter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "fatal").toString());
   private static Meter totalThrowables = registry
       .meter(Log4J2RuleHelper.THROWABLES_BASE_NAME.submetric("total").toString());
 
@@ -77,7 +84,9 @@ class InstrumentedAppender extends AbstractAppender {
       Throwable throwable = throwableInformation.getThrowable();
       if (throwable != null) {
         String className = throwable.getClass().getName();
-        registry.meter(Log4J2RuleHelper.THROWABLES_BASE_NAME.withTags("class", className).toString()).mark();
+        registry
+            .meter(Log4J2RuleHelper.THROWABLES_BASE_NAME.withTags("class", className).toString())
+            .mark();
       }
     }
   }

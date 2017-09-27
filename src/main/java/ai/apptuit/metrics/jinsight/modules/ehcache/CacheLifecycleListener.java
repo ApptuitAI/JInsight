@@ -65,7 +65,8 @@ class CacheLifecycleListener implements CacheExtension {
   }
 
   private void register(String metric, Gauge<Number> gauge) {
-    String name = EhcacheRuleHelper.ROOT_NAME.submetric(metric).withTags("cache", this.cache.getName()).toString();
+    String name = EhcacheRuleHelper.ROOT_NAME.submetric(metric)
+        .withTags("cache", this.cache.getName()).toString();
     RegistryService.getMetricRegistry().register(name, gauge);
   }
 
