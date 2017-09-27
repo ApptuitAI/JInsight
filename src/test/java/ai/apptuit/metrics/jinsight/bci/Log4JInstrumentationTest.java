@@ -51,16 +51,34 @@ public class Log4JInstrumentationTest {
     meters.put("warn", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "warn")));
     meters.put("error", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "error")));
     meters.put("fatal", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "fatal")));
+    meters.put("throwCount", getMeter(Log4JRuleHelper.THROWABLES_BASE_NAME.submetric("total")));
+    meters.put("throw[RuntimeException]", getMeter(
+        Log4JRuleHelper.THROWABLES_BASE_NAME
+            .withTags("class", RuntimeException.class.getName())
+    ));
 
     logger = Logger.getLogger(Log4JInstrumentationTest.class.getName());
     logger.setLevel(Level.ALL);
   }
 
   @Test
+  public void testThrowable() throws Exception {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("error", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("throwCount", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("throw[RuntimeException]", (s, aLong) -> aLong + 1);
+
+    logger.error("Error with throwable", new RuntimeException());
+
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+  @Test
   public void testLogTrace() throws Exception {
     Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("total", (s, aLong) -> aLong+1);
-    expectedCounts.compute("trace", (s, aLong) -> aLong+1);
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("trace", (s, aLong) -> aLong + 1);
 
     logger.trace("TRACE!");
 
@@ -71,8 +89,8 @@ public class Log4JInstrumentationTest {
   @Test
   public void testLogDebug() throws Exception {
     Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("total", (s, aLong) -> aLong+1);
-    expectedCounts.compute("debug", (s, aLong) -> aLong+1);
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("debug", (s, aLong) -> aLong + 1);
 
     logger.debug("DEBUG!");
 
@@ -83,8 +101,8 @@ public class Log4JInstrumentationTest {
   @Test
   public void testLogInfo() throws Exception {
     Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("total", (s, aLong) -> aLong+1);
-    expectedCounts.compute("info", (s, aLong) -> aLong+1);
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("info", (s, aLong) -> aLong + 1);
 
     logger.info("INFO!");
 
@@ -95,8 +113,8 @@ public class Log4JInstrumentationTest {
   @Test
   public void testLogWarn() throws Exception {
     Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("total", (s, aLong) -> aLong+1);
-    expectedCounts.compute("warn", (s, aLong) -> aLong+1);
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("warn", (s, aLong) -> aLong + 1);
 
     logger.warn("WARN!");
 
@@ -106,8 +124,8 @@ public class Log4JInstrumentationTest {
   @Test
   public void testLogError() throws Exception {
     Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("total", (s, aLong) -> aLong+1);
-    expectedCounts.compute("error", (s, aLong) -> aLong+1);
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("error", (s, aLong) -> aLong + 1);
 
     logger.error("ERROR!");
 
@@ -118,8 +136,8 @@ public class Log4JInstrumentationTest {
   @Test
   public void testLogFatal() throws Exception {
     Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("total", (s, aLong) -> aLong+1);
-    expectedCounts.compute("fatal", (s, aLong) -> aLong+1);
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("fatal", (s, aLong) -> aLong + 1);
 
     logger.fatal("FATAL!");
 
@@ -130,9 +148,9 @@ public class Log4JInstrumentationTest {
     return registry.meter(name.toString());
   }
 
-  private Map<String, Long> getCurrentCounts(){
+  private Map<String, Long> getCurrentCounts() {
     Map<String, Long> currentValues = new HashMap<>(meters.size());
-    meters.forEach((k, meter)->{
+    meters.forEach((k, meter) -> {
       currentValues.put(k, meter.getCount());
     });
     return currentValues;

@@ -55,26 +55,28 @@ public class Log4J2InstrumentationTest {
     meters.put("warn", getMeter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "warn")));
     meters.put("error", getMeter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "error")));
     meters.put("fatal", getMeter(Log4J2RuleHelper.ROOT_NAME.withTags("level", "fatal")));
+    meters.put("throwCount", getMeter(Log4J2RuleHelper.THROWABLES_BASE_NAME.submetric("total")));
+    meters.put("throw[RuntimeException]", getMeter(
+        Log4J2RuleHelper.THROWABLES_BASE_NAME
+            .withTags("class", RuntimeException.class.getName())
+    ));
 
     logger = LogManager.getLogger(Log4J2InstrumentationTest.class.getName());
     setLogLevelAll(logger);
 
   }
 
-  private void setLogLevelAll(Logger logger) {
-    LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
-    Configuration config = ctx.getConfiguration();
-    LoggerConfig loggerConfig = config.getLoggerConfig(logger.getName());
+  @Test
+  public void testThrowable() throws Exception {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("error", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("throwCount", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("throw[RuntimeException]", (s, aLong) -> aLong + 1);
 
-    LoggerConfig specificConfig = loggerConfig;
-    if (!loggerConfig.getName().equals(logger.getName())) {
-      specificConfig = new LoggerConfig(logger.getName(), Level.ALL, true);
-      specificConfig.setParent(loggerConfig);
-      config.addLogger(logger.getName(), specificConfig);
-    }
+    logger.error("Error with throwable", new RuntimeException());
 
-    specificConfig.setLevel(Level.ALL);
-    ctx.updateLoggers();
+    assertEquals(expectedCounts, getCurrentCounts());
   }
 
   @Test
@@ -145,6 +147,23 @@ public class Log4J2InstrumentationTest {
     logger.fatal("FATAL!");
 
     assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+
+  private void setLogLevelAll(Logger logger) {
+    LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+    Configuration config = ctx.getConfiguration();
+    LoggerConfig loggerConfig = config.getLoggerConfig(logger.getName());
+
+    LoggerConfig specificConfig = loggerConfig;
+    if (!loggerConfig.getName().equals(logger.getName())) {
+      specificConfig = new LoggerConfig(logger.getName(), Level.ALL, true);
+      specificConfig.setParent(loggerConfig);
+      config.addLogger(logger.getName(), specificConfig);
+    }
+
+    specificConfig.setLevel(Level.ALL);
+    ctx.updateLoggers();
   }
 
   private Meter getMeter(TagEncodedMetricName name) {

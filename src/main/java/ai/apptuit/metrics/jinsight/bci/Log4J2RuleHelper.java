@@ -22,6 +22,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.impl.ThrowableProxy;
 import org.jboss.byteman.rule.Rule;
 
 /**
@@ -30,6 +31,8 @@ import org.jboss.byteman.rule.Rule;
 public class Log4J2RuleHelper extends RuleHelper {
 
   public static final TagEncodedMetricName ROOT_NAME = TagEncodedMetricName.decode("log4j.appends");
+  public static final TagEncodedMetricName THROWABLES_BASE_NAME = TagEncodedMetricName
+      .decode("log4j.throwables");
 
   public Log4J2RuleHelper(Rule rule) {
     super(rule);
@@ -54,6 +57,8 @@ public class Log4J2RuleHelper extends RuleHelper {
     private static Meter warn = registry.meter(ROOT_NAME.withTags("level", "warn").toString());
     private static Meter error = registry.meter(ROOT_NAME.withTags("level", "error").toString());
     private static Meter fatal = registry.meter(ROOT_NAME.withTags("level", "fatal").toString());
+    private static Meter totalThrowables = registry
+        .meter(THROWABLES_BASE_NAME.submetric("total").toString());
 
     public InstrumentedAppender() {
       super(InstrumentedAppender.class.getName(), null, null);
@@ -85,6 +90,16 @@ public class Log4J2RuleHelper extends RuleHelper {
           break;
       }
 
+
+      ThrowableProxy throwableInformation = event.getThrownProxy();
+      if (throwableInformation != null) {
+        totalThrowables.mark();
+        Throwable throwable = throwableInformation.getThrowable();
+        if (throwable != null) {
+          String className = throwable.getClass().getName();
+          registry.meter(THROWABLES_BASE_NAME.withTags("class", className).toString()).mark();
+        }
+      }
     }
   }
 }
