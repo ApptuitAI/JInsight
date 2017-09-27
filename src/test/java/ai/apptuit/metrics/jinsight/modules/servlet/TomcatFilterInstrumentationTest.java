@@ -32,9 +32,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
@@ -112,18 +109,5 @@ public class TomcatFilterInstrumentationTest {
   private long getTimerCount(TagEncodedMetricName name) {
     Timer timer = registry.getTimers().get(name.toString());
     return timer != null ? timer.getCount() : 0;
-  }
-
-  private static class PingPongServlet extends HttpServlet {
-
-    static final String PONG = "pong";
-    static final String PATH = "/ping";
-
-    @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-      response.setStatus(HttpServletResponse.SC_OK);
-      response.getWriter().append(PONG);
-    }
   }
 }

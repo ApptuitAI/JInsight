@@ -29,9 +29,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -39,7 +36,6 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 
 /**
  * @author Rajiv Shivane
@@ -99,22 +95,9 @@ public class JettyFilterInstrumentationTest {
     return new URL("http://localhost:" + serverPort + path);
   }
 
-
   private long getTimerCount(TagEncodedMetricName name) {
     Timer timer = registry.getTimers().get(name.toString());
     return timer != null ? timer.getCount() : 0;
   }
 
-  public static class PingPongServlet extends HttpServlet {
-
-    public static final String PONG = "pong";
-    public static final String PATH = "/ping";
-
-    @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-      response.setStatus(HttpServletResponse.SC_OK);
-      response.getWriter().append(PONG);
-    }
-  }
 }
