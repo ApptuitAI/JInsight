@@ -144,6 +144,26 @@ public class Log4JInstrumentationTest {
     assertEquals(expectedCounts, getCurrentCounts());
   }
 
+  @Test
+  public void testLogLevel() throws Exception {
+    logger.setLevel(Level.ERROR);
+
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong + 2);
+    expectedCounts.compute("error", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("fatal", (s, aLong) -> aLong + 1);
+
+
+    logger.trace("trace!");
+    logger.debug("debug!");
+    logger.info("info!");
+    logger.warn("warn!");
+    logger.error("error!");
+    logger.fatal("fatal!");
+
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
   private Meter getMeter(TagEncodedMetricName name) {
     return registry.meter(name.toString());
   }

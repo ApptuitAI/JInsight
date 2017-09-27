@@ -62,7 +62,7 @@ public class Log4J2InstrumentationTest {
     ));
 
     logger = LogManager.getLogger(Log4J2InstrumentationTest.class.getName());
-    setLogLevelAll(logger);
+    setLogLevel(logger, Level.ALL);
 
   }
 
@@ -150,19 +150,38 @@ public class Log4J2InstrumentationTest {
   }
 
 
-  private void setLogLevelAll(Logger logger) {
+  @Test
+  public void testLogLevel() throws Exception {
+    setLogLevel(logger, Level.ERROR);
+
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong + 2);
+    expectedCounts.compute("error", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("fatal", (s, aLong) -> aLong + 1);
+
+    logger.trace("trace!");
+    logger.debug("debug!");
+    logger.info("info!");
+    logger.warn("warn!");
+    logger.error("error!");
+    logger.fatal("fatal!");
+
+    assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+  private void setLogLevel(Logger logger, Level level) {
     LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
     Configuration config = ctx.getConfiguration();
     LoggerConfig loggerConfig = config.getLoggerConfig(logger.getName());
 
     LoggerConfig specificConfig = loggerConfig;
     if (!loggerConfig.getName().equals(logger.getName())) {
-      specificConfig = new LoggerConfig(logger.getName(), Level.ALL, true);
+      specificConfig = new LoggerConfig(logger.getName(), level, true);
       specificConfig.setParent(loggerConfig);
       config.addLogger(logger.getName(), specificConfig);
     }
 
-    specificConfig.setLevel(Level.ALL);
+    specificConfig.setLevel(level);
     ctx.updateLoggers();
   }
 
