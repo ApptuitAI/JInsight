@@ -28,7 +28,6 @@ import org.jboss.byteman.rule.Rule;
  */
 public class ServletRuleHelper extends RuleHelper {
 
-  public static final String TOMCAT_METRIC_PREFIX = "tomcat";
   public static final String JETTY_METRIC_PREFIX = "jetty";
   public static final String ROOT_CONTEXT_PATH = "ROOT";
   private static final String PROPERTY_VALUE_TRUE = "TRUE";
@@ -51,5 +50,4 @@ public class ServletRuleHelper extends RuleHelper {
 
     setObjectProperty(context, PROPERTY_NAME_IS_FILTER_ADDED, PROPERTY_VALUE_TRUE);
   }
-
 }

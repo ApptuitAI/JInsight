@@ -46,10 +46,9 @@ public class JettyFilterInstrumentationTest extends AbstractWebServerTest {
 
   @Before
   public void setup() throws Exception {
-    setupMetrics(TagEncodedMetricName.decode(JETTY_METRIC_PREFIX)
-        .submetric("requests")
-        .withTags("context", ROOT_CONTEXT_PATH)
-    );
+    TagEncodedMetricName base = TagEncodedMetricName.decode(JETTY_METRIC_PREFIX)
+        .withTags("context", ROOT_CONTEXT_PATH);
+    setupMetrics(base.submetric("requests"), base.submetric("responses"));
 
     System.out.println("Jetty [Configuring]");
 

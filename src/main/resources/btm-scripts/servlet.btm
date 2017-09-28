@@ -23,11 +23,11 @@ IF TRUE
 DO instrumentServletContextOnce($0.getServletContext())
 ENDRULE
 
-RULE Tomcat ApplicationContext constructor exit
-CLASS org.apache.catalina.core.ApplicationContext
+RULE Tomcat StandardContext constructor exit
+CLASS org.apache.catalina.core.StandardContext
 METHOD <init>
-HELPER ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper
+HELPER ai.apptuit.metrics.jinsight.modules.servlet.TomcatRuleHelper
 AT EXIT
 IF TRUE
-DO instrumentServletContextOnce($0)
+DO instrumentPipeline($0)
 ENDRULE

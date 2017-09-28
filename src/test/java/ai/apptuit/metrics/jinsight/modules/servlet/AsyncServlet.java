@@ -44,7 +44,9 @@ public class AsyncServlet extends BaseTestServlet {
     acontext.start(() -> {
       HttpServletResponse httpServletResponse = (HttpServletResponse) acontext.getResponse();
       try {
+        System.out.println("Sleeping");
         Thread.sleep(5000);
+        System.out.println("DONE Sleeping");
         httpServletResponse.getOutputStream().write(uuid.getBytes());
       } catch (InterruptedException | IOException | RuntimeException e) {
         try {
@@ -53,6 +55,7 @@ public class AsyncServlet extends BaseTestServlet {
           e1.printStackTrace();
         }
       }
+      System.out.println("completing");
       acontext.complete();
     });
   }

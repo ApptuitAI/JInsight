@@ -19,6 +19,7 @@ package ai.apptuit.metrics.jinsight.modules.servlet;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Counting;
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import java.io.IOException;
@@ -37,16 +38,20 @@ abstract class AbstractWebServerTest {
   private Map<String, Counting> counters;
 
 
-  public void setupMetrics(TagEncodedMetricName requestMetricRoot) throws Exception {
+  public void setupMetrics(TagEncodedMetricName requestMetricRoot,
+      TagEncodedMetricName responseMetricRoot) throws Exception {
+
     registry = RegistryService.getMetricRegistry();
 
     counters = new HashMap<>();
     counters.put("GET", getTimer(requestMetricRoot.withTags("method", "GET")));
     counters.put("POST", getTimer(requestMetricRoot.withTags("method", "POST")));
+    counters.put("200", getMeter(responseMetricRoot.withTags("status", "200")));
+    counters.put("500", getMeter(responseMetricRoot.withTags("status", "500")));
   }
 
-  protected String getText(HttpURLConnection connection) throws IOException {
-    return new Scanner(connection.getInputStream()).useDelimiter("\0").next();
+  private Meter getMeter(TagEncodedMetricName metricName) {
+    return registry.meter(metricName.toString());
   }
 
   protected Timer getTimer(TagEncodedMetricName metricName) {
@@ -59,5 +64,9 @@ abstract class AbstractWebServerTest {
       currentValues.put(k, meter.getCount());
     });
     return currentValues;
+  }
+
+  protected String getText(HttpURLConnection connection) throws IOException {
+    return new Scanner(connection.getInputStream()).useDelimiter("\0").next();
   }
 }

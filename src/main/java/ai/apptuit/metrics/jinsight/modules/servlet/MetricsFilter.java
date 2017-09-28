@@ -18,9 +18,13 @@ package ai.apptuit.metrics.jinsight.modules.servlet;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.Filter;
@@ -37,7 +41,11 @@ import javax.servlet.http.HttpServletRequest;
  */
 class MetricsFilter implements Filter {
 
-  private TagEncodedMetricName rootMetric;
+  private MetricRegistry registry;
+  private TagEncodedMetricName requestCountRootMetric;
+
+  private Counter activeRequestsCounter;
+  private Map<String, Timer> timersByMethod = new ConcurrentHashMap<>();
 
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
@@ -46,8 +54,12 @@ class MetricsFilter implements Filter {
     if (contextPathTag.trim().equals("")) {
       contextPathTag = ServletRuleHelper.ROOT_CONTEXT_PATH;
     }
-    rootMetric = TagEncodedMetricName.decode(getServerName(context.getServerInfo()))
-        .submetric("requests").withTags("context", contextPathTag);
+    TagEncodedMetricName serverRootMetric = TagEncodedMetricName
+        .decode(getServerName(context.getServerInfo())).withTags("context", contextPathTag);
+    requestCountRootMetric = serverRootMetric.submetric("requests");
+    registry = RegistryService.getMetricRegistry();
+    activeRequestsCounter = registry
+        .counter(serverRootMetric.submetric("requests.active").toString());
   }
 
   private String getServerName(String serverInfo) {
@@ -60,9 +72,7 @@ class MetricsFilter implements Filter {
       serverName = serverInfo.substring(0, slash);
     }
 
-    if (serverName.toLowerCase().contains("tomcat")) {
-      return ServletRuleHelper.TOMCAT_METRIC_PREFIX;
-    } else if (serverName.toLowerCase().contains("jetty")) {
+    if (serverName.toLowerCase().contains("jetty")) {
       return ServletRuleHelper.JETTY_METRIC_PREFIX;
     } else {
       return serverName;
@@ -73,13 +83,9 @@ class MetricsFilter implements Filter {
   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
       FilterChain filterChain) throws IOException, ServletException {
 
-    TagEncodedMetricName metricName = rootMetric;
-    if (servletRequest instanceof HttpServletRequest) {
-      metricName = metricName
-          .withTags("method", ((HttpServletRequest) servletRequest).getMethod());
-    }
-    Timer timer = RegistryService.getMetricRegistry().timer(metricName.toString());
-    Context context = timer.time();
+    activeRequestsCounter.inc();
+    Context context = getTimerByMethod(servletRequest).time();
+
     boolean cleanRun = false;
     try {
       filterChain.doFilter(servletRequest, servletResponse);
@@ -89,8 +95,28 @@ class MetricsFilter implements Filter {
         servletRequest.getAsyncContext().addListener(new AsyncCompletionListener(context));
       } else {
         context.stop();
+        activeRequestsCounter.dec();
       }
     }
+  }
+
+  private Timer getTimerByMethod(ServletRequest servletRequest) {
+    String method = null;
+    if (servletRequest instanceof HttpServletRequest) {
+      method = ((HttpServletRequest) servletRequest).getMethod();
+    }
+    return getTimerByMethod(method);
+  }
+
+  private Timer getTimerByMethod(String method) {
+    String key = (method != null) ? method : "?";
+    return timersByMethod.computeIfAbsent(key, s -> {
+      TagEncodedMetricName metric = requestCountRootMetric;
+      if (method != null) {
+        metric = metric.withTags("method", method);
+      }
+      return registry.timer(metric.toString());
+    });
   }
 
   @Override
@@ -112,17 +138,20 @@ class MetricsFilter implements Filter {
         return;
       }
       context.stop();
+      activeRequestsCounter.dec();
     }
 
     @Override
     public void onTimeout(AsyncEvent event) throws IOException {
       context.stop();
+      activeRequestsCounter.dec();
       processed = true;
     }
 
     @Override
     public void onError(AsyncEvent event) throws IOException {
       context.stop();
+      activeRequestsCounter.dec();
       processed = true;
     }
 
