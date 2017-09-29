@@ -86,8 +86,8 @@ limitations under the License.
     <enforce.code.style>false</enforce.code.style>
     <ignore.license.checks>false</ignore.license.checks>
     <enforce.findbugs>true</enforce.findbugs>
-    <minimum.complexity.coverage>0.50</minimum.complexity.coverage>
-    <minimum.instruction.coverage>0.70</minimum.instruction.coverage>
+    <minimum.complexity.coverage>0.60</minimum.complexity.coverage>
+    <minimum.instruction.coverage>0.80</minimum.instruction.coverage>
     <max.agent.file.size>2.5</max.agent.file.size>
   </properties>
 
