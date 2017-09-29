@@ -14,13 +14,13 @@
 #  limitations under the License.
 #
 
-RULE Jetty ServletContextHandler constructor exit
-CLASS org.eclipse.jetty.servlet.ServletContextHandler
-METHOD <init>
-HELPER ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper
+RULE Jetty Server constructor exit
+CLASS org.eclipse.jetty.server.Server
+METHOD <init>(org.eclipse.jetty.util.thread.ThreadPool)
+HELPER ai.apptuit.metrics.jinsight.modules.servlet.JettyRuleHelper
 AT EXIT
 IF TRUE
-DO instrumentServletContextOnce($0.getServletContext())
+DO instrument($0)
 ENDRULE
 
 RULE Tomcat StandardContext constructor exit
@@ -29,5 +29,5 @@ METHOD <init>
 HELPER ai.apptuit.metrics.jinsight.modules.servlet.TomcatRuleHelper
 AT EXIT
 IF TRUE
-DO instrumentPipeline($0)
+DO instrument($0)
 ENDRULE

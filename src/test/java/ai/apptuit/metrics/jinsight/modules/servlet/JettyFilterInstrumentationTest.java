@@ -16,8 +16,8 @@
 
 package ai.apptuit.metrics.jinsight.modules.servlet;
 
-import static ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper.JETTY_METRIC_PREFIX;
-import static ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper.ROOT_CONTEXT_PATH;
+import static ai.apptuit.metrics.jinsight.modules.servlet.JettyRuleHelper.JETTY_METRIC_PREFIX;
+import static ai.apptuit.metrics.jinsight.modules.servlet.ContextMetricsHelper.ROOT_CONTEXT_PATH;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
@@ -46,8 +46,7 @@ public class JettyFilterInstrumentationTest extends AbstractWebServerTest {
 
   @Before
   public void setup() throws Exception {
-    TagEncodedMetricName base = TagEncodedMetricName.decode(JETTY_METRIC_PREFIX)
-        .withTags("context", ROOT_CONTEXT_PATH);
+    TagEncodedMetricName base = JETTY_METRIC_PREFIX.withTags("context", ROOT_CONTEXT_PATH);
     setupMetrics(base.submetric("requests"), base.submetric("responses"));
 
     System.out.println("Jetty [Configuring]");
@@ -76,9 +75,10 @@ public class JettyFilterInstrumentationTest extends AbstractWebServerTest {
   }
 
   @Test
-  public void testPingPong() throws IOException {
+  public void testPingPong() throws IOException, InterruptedException {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("200", (s, aLong) -> aLong + 1);
 
     URL url = pathToURL(PingPongServlet.PATH);
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -87,14 +87,15 @@ public class JettyFilterInstrumentationTest extends AbstractWebServerTest {
     assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
     assertEquals(PingPongServlet.PONG, getText(connection));
 
-    assertEquals(expectedCounts, getCurrentCounts());
+    validateCounts(expectedCounts);
   }
 
 
   @Test
-  public void testAsync() throws IOException {
+  public void testAsync() throws IOException, InterruptedException {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("200", (s, aLong) -> aLong + 1);
 
     String uuid = UUID.randomUUID().toString();
     URL url = pathToURL(AsyncServlet.PATH + "?" + AsyncServlet.UUID_PARAM + "=" + uuid);
@@ -104,27 +105,29 @@ public class JettyFilterInstrumentationTest extends AbstractWebServerTest {
     assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
     assertEquals(uuid, getText(connection));
 
-    assertEquals(expectedCounts, getCurrentCounts());
+    validateCounts(expectedCounts);
   }
 
 
   @Test
-  public void testAsyncWithError() throws IOException {
+  public void testAsyncWithError() throws IOException, InterruptedException {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("500", (s, aLong) -> aLong + 1);
 
     URL url = pathToURL(AsyncServlet.PATH);
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.connect();
 
     assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
-    assertEquals(expectedCounts, getCurrentCounts());
+    validateCounts(expectedCounts);
   }
 
   @Test
-  public void testPost() throws IOException {
+  public void testPost() throws IOException, InterruptedException {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("POST", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("200", (s, aLong) -> aLong + 1);
 
     String content = UUID.randomUUID().toString();
 
@@ -138,14 +141,15 @@ public class JettyFilterInstrumentationTest extends AbstractWebServerTest {
     assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
     assertEquals(content, getText(connection));
 
-    assertEquals(expectedCounts, getCurrentCounts());
+    validateCounts(expectedCounts);
   }
 
 
   @Test
-  public void testExceptionResponse() throws IOException {
+  public void testExceptionResponse() throws IOException, InterruptedException {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("500", (s, aLong) -> aLong + 1);
 
     URL url = pathToURL(ExceptionServlet.PATH);
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -153,7 +157,7 @@ public class JettyFilterInstrumentationTest extends AbstractWebServerTest {
     connection.connect();
 
     assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
-    assertEquals(expectedCounts, getCurrentCounts());
+    validateCounts(expectedCounts);
   }
 
   private URL pathToURL(String path) throws MalformedURLException {

@@ -19,6 +19,7 @@ package ai.apptuit.metrics.jinsight.modules.servlet;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
@@ -27,85 +28,61 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author Rajiv Shivane
  */
-class MetricsFilter implements Filter {
+public class ContextMetricsHelper {
+
+  public static final String ROOT_CONTEXT_PATH = "ROOT";
 
   private MetricRegistry registry;
   private TagEncodedMetricName requestCountRootMetric;
+  private TagEncodedMetricName responseCountRootMetric;
 
   private Counter activeRequestsCounter;
   private Map<String, Timer> timersByMethod = new ConcurrentHashMap<>();
+  private Map<Integer, Meter> metersByStatusCode = new ConcurrentHashMap<>();
 
-  @Override
-  public void init(FilterConfig filterConfig) throws ServletException {
-    ServletContext context = filterConfig.getServletContext();
-    String contextPathTag = context.getContextPath();
-    if (contextPathTag.trim().equals("")) {
-      contextPathTag = ServletRuleHelper.ROOT_CONTEXT_PATH;
+  public ContextMetricsHelper(TagEncodedMetricName serverPrefix, String contextPath) {
+    if (contextPath.trim().equals("")) {
+      contextPath = ROOT_CONTEXT_PATH;
     }
-    TagEncodedMetricName serverRootMetric = TagEncodedMetricName
-        .decode(getServerName(context.getServerInfo())).withTags("context", contextPathTag);
+    TagEncodedMetricName serverRootMetric = serverPrefix.withTags("context", contextPath);
     requestCountRootMetric = serverRootMetric.submetric("requests");
+    responseCountRootMetric = serverRootMetric.submetric("responses");
     registry = RegistryService.getMetricRegistry();
     activeRequestsCounter = registry
         .counter(serverRootMetric.submetric("requests.active").toString());
   }
 
-  private String getServerName(String serverInfo) {
 
-    String serverName;
-    int slash = serverInfo.indexOf('/');
-    if (slash == -1) {
-      serverName = serverInfo;
-    } else {
-      serverName = serverInfo.substring(0, slash);
-    }
-
-    if (serverName.toLowerCase().contains("jetty")) {
-      return ServletRuleHelper.JETTY_METRIC_PREFIX;
-    } else {
-      return serverName;
-    }
-  }
-
-  @Override
-  public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
-      FilterChain filterChain) throws IOException, ServletException {
+  public void measure(HttpServletRequest request, HttpServletResponse response,
+      MeasurableJob runnable)
+      throws IOException, ServletException {
 
     activeRequestsCounter.inc();
-    Context context = getTimerByMethod(servletRequest).time();
+    Context context = getTimerByMethod(request).time();
 
-    boolean cleanRun = false;
-    try {
-      filterChain.doFilter(servletRequest, servletResponse);
-      cleanRun = true;
-    } finally {
-      if (cleanRun && servletRequest.isAsyncStarted()) {
-        servletRequest.getAsyncContext().addListener(new AsyncCompletionListener(context));
-      } else {
-        context.stop();
-        activeRequestsCounter.dec();
-      }
+    runnable.run();
+    if (request.isAsyncStarted()) {
+      request.getAsyncContext().addListener(new AsyncCompletionListener(context, response));
+    } else {
+      context.stop();
+      activeRequestsCounter.dec();
+      updateStatusMetric(response);
     }
   }
 
-  private Timer getTimerByMethod(ServletRequest servletRequest) {
-    String method = null;
-    if (servletRequest instanceof HttpServletRequest) {
-      method = ((HttpServletRequest) servletRequest).getMethod();
-    }
-    return getTimerByMethod(method);
+  private void updateStatusMetric(HttpServletResponse response) {
+    getMeterByStatus(response.getStatus()).mark();
+  }
+
+  private Timer getTimerByMethod(HttpServletRequest servletRequest) {
+    return getTimerByMethod(servletRequest.getMethod());
   }
 
   private Timer getTimerByMethod(String method) {
@@ -119,40 +96,54 @@ class MetricsFilter implements Filter {
     });
   }
 
-  @Override
-  public void destroy() {
+  private Meter getMeterByStatus(Integer status) {
+    return metersByStatusCode.computeIfAbsent(status, s -> {
+      TagEncodedMetricName metric = responseCountRootMetric.withTags("status", status.toString());
+      return registry.meter(metric.toString());
+    });
+  }
+
+  public interface MeasurableJob {
+
+    public void run() throws IOException, ServletException;
   }
 
   private class AsyncCompletionListener implements AsyncListener {
 
-    private Context context;
-    private boolean processed = false;
+    private final Context context;
+    private final HttpServletResponse response;
+    private boolean done;
 
-    public AsyncCompletionListener(Context context) {
+    public AsyncCompletionListener(Context context, HttpServletResponse response) {
       this.context = context;
+      this.response = response;
+      done = false;
     }
 
     @Override
     public void onComplete(AsyncEvent event) throws IOException {
-      if (processed) {
+      if (done) {
         return;
       }
       context.stop();
       activeRequestsCounter.dec();
+      updateStatusMetric(response);
     }
 
     @Override
     public void onTimeout(AsyncEvent event) throws IOException {
       context.stop();
       activeRequestsCounter.dec();
-      processed = true;
+      updateStatusMetric(response);
+      done = true;
     }
 
     @Override
     public void onError(AsyncEvent event) throws IOException {
       context.stop();
       activeRequestsCounter.dec();
-      processed = true;
+      updateStatusMetric(response);
+      done = true;
     }
 
     @Override

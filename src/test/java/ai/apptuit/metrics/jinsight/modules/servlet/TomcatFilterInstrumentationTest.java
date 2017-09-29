@@ -16,7 +16,7 @@
 
 package ai.apptuit.metrics.jinsight.modules.servlet;
 
-import static ai.apptuit.metrics.jinsight.modules.servlet.ServletRuleHelper.ROOT_CONTEXT_PATH;
+import static ai.apptuit.metrics.jinsight.modules.servlet.ContextMetricsHelper.ROOT_CONTEXT_PATH;
 import static ai.apptuit.metrics.jinsight.modules.servlet.TomcatRuleHelper.TOMCAT_METRIC_PREFIX;
 import static org.junit.Assert.assertEquals;
 
@@ -49,8 +49,7 @@ public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
   @Before
   public void setup() throws Exception {
 
-    TagEncodedMetricName base = TagEncodedMetricName.decode(TOMCAT_METRIC_PREFIX)
-        .withTags("context", ROOT_CONTEXT_PATH);
+    TagEncodedMetricName base = TOMCAT_METRIC_PREFIX.withTags("context", ROOT_CONTEXT_PATH);
     setupMetrics(base.submetric("requests"), base.submetric("responses"));
 
     System.out.println("Tomcat [Configuring]");
@@ -85,7 +84,7 @@ public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
   }
 
   @Test
-  public void testPingPong() throws IOException {
+  public void testPingPong() throws IOException, InterruptedException {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
     expectedCounts.compute("200", (s, aLong) -> aLong + 1);
@@ -97,7 +96,7 @@ public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
     assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
     assertEquals(PingPongServlet.PONG, getText(connection));
 
-    assertEquals(expectedCounts, getCurrentCounts());
+    validateCounts(expectedCounts);
   }
 
   @Test
@@ -113,9 +112,7 @@ public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
 
     assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
     assertEquals(uuid, getText(connection));
-
-    Thread.sleep(1000); //Sleep for a bit for the Async metrics to be updated
-    assertEquals(expectedCounts, getCurrentCounts());
+    validateCounts(expectedCounts);
   }
 
 
@@ -130,12 +127,11 @@ public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
     connection.connect();
 
     assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
-    Thread.sleep(1000); //Sleep for a bit for the Async metrics to be updated
-    assertEquals(expectedCounts, getCurrentCounts());
+    validateCounts(expectedCounts);
   }
 
   @Test
-  public void testPost() throws IOException {
+  public void testPost() throws IOException, InterruptedException {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("POST", (s, aLong) -> aLong + 1);
     expectedCounts.compute("200", (s, aLong) -> aLong + 1);
@@ -152,12 +148,12 @@ public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
     assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
     assertEquals(content, getText(connection));
 
-    assertEquals(expectedCounts, getCurrentCounts());
+    validateCounts(expectedCounts);
   }
 
 
   @Test
-  public void testExceptionResponse() throws IOException {
+  public void testExceptionResponse() throws IOException, InterruptedException {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
     expectedCounts.compute("500", (s, aLong) -> aLong + 1);
@@ -167,7 +163,7 @@ public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
     connection.connect();
 
     assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
-    assertEquals(expectedCounts, getCurrentCounts());
+    validateCounts(expectedCounts);
   }
 
   private <T extends BaseTestServlet> T registerServlet(Context context, T servlet) {

@@ -16,6 +16,8 @@
 
 package ai.apptuit.metrics.jinsight.modules.servlet;
 
+import static org.junit.Assert.assertEquals;
+
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Counting;
@@ -56,6 +58,12 @@ abstract class AbstractWebServerTest {
 
   protected Timer getTimer(TagEncodedMetricName metricName) {
     return registry.timer(metricName.toString());
+  }
+
+
+  protected void validateCounts(Map<String, Long> expectedCounts) throws InterruptedException {
+    Thread.sleep(250); //Wait for the valve/filter to be invoked to get the latest metrics
+    assertEquals(expectedCounts, getCurrentCounts());
   }
 
   protected Map<String, Long> getCurrentCounts() {
