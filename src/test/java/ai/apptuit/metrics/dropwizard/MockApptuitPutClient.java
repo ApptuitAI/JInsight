@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ai.apptuit.metrics.util;
+package ai.apptuit.metrics.dropwizard;
 
 import static org.mockito.Matchers.anyCollectionOf;
 import static org.mockito.Mockito.doAnswer;

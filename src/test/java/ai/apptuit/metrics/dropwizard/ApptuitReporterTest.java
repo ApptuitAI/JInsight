@@ -19,8 +19,7 @@ package ai.apptuit.metrics.dropwizard;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 
-import ai.apptuit.metrics.util.MockApptuitPutClient;
-import ai.apptuit.metrics.util.MockApptuitPutClient.PutListener;
+import ai.apptuit.metrics.dropwizard.MockApptuitPutClient.PutListener;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
