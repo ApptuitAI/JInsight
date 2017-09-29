@@ -39,8 +39,8 @@ public class ConfigService {
   private static final String ACCESS_TOKEN_PROPERTY_NAME = "apptuit.access_token";
   private static final String GLOBAL_TAGS_PROPERTY_NAME = "global_tags";
 
-  private static final File DEFAULT_CONFIG_FILE = new File(System.getProperty("user.home"),
-      DEFAULT_CONFIG_FILE_NAME);
+  private static final File JINSIGHT_HOME = new File(System.getProperty("user.home"), ".jinsight");
+  private static final File DEFAULT_CONFIG_FILE = new File(JINSIGHT_HOME, DEFAULT_CONFIG_FILE_NAME);
 
 
   private static ConfigService singleton = null;
