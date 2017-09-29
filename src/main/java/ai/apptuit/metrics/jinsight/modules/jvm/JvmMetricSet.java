@@ -18,6 +18,7 @@ package ai.apptuit.metrics.jinsight.modules.jvm;
 
 import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
 
+import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.jvm.BufferPoolMetricSet;
@@ -26,50 +27,47 @@ import com.codahale.metrics.jvm.ClassLoadingGaugeSet;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Rajiv Shivane
  */
-public class JvmMetricsMonitor {
+public class JvmMetricSet implements MetricSet {
 
-  private final MetricRegistry metricRegistry;
+  Map<String, Metric> metrics = new HashMap<>();
 
-  public JvmMetricsMonitor(MetricRegistry registry) {
-    this.metricRegistry = registry;
-    registerAll();
-  }
+  public JvmMetricSet() {
+    registerSet("jvm.buffers", new BufferPoolMetricSet(getPlatformMBeanServer()));
+    registerSet("jvm.classloading", new ClassLoadingGaugeSet());
+    registerSet("jvm.fd", new FileDescriptorMetrics());
+    registerSet("jvm.gc", new GarbageCollectorMetricSet());
+    registerSet("jvm.memory", new MemoryUsageGaugeSet());
+    registerSet("jvm.thread", new CachedThreadStatesGaugeSet(60, TimeUnit.SECONDS));
 
-
-  private void registerAll() {
-
-    registerAll("jvm.buffers", new BufferPoolMetricSet(getPlatformMBeanServer()));
-    registerAll("jvm.classloading", new ClassLoadingGaugeSet());
-    registerAll("jvm.fd", new FileDescriptorMetrics());
-    registerAll("jvm.gc", new GarbageCollectorMetricSet());
-    registerAll("jvm.memory", new MemoryUsageGaugeSet());
-    registerAll("jvm.thread", new CachedThreadStatesGaugeSet(60, TimeUnit.SECONDS));
-
-    metricRegistry.register("jvm.uptime", new UptimeGauge());
+    metrics.put("jvm.uptime", new UptimeGauge());
 
     try {
-      metricRegistry.register("jvm.processCPU", new ProcessCpuTicksGauge());
+      metrics.put("jvm.processCPU", new ProcessCpuTicksGauge());
     } catch (ClassNotFoundException | IOException e) {
       //e.printStackTrace();
       //TODO Log
     }
   }
+  @Override
+  public Map<String, Metric> getMetrics() {
+    return metrics;
+  }
 
-  private void registerAll(String prefix, MetricSet metrics)
-      throws IllegalArgumentException {
-    metrics.getMetrics().forEach((key, value) -> {
-      metricRegistry.register(getMetricName(prefix, key), value);
+  private void registerSet(String prefix, MetricSet metricset) throws IllegalArgumentException {
+
+    metricset.getMetrics().forEach((key, value) -> {
+      metrics.put(getMetricName(prefix, key), value);
     });
   }
 
   private String getMetricName(String prefix, String key) {
     return MetricRegistry.name(prefix, key).toLowerCase().replace('-', '_');
   }
-
-
 }

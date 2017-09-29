@@ -17,7 +17,7 @@
 package ai.apptuit.metrics.jinsight;
 
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
-import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricsMonitor;
+import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import java.net.InetAddress;
@@ -53,7 +53,7 @@ public class RegistryService {
         configService.getApiToken());
     reporter.start(5, TimeUnit.SECONDS);
 
-    new JvmMetricsMonitor(registry);
+    registry.registerAll(new JvmMetricSet());
   }
 
   public static MetricRegistry getMetricRegistry() {

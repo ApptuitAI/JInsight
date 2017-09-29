@@ -18,7 +18,6 @@ package ai.apptuit.metrics.jinsight.modules.jvm;
 
 import static org.junit.Assert.assertEquals;
 
-import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricsMonitor;
 import com.codahale.metrics.MetricRegistry;
 import java.util.Arrays;
 import java.util.List;
@@ -30,14 +29,14 @@ import org.junit.Test;
 /**
  * @author Rajiv Shivane
  */
-public class JVMMetricsMonitorTest {
+public class JvmMetricSetTest {
 
   private MetricRegistry registry;
 
   @Before
   public void setUp() throws Exception {
     registry = new MetricRegistry();
-    JvmMetricsMonitor monitor = new JvmMetricsMonitor(registry);
+    registry.registerAll(new JvmMetricSet());
   }
 
   @Test
