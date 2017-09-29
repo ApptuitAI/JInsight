@@ -88,6 +88,7 @@ limitations under the License.
     <enforce.findbugs>true</enforce.findbugs>
     <minimum.complexity.coverage>0.50</minimum.complexity.coverage>
     <minimum.instruction.coverage>0.70</minimum.instruction.coverage>
+    <max.agent.file.size>2.5</max.agent.file.size>
   </properties>
 
   <dependencies>
@@ -467,6 +468,39 @@ limitations under the License.
                   </limits>
                 </rule>
               </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.gmaven</groupId>
+        <artifactId>groovy-maven-plugin</artifactId>
+        <version>2.0</version>
+        <executions>
+          <execution>
+            <id>enforce-agent-jar-size</id>
+            <phase>package</phase>
+            <goals>
+              <goal>execute</goal>
+            </goals>
+            <configuration>
+              <properties>
+                <filename>
+                  ${project.build.directory}/${project.build.finalName}.${project.packaging}
+                </filename>
+                <maxSizeMB>${max.agent.file.size}</maxSizeMB>
+              </properties>
+              <source>
+                float maxSize = Float.parseFloat(properties['maxSizeMB'])
+                File file = new File(properties['filename'])
+                log.info("${file} is of size ${file.length()} bytes")
+                if (file.length() > maxSize * 1024 * 1024) {
+                  log.error("Package exceeds maximum size allowed size: ${maxSize} MB")
+                  fail()
+                } else
+                  log.info("File size OK")
+
+              </source>
             </configuration>
           </execution>
         </executions>
