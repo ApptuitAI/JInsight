@@ -275,21 +275,27 @@ limitations under the License.
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.0.2</version>
-        <configuration>
-          <resources>
-            <resource>
-              <directory>${project.basedir}/src/main/resources/</directory>
-              <!--
-              Exclude btm files since we merge them and copy merged file in
-              see: @merge-btm-files
-              -->
-              <excludes>
-                <exclude>**/*.btm</exclude>
-              </excludes>
-              <filtering>false</filtering>
-            </resource>
-          </resources>
-        </configuration>
+        <executions>
+          <execution>
+            <id>default-resources</id>
+            <phase>process-resources</phase>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>${project.basedir}/src/main/resources/</directory>
+                  <!--
+                  Exclude btm files since we merge them and copy merged file in
+                  see: @merge-btm-files
+                  -->
+                  <excludes>
+                    <exclude>**/*.btm</exclude>
+                  </excludes>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.zcore.maven</groupId>
