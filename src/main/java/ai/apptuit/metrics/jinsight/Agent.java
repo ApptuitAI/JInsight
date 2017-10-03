@@ -29,20 +29,23 @@ import org.jboss.byteman.agent.Main;
 public class Agent {
 
   private static final String BTM_SCRIPTS_RESOURCE_PATH = "btm-scripts/jinsight.btm";
-  private static final String RESOURCE_SCRIPT_PARAM = "resourcescript:" + BTM_SCRIPTS_RESOURCE_PATH;
+  private static final String MODULE_LOADER_CLASSNAME = "ai.apptuit.metrics.jinsight.ContextualModuleLoader";
+
+  private static final String AGENT_PARAMS = "resourcescript:" + BTM_SCRIPTS_RESOURCE_PATH
+      + ",modules:" + MODULE_LOADER_CLASSNAME;
 
   public static void premain(String agentArgs, Instrumentation instrumentation) throws Exception {
     if (!canStartAgent()) {
       return;
     }
-    Main.premain(RESOURCE_SCRIPT_PARAM, instrumentation);
+    Main.premain(AGENT_PARAMS, instrumentation);
   }
 
   public static void agentmain(String agentArgs, Instrumentation instrumentation) throws Exception {
     if (!canStartAgent()) {
       return;
     }
-    Main.agentmain(RESOURCE_SCRIPT_PARAM, instrumentation);
+    Main.agentmain(AGENT_PARAMS, instrumentation);
   }
 
   private static boolean canStartAgent() {
