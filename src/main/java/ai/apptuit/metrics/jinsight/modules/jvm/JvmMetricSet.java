@@ -27,6 +27,7 @@ import com.codahale.metrics.jvm.ClassLoadingGaugeSet;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class JvmMetricSet implements MetricSet {
 
-  Map<String, Metric> metrics = new HashMap<>();
+  private final Map<String, Metric> metrics = new HashMap<>();
 
   public JvmMetricSet() {
     registerSet("jvm.buffers", new BufferPoolMetricSet(getPlatformMBeanServer()));
@@ -58,7 +59,7 @@ public class JvmMetricSet implements MetricSet {
 
   @Override
   public Map<String, Metric> getMetrics() {
-    return metrics;
+    return Collections.unmodifiableMap(metrics);
   }
 
   private void registerSet(String prefix, MetricSet metricset) throws IllegalArgumentException {
