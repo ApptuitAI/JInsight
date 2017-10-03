@@ -327,6 +327,38 @@ limitations under the License.
 
       <!-- Plugins for test phase -->
       <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Premain-Class>ai.apptuit.metrics.jinsight.Agent</Premain-Class>
+              <Agent-Class>ai.apptuit.metrics.jinsight.Agent</Agent-Class>
+              <Can-Redefine-Classes>true</Can-Redefine-Classes>
+              <Can-Retransform-Classes>true</Can-Retransform-Classes>
+            </manifestEntries>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <id>instrumented-jar</id>
+            <phase>generate-test-resources</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <attach>false</attach>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+              <classifier>instrumented</classifier>
+              <finalName>${project.build.finalName}-instrumented</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${surefire.version}</version>
@@ -363,18 +395,6 @@ limitations under the License.
             </manifestEntries>
           </archive>
         </configuration>
-        <executions>
-          <execution>
-            <id>instrumented-jar</id>
-            <phase>generate-test-resources</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-            <configuration>
-              <classifier>instrumented</classifier>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
