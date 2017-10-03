@@ -220,17 +220,6 @@ limitations under the License.
   </dependencies>
   <build>
 
-    <resources>
-      <resource>
-        <directory>${project.basedir}/src/main/resources</directory>
-        <excludes>
-          <!-- Exclude btm files since we merge them and copy merged file in #merge-btm-files -->
-          <exclude>**/*.btm</exclude>
-        </excludes>
-        <filtering>false</filtering>
-      </resource>
-    </resources>
-
     <plugins>
 
       <!-- Plugins for validate phase -->
@@ -281,6 +270,26 @@ limitations under the License.
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.0.2</version>
+        <configuration>
+          <resources>
+            <resource>
+              <directory>${project.basedir}/src/main/resources/</directory>
+              <!--
+              Exclude btm files since we merge them and copy merged file in
+              see: @merge-btm-files
+              -->
+              <excludes>
+                <exclude>**/*.btm</exclude>
+              </excludes>
+              <filtering>false</filtering>
+            </resource>
+          </resources>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.zcore.maven</groupId>
@@ -397,7 +406,19 @@ limitations under the License.
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.0.1</version>
+        <executions>
+          <execution>
+            <id>generate-sources-jar</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
       <!-- Plugins for verify phase -->
       <plugin>
