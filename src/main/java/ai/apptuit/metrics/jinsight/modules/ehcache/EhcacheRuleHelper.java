@@ -17,7 +17,9 @@
 package ai.apptuit.metrics.jinsight.modules.ehcache;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
+import com.codahale.metrics.MetricRegistry;
 import net.sf.ehcache.Cache;
 import org.jboss.byteman.rule.Rule;
 
@@ -33,7 +35,8 @@ public class EhcacheRuleHelper extends RuleHelper {
   }
 
   public void monitor(Cache cache) {
-    cache.registerCacheExtension(new CacheLifecycleListener(cache));
+    MetricRegistry registry = RegistryService.getMetricRegistry();
+    cache.registerCacheExtension(new CacheLifecycleListener(cache, registry));
 
   }
 

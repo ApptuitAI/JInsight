@@ -16,8 +16,10 @@
 
 package ai.apptuit.metrics.jinsight.modules.ehcache;
 
-import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
+import java.util.Set;
+import java.util.TreeSet;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Ehcache;
@@ -30,11 +32,14 @@ import net.sf.ehcache.extension.CacheExtension;
 class CacheLifecycleListener implements CacheExtension {
 
   private final Cache cache;
+  private final MetricRegistry metricRegistry;
+  private final Set<String> registeredMetrics = new TreeSet<>();
   private Status status;
 
-  public CacheLifecycleListener(Cache cache) {
+  public CacheLifecycleListener(Cache cache, MetricRegistry metricRegistry) {
     this.cache = cache;
-    status = Status.STATUS_UNINITIALISED;
+    this.metricRegistry = metricRegistry;
+    this.status = Status.STATUS_UNINITIALISED;
   }
 
   @Override
@@ -67,13 +72,13 @@ class CacheLifecycleListener implements CacheExtension {
   private void register(String metric, Gauge<Number> gauge) {
     String name = EhcacheRuleHelper.ROOT_NAME.submetric(metric)
         .withTags("cache", this.cache.getName()).toString();
-    RegistryService.getMetricRegistry().register(name, gauge);
+    registeredMetrics.add(name);
+    metricRegistry.register(name, gauge);
   }
 
   @Override
   public void dispose() throws CacheException {
-    //new Exception("Disposing cache: [" + cache.getName() + "]").printStackTrace();
-    //TODO unregister the metrics?!
+    registeredMetrics.forEach(metricName -> metricRegistry.remove(metricName));
     status = Status.STATUS_SHUTDOWN;
   }
 
@@ -84,7 +89,6 @@ class CacheLifecycleListener implements CacheExtension {
 
   @Override
   public Status getStatus() {
-    Thread.dumpStack();
     return status;
   }
 }
