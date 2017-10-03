@@ -22,14 +22,20 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.config.properties.PropertiesConfiguration;
+import org.apache.logging.log4j.core.config.properties.PropertiesConfigurationFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -170,6 +176,41 @@ public class Log4J2InstrumentationTest {
 
     assertEquals(expectedCounts, getCurrentCounts());
   }
+
+
+  @Test
+  public void testLoggerReconfiguration() throws Exception {
+    setLogLevel(logger, Level.ERROR);
+
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("error", (s, aLong) -> aLong + 1);
+
+    Properties properties = new Properties();
+    properties.setProperty("name", "PropertiesConfig");
+    properties.setProperty("appenders", "console");
+    properties.setProperty("appender.console.type", "Console");
+    properties.setProperty("appender.console.name", "STDOUT");
+    properties.setProperty("rootLogger.level", "debug");
+    properties.setProperty("rootLogger.appenderRefs", "stdout");
+    properties.setProperty("rootLogger.appenderRefs", "stdout");
+    properties.setProperty("rootLogger.appenderRef.stdout.ref", "STDOUT");
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    properties.store(baos, null);
+    ConfigurationSource source = new ConfigurationSource(
+        new ByteArrayInputStream(baos.toByteArray()));
+
+    PropertiesConfigurationFactory factory = new PropertiesConfigurationFactory();
+    LoggerContext context = (LoggerContext) LogManager.getContext(false);
+    PropertiesConfiguration configuration = factory.getConfiguration(context, source);
+    configuration.start();
+    context.updateLoggers(configuration);
+
+    logger.error("error!");
+    assertEquals(expectedCounts, getCurrentCounts());
+
+  }
+
 
   private void setLogLevel(Logger logger, Level level) {
     LoggerContext ctx = (LoggerContext) LogManager.getContext(false);

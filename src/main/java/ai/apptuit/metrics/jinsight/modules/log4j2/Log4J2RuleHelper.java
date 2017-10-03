@@ -18,6 +18,7 @@ package ai.apptuit.metrics.jinsight.modules.log4j2;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
+import org.apache.logging.log4j.core.LogEvent;
 import org.jboss.byteman.rule.Rule;
 
 /**
@@ -29,15 +30,14 @@ public class Log4J2RuleHelper extends RuleHelper {
   public static final TagEncodedMetricName THROWABLES_BASE_NAME = TagEncodedMetricName
       .decode("log4j.throwables");
 
+  private static final InstrumentedAppender appender = new InstrumentedAppender();
+
   public Log4J2RuleHelper(Rule rule) {
     super(rule);
   }
 
-  public void instrument(org.apache.logging.log4j.core.config.LoggerConfig config) {
-    InstrumentedAppender appender = new InstrumentedAppender();
-    appender.start();
-
-    config.addAppender(appender, null, null);
+  public void appendersCalled(LogEvent event) {
+    appender.append(event);
   }
 
 }

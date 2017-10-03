@@ -24,8 +24,10 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -155,7 +157,6 @@ public class Log4JInstrumentationTest {
     expectedCounts.compute("error", (s, aLong) -> aLong + 1);
     expectedCounts.compute("fatal", (s, aLong) -> aLong + 1);
 
-
     logger.trace("trace!");
     logger.debug("debug!");
     logger.info("info!");
@@ -164,6 +165,25 @@ public class Log4JInstrumentationTest {
     logger.fatal("fatal!");
 
     assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+  @Test
+  public void testLoggerReconfiguration() throws Exception {
+    logger.setLevel(Level.ERROR);
+
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("error", (s, aLong) -> aLong + 1);
+
+    Properties properties = new Properties();
+    properties.setProperty("log4j.rootCategory", "INFO,TestLog");
+    properties.setProperty("log4j.appender.TestLog", "org.apache.log4j.ConsoleAppender");
+    properties.setProperty("log4j.appender.TestLog.layout", "org.apache.log4j.PatternLayout");
+    PropertyConfigurator.configure(properties);
+
+    logger.error("error!");
+    assertEquals(expectedCounts, getCurrentCounts());
+
   }
 
   private Meter getMeter(TagEncodedMetricName name) {
