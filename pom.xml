@@ -325,7 +325,7 @@ limitations under the License.
         <configuration>
           <argLine>
             ${jvm.debug.options}
-            -javaagent:${project.build.directory}/${project.build.finalName}.jar
+            -javaagent:${project.build.directory}/${project.build.finalName}-instrumented.jar
             -Djacoco-agent.destfile=${project.build.directory}/jacoco.exec
             -Djinsight.config=${project.build.testOutputDirectory}/jinsight-config-test.properties
             ${byteman.debug.options}
@@ -350,11 +350,14 @@ limitations under the License.
         </configuration>
         <executions>
           <execution>
-            <id>default-jar</id>
+            <id>instrumented-jar</id>
             <phase>generate-test-resources</phase>
             <goals>
               <goal>jar</goal>
             </goals>
+            <configuration>
+              <classifier>instrumented</classifier>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -367,8 +370,6 @@ limitations under the License.
         </configuration>
         <executions>
           <execution>
-            <id>generate-shaded-jar-for-tests</id>
-            <phase>generate-test-resources</phase>
             <goals>
               <goal>shade</goal>
             </goals>
