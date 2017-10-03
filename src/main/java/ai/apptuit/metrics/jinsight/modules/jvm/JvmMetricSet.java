@@ -55,6 +55,7 @@ public class JvmMetricSet implements MetricSet {
       //TODO Log
     }
   }
+
   @Override
   public Map<String, Metric> getMetrics() {
     return metrics;
