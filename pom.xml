@@ -351,7 +351,6 @@ limitations under the License.
               <descriptorRefs>
                 <descriptorRef>jar-with-dependencies</descriptorRef>
               </descriptorRefs>
-              <classifier>instrumented</classifier>
               <finalName>${project.build.finalName}-instrumented</finalName>
               <appendAssemblyId>false</appendAssemblyId>
             </configuration>
