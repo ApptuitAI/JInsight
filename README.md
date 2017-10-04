@@ -32,6 +32,7 @@ Log metrics to a file for offline processing; or report them to a server
 of your choice: apptuit.ai, Prometheus, Graphite etc.
 
 ## Screenshots
+(click to zoom)
 [![JVM Metrics](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/JVM_Metrics_thumb.png)](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/JVM_Metrics.png)
 [![Tomcat Metrics](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/Tomcat_Metrics_thumb.png)](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/Tomcat_Metrics.png)  
 [![EHCache Metrics](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/EHCache_Metrics_thumb.png)](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/EHCache_Metrics.png)
