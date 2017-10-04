@@ -31,6 +31,24 @@ Minimal overhead on Memory and CPU footprint
 Log metrics to a file for offline processing; or report them to a server
 of your choice: apptuit.ai, Prometheus, Graphite etc.
 
+## Screenshots
+[![JVM Metrics](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/JVM_Metrics_thumb.png)](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/JVM_Metrics.png)
+[![Tomcat Metrics](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/Tomcat_Metrics_thumb.png)](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/Tomcat_Metrics.png)  
+[![EHCache Metrics](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/EHCache_Metrics_thumb.png)](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/EHCache_Metrics.png)
+[![Log4J Metrics](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/Log4J_Metrics_thumb.png)](https://raw.githubusercontent.com/ApptuitAI/JInsight/readme-attachments/screenshots/Log4J_Metrics.png)
+
+## Usage
+
+Instrumenting a JVM with JInsight Java Agent is refreshingly simple:
+1. Update your java command line to include the jinsight options:  
+`java -javaagent:/var/lib/jinsight/jinsight-latest.jar -Djinsight.config=/etc/jinsight/jinsight-config.properties -cp helloworld.jar HelloWorld`  
+2. Save API-TOKEN, global tags, frequency of reporting data etc  in the `jinsight-config.properties` file
+3. (Re)start your JVM
+
+Refer the  **[Agent installation guide](https://github.com/ApptuitAI/JInsight/wiki/UsageJInsightAgent)** for detailed instructions.
+
+If you want additional metrics specific to your application/workflows, beyond the [out-of-the-box metrics](https://github.com/ApptuitAI/JInsight/wiki/Metrics) provided by the agent, jinsight provides a rich toolkit to capture metrics from your code. Refer the **[API integration guide](https://github.com/ApptuitAI/JInsight/wiki/UsageDropwizard)** for help instrumenting your code with metrics.
+
 
 ## LICENSE
 
