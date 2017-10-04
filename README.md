@@ -1,2 +1,1 @@
-# jinsight
-Open source java agent to transparently instrument and monitor your Java web applications
+Branch to save attachments (images, videos etc) referenced by Readme.md
