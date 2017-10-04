@@ -11,12 +11,35 @@ A Java Agent to transparently collect metrics about various sub-systems
 in your application.
 
 The goal of the project is to provide out of the box monitoring for:
- * [ ] JVM metrics (Memory, GC, Threads, etc)
- * [ ] Web Server metrics (Thread Pool, Active Sessions etc)
+ * [x] JVM metrics
+   * [x] Heap
+   * [x] GC
+   * [x] Threads
+   * [x] Classloading
+   * [x] Threads
+ * [ ] Web Server metrics
+   * [ ] Thread Pools
+   * [ ] Active sessions
+   * [x] Active requests
+   * [x] Response status 
+   * [x] Request latency  
  * [ ] Logging metrics
- * [ ] Cache metrics (EHCache, Memcache, Redis etc)
+   * [x] Log4J v1 & v2
+   * [ ] Logback
+ * [ ] Cache metrics
+   * [x] EHCache
+   * [ ] Memcache
+   * [ ] Redis
  * [ ] JDBC metrics (Connection time, PreparedStatement execution time etc)
- * [ ] HTTP metrics (Response time, HTTP status metrics)
+   * [ ] Connection time
+   * [ ] PreparedStatement execution time
+   * [ ] Commit time
+ * [ ] URL connection metrics
+   * [ ] Connection time
+   * [ ] Time to submit request
+   * [ ] Time to response headers
+   * [ ] Response status
+ 
 
 ## Design Goals
 
