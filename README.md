@@ -5,10 +5,7 @@
 
 # JInsight
 
-Open source java agent to transparently instrument and monitor your Java web applications
-
-A Java Agent to transparently collect metrics about various sub-systems
-in your application.
+Open source java agent to transparently collect metrics about various sub-systems in your application.
 
 The goal of the project is to provide out of the box monitoring for:
  * [x] JVM metrics
@@ -39,7 +36,8 @@ The goal of the project is to provide out of the box monitoring for:
    * [ ] Time to submit request
    * [ ] Time to response headers
    * [ ] Response status
- 
+
+Refer the [Metrics Reference Guide](https://github.com/ApptuitAI/JInsight/wiki/Metrics) for a comprehensive list of metrics supported out-of-the-box
 
 ## Design Goals
 
