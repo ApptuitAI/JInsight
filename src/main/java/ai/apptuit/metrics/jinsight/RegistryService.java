@@ -16,6 +16,7 @@
 
 package ai.apptuit.metrics.jinsight;
 
+import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
 import com.codahale.metrics.MetricRegistry;
@@ -49,8 +50,14 @@ public class RegistryService {
 
     ConfigService configService = ConfigService.getInstance();
 
+    ReportingMode mode = null;
+    String configMode = configService.getReportingMode();
+    if (configMode != null) {
+      mode = ReportingMode.valueOf(configMode);
+    }
+
     ScheduledReporter reporter = getScheduledReporter(hostname, configService.getGlobalTags(),
-        configService.getApiToken(), configService.getApiUrl());
+        configService.getApiToken(), configService.getApiUrl(), mode);
     reporter.start(5, TimeUnit.SECONDS);
 
     registry.registerAll(new JvmMetricSet());
@@ -65,7 +72,7 @@ public class RegistryService {
   }
 
   private ScheduledReporter getScheduledReporter(String hostname, Map<String, String> globalTags,
-      String apiToken, String apiUrl) {
+      String apiToken, String apiUrl, ReportingMode reportingMode) {
     ApptuitReporterFactory factory = new ApptuitReporterFactory();
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
@@ -73,6 +80,7 @@ public class RegistryService {
     globalTags.forEach(factory::addGlobalTag);
     factory.setApiKey(apiToken);
     factory.setApiUrl(apiUrl);
+    factory.setReportingMode(reportingMode);
 
     return factory.build(registry);
   }

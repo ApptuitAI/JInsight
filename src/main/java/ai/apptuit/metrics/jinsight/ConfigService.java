@@ -38,6 +38,7 @@ public class ConfigService {
 
   private static final String ACCESS_TOKEN_PROPERTY_NAME = "apptuit.access_token";
   private static final String API_ENDPOINT_PROPERTY_NAME = "apptuit.api_url";
+  private static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
   private static final String GLOBAL_TAGS_PROPERTY_NAME = "global_tags";
 
   private static final File JINSIGHT_HOME = new File(System.getProperty("user.home"), ".jinsight");
@@ -46,12 +47,14 @@ public class ConfigService {
 
   private static ConfigService singleton = null;
   private final String apiToken;
-  private String apiUrl;
+  private final String apiUrl;
+  private final String reportingMode;
   private final Map<String, String> globalTags = new HashMap<>();
 
   ConfigService(Properties config) throws ConfigurationException {
     this.apiToken = config.getProperty(ACCESS_TOKEN_PROPERTY_NAME);
     this.apiUrl = config.getProperty(API_ENDPOINT_PROPERTY_NAME);
+    this.reportingMode = config.getProperty(REPORTING_MODE_PROPERTY_NAME);
 
     loadGlobalTags(config);
 
@@ -144,7 +147,11 @@ public class ConfigService {
     return Collections.unmodifiableMap(globalTags);
   }
 
-  public String getApiUrl() {
+  String getApiUrl() {
     return apiUrl;
+  }
+
+  String getReportingMode() {
+    return reportingMode;
   }
 }

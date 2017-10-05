@@ -39,6 +39,14 @@ public class ConfigServiceTest {
     assertEquals(token, configService.getApiToken());
   }
 
+  @Test
+  public void testGetReportingMode() throws Exception {
+    Properties p = new Properties();
+    String token = UUID.randomUUID().toString();
+    p.setProperty("apptuit.reporting_mode", token);
+    ConfigService configService = new ConfigService(p);
+    assertEquals(token, configService.getReportingMode());
+  }
 
   @Test
   public void testGetApiUrl() throws Exception {
@@ -63,7 +71,7 @@ public class ConfigServiceTest {
     Properties p = new Properties();
     String v1 = UUID.randomUUID().toString();
     String v2 = UUID.randomUUID().toString();
-    p.setProperty("global_tags", "k1:"+v1+", k2 : "+v2);
+    p.setProperty("global_tags", "k1:" + v1 + ", k2 : " + v2);
     ConfigService configService = new ConfigService(p);
     Map<String, String> globalTags = configService.getGlobalTags();
     assertEquals(v1, globalTags.get("k1"));
@@ -75,7 +83,7 @@ public class ConfigServiceTest {
     Properties p = new Properties();
     String v1 = UUID.randomUUID().toString();
     String v2 = UUID.randomUUID().toString();
-    p.setProperty("global_tags", "k1: , k2 : "+v2);
+    p.setProperty("global_tags", "k1: , k2 : " + v2);
     new ConfigService(p);
   }
 
@@ -84,7 +92,7 @@ public class ConfigServiceTest {
     Properties p = new Properties();
     String v1 = UUID.randomUUID().toString();
     String v2 = UUID.randomUUID().toString();
-    p.setProperty("global_tags", "k1:"+v1+" k2 : "+v2);
+    p.setProperty("global_tags", "k1:" + v1 + " k2 : " + v2);
     new ConfigService(p);
   }
 

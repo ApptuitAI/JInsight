@@ -42,29 +42,27 @@ import java.util.concurrent.TimeUnit;
  */
 public class ApptuitReporter extends ScheduledReporter {
 
-  public enum ReportingMode {
-    NO_OP, SYS_OUT, API_PUT
-  }
-
   private static final boolean DEBUG = false;
-  private static final ReportingMode REPORTING_MODE = ReportingMode.API_PUT;
-
+  private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
   private static final String REPORTER_NAME = "apptuit-reporter";
-
   private final Timer buildReportTimer;
   private final Timer sendReportTimer;
   private final DataPointsReporter dataPointsReporter;
 
-
   protected ApptuitReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit,
       TimeUnit durationUnit,
-      Map<String, String> globalTags, String key, String apiUrl) {
+      Map<String, String> globalTags, String key, String apiUrl,
+      ReportingMode reportingMode) {
     super(registry, REPORTER_NAME, filter, rateUnit, durationUnit);
 
     this.buildReportTimer = registry.timer("apptuit.reporter.report.build");
     this.sendReportTimer = registry.timer("apptuit.reporter.report.send");
 
-    switch (REPORTING_MODE) {
+    if (reportingMode == null) {
+      reportingMode = DEFAULT_REPORTING_MODE;
+    }
+
+    switch (reportingMode) {
       case NO_OP:
         this.dataPointsReporter = dataPoints -> {
         };
@@ -116,6 +114,15 @@ public class ApptuitReporter extends ScheduledReporter {
     if (DEBUG) {
       System.out.println(s);
     }
+  }
+
+  public enum ReportingMode {
+    NO_OP, SYS_OUT, API_PUT
+  }
+
+  public interface DataPointsReporter {
+
+    void put(Collection<DataPoint> dataPoints);
   }
 
   private class DataPointCollector {
@@ -226,10 +233,5 @@ public class ApptuitReporter extends ScheduledReporter {
       dataPoints.add(dataPoint);
       debug(dataPoint);
     }
-  }
-
-  public interface DataPointsReporter {
-
-    void put(Collection<DataPoint> dataPoints);
   }
 }

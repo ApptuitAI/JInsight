@@ -38,7 +38,7 @@ import org.apache.http.util.EntityUtils;
  */
 public class ApptuitPutClient {
 
-  private static final boolean DEBUG = false;
+  private static final boolean DEBUG = true;
   private static final boolean GZIP = true;
   private static final int CONNECT_TIMEOUT_MS = 5000;
   private static final int SOCKET_TIMEOUT_MS = 15000;
