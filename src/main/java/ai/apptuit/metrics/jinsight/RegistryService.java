@@ -53,7 +53,12 @@ public class RegistryService {
     ReportingMode mode = null;
     String configMode = configService.getReportingMode();
     if (configMode != null) {
-      mode = ReportingMode.valueOf(configMode);
+      try {
+        mode = ReportingMode.valueOf(configMode);
+      } catch (IllegalArgumentException e) {
+        //TODO Log bad configuration option
+        //e.printStackTrace();
+      }
     }
 
     ScheduledReporter reporter = getScheduledReporter(hostname, configService.getGlobalTags(),
