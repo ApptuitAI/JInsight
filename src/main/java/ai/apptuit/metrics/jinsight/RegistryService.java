@@ -54,7 +54,7 @@ public class RegistryService {
     String configMode = configService.getReportingMode();
     if (configMode != null) {
       try {
-        mode = ReportingMode.valueOf(configMode);
+        mode = ReportingMode.valueOf(configMode.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
         //TODO Log bad configuration option
         //e.printStackTrace();
