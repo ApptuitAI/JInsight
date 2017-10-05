@@ -81,7 +81,7 @@ public class RegistryService {
     ApptuitReporterFactory factory = new ApptuitReporterFactory();
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
-    factory.addGlobalTag("hostname", hostname);
+    factory.addGlobalTag("host", hostname);
     globalTags.forEach(factory::addGlobalTag);
     factory.setApiKey(apiToken);
     factory.setApiUrl(apiUrl);
