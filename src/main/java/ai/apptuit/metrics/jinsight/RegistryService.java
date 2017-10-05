@@ -22,6 +22,8 @@ import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +41,10 @@ public class RegistryService {
   private MetricRegistry registry = null;
 
   private RegistryService() {
+    this(ConfigService.getInstance(), new ApptuitReporterFactory());
+  }
+
+  RegistryService(ConfigService configService, ApptuitReporterFactory factory) {
     this.registry = new MetricRegistry();
 
     String hostname;
@@ -47,8 +53,6 @@ public class RegistryService {
     } catch (UnknownHostException e) {
       hostname = "?";
     }
-
-    ConfigService configService = ConfigService.getInstance();
 
     ReportingMode mode = null;
     String configMode = configService.getReportingMode();
@@ -61,8 +65,16 @@ public class RegistryService {
       }
     }
 
-    ScheduledReporter reporter = getScheduledReporter(hostname, configService.getGlobalTags(),
-        configService.getApiToken(), configService.getApiUrl(), mode);
+    String apiUrl = configService.getApiUrl();
+    try {
+      new URL(apiUrl);
+    } catch (MalformedURLException e) {
+      apiUrl = null;
+      //TODO Log bad configuration option
+      //e.printStackTrace();
+    }
+    ScheduledReporter reporter = createReporter(factory, hostname, configService.getGlobalTags(),
+        configService.getApiToken(), apiUrl, mode);
     reporter.start(5, TimeUnit.SECONDS);
 
     registry.registerAll(new JvmMetricSet());
@@ -76,9 +88,8 @@ public class RegistryService {
     return singleton;
   }
 
-  private ScheduledReporter getScheduledReporter(String hostname, Map<String, String> globalTags,
-      String apiToken, String apiUrl, ReportingMode reportingMode) {
-    ApptuitReporterFactory factory = new ApptuitReporterFactory();
+  private ScheduledReporter createReporter(ApptuitReporterFactory factory, String hostname,
+      Map<String, String> globalTags, String apiToken, String apiUrl, ReportingMode reportingMode) {
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
     factory.addGlobalTag("host", hostname);
