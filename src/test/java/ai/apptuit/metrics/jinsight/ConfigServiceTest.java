@@ -39,6 +39,16 @@ public class ConfigServiceTest {
     assertEquals(token, configService.getApiToken());
   }
 
+
+  @Test
+  public void testGetApiUrl() throws Exception {
+    Properties p = new Properties();
+    String token = UUID.randomUUID().toString();
+    p.setProperty("apptuit.api_url", token);
+    ConfigService configService = new ConfigService(p);
+    assertEquals(token, configService.getApiUrl());
+  }
+
   @Test
   public void testGetTagsMissing() throws Exception {
     Properties p = new Properties();

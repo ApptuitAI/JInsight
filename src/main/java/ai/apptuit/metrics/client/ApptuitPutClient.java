@@ -38,11 +38,12 @@ import org.apache.http.util.EntityUtils;
  */
 public class ApptuitPutClient {
 
+  private static final boolean DEBUG = false;
+  private static final boolean GZIP = true;
   private static final int CONNECT_TIMEOUT_MS = 5000;
   private static final int SOCKET_TIMEOUT_MS = 15000;
   private static final int CONNECTION_REQUEST_TIMEOUT_MS = 1000;
-  private static final String PUT_API_URI = "https://api.apptuit.ai/api/put?details";
-  private static final boolean GZIP = true;
+  private static final String DEFAULT_PUT_API_URI = "https://api.apptuit.ai/api/put?details";
 
   private final String apiEndPoint;
 
@@ -51,13 +52,13 @@ public class ApptuitPutClient {
   private CloseableHttpClient httpclient;
 
   public ApptuitPutClient(String token, Map<String, String> globalTags) {
-    this(token, globalTags, PUT_API_URI);
+    this(token, globalTags, null);
   }
 
-  ApptuitPutClient(String token, Map<String, String> globalTags, String apiEndPoint) {
+  public ApptuitPutClient(String token, Map<String, String> globalTags, String apiEndPoint) {
     this.globalTags = globalTags;
     this.token = token;
-    this.apiEndPoint = apiEndPoint;
+    this.apiEndPoint = (apiEndPoint != null) ? apiEndPoint : DEFAULT_PUT_API_URI;
   }
 
   public void put(Collection<DataPoint> dataPoints) {
@@ -80,15 +81,23 @@ public class ApptuitPutClient {
       HttpResponse response = getHttpclient().execute(httpPost);
       int status = response.getStatusLine().getStatusCode();
 
-      System.out.println("-------------------" + status + "---------------------");
+      debug("-------------------" + status + "---------------------");
       HttpEntity respEntity = response.getEntity();
       String responseBody = respEntity != null ? EntityUtils.toString(respEntity) : null;
-      System.out.println(responseBody);
+      debug(responseBody);
     } catch (IOException e) {
-      System.err.println("Caught error:");
-      e.printStackTrace();
+      //TODO log
+      debug(e);
     } finally {
       httpPost.releaseConnection();
+    }
+  }
+
+  private void debug(Object o) {
+    if(DEBUG) {
+      if (o instanceof Throwable)
+        ((Throwable) o).printStackTrace();
+      System.out.println(o);
     }
   }
 

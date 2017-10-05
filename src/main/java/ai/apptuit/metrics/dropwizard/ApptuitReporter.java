@@ -58,7 +58,7 @@ public class ApptuitReporter extends ScheduledReporter {
 
   protected ApptuitReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit,
       TimeUnit durationUnit,
-      Map<String, String> globalTags, String key) {
+      Map<String, String> globalTags, String key, String apiUrl) {
     super(registry, REPORTER_NAME, filter, rateUnit, durationUnit);
 
     this.buildReportTimer = registry.timer("apptuit.reporter.report.build");
@@ -76,7 +76,7 @@ public class ApptuitReporter extends ScheduledReporter {
         break;
       case API_PUT:
       default:
-        ApptuitPutClient putClient = new ApptuitPutClient(key, globalTags);
+        ApptuitPutClient putClient = new ApptuitPutClient(key, globalTags, apiUrl);
         this.dataPointsReporter = putClient::put;
     }
   }

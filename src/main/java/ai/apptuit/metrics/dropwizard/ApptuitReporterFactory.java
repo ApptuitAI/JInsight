@@ -57,12 +57,18 @@ public class ApptuitReporterFactory {
 
   private String apiKey;
 
+  private String apiUrl;
+
   public void addGlobalTag(String tag, String value) {
     globalTags.put(tag, value);
   }
 
   public void setApiKey(String key) {
     this.apiKey = key;
+  }
+
+  public void setApiUrl(String url) {
+    this.apiUrl = url;
   }
 
   public TimeUnit getDurationUnit() {
@@ -158,7 +164,7 @@ public class ApptuitReporterFactory {
 
   public ScheduledReporter build(MetricRegistry registry) {
     return new ApptuitReporter(registry, getFilter(), getRateUnit(), getDurationUnit(), globalTags,
-        apiKey);
+        apiKey, apiUrl);
   }
 
   private interface StringMatchingStrategy {

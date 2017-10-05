@@ -50,7 +50,7 @@ public class RegistryService {
     ConfigService configService = ConfigService.getInstance();
 
     ScheduledReporter reporter = getScheduledReporter(hostname, configService.getGlobalTags(),
-        configService.getApiToken());
+        configService.getApiToken(), configService.getApiUrl());
     reporter.start(5, TimeUnit.SECONDS);
 
     registry.registerAll(new JvmMetricSet());
@@ -65,13 +65,14 @@ public class RegistryService {
   }
 
   private ScheduledReporter getScheduledReporter(String hostname, Map<String, String> globalTags,
-      String apiToken) {
+      String apiToken, String apiUrl) {
     ApptuitReporterFactory factory = new ApptuitReporterFactory();
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
     factory.addGlobalTag("hostname", hostname);
     globalTags.forEach(factory::addGlobalTag);
     factory.setApiKey(apiToken);
+    factory.setApiUrl(apiUrl);
 
     return factory.build(registry);
   }
