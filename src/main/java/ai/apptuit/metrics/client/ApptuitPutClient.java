@@ -94,9 +94,10 @@ public class ApptuitPutClient {
   }
 
   private void debug(Object o) {
-    if(DEBUG) {
-      if (o instanceof Throwable)
+    if (DEBUG) {
+      if (o instanceof Throwable) {
         ((Throwable) o).printStackTrace();
+      }
       System.out.println(o);
     }
   }
