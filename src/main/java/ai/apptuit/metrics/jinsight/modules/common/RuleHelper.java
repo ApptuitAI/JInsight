@@ -18,12 +18,15 @@ package ai.apptuit.metrics.jinsight.modules.common;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
-import com.codahale.metrics.Timer.Context;
+import com.codahale.metrics.Clock;
+import com.codahale.metrics.Timer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 import java.util.WeakHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
 
@@ -37,14 +40,6 @@ public class RuleHelper extends Helper {
 
   public RuleHelper(Rule rule) {
     super(rule);
-  }
-
-  public void startTimer(TagEncodedMetricName metric) {
-    Timers.start(metric);
-  }
-
-  public void stopTimer(TagEncodedMetricName metric) {
-    Timers.stop(metric);
   }
 
   public String setObjectProperty(Object o, String propertyName, String propertyValue) {
@@ -61,19 +56,88 @@ public class RuleHelper extends Helper {
     return props.get(propertyName);
   }
 
-  private static class Timers {
+  public void beginTimedOperation(OperationId operationId) {
+    OperationContexts.start(operationId);
+  }
 
-    private static final ThreadLocal<Stack<Context>> TIMERS = ThreadLocal.withInitial(Stack::new);
+  public void endTimedOperation(OperationId operationId, TagEncodedMetricName metricName) {
+    endTimedOperation(operationId, () -> metricName);
+  }
 
-    public static void start(TagEncodedMetricName metric) {
-      TIMERS.get().push(RegistryService.getMetricRegistry().timer(metric.toString()).time());
+  public void endTimedOperation(OperationId operationId,
+      Supplier<TagEncodedMetricName> nameSupplier) {
+    OperationContexts.stop(operationId, nameSupplier);
+  }
+
+  public static final class OperationId {
+
+    private String displayName;
+
+    public OperationId(String displayName) {
+      this.displayName = displayName;
     }
 
-    public static void stop(TagEncodedMetricName metric) {
-      Context context = TIMERS.get().pop();
-      long t = context.stop();
-      //TODO verify the Context we popped is the one for the same metric
-      //System.out.printf("Done in [%d] nanos\n", t);
+    @Override
+    public String toString() {
+      return "OperationId(" + displayName + ")#" + hashCode();
+    }
+  }
+
+  private static class OperationContexts {
+
+    private static final ThreadLocal<Stack<OperationContext>> CONTEXT_STACK = ThreadLocal
+        .withInitial(Stack::new);
+    private static final Clock clock = Clock.defaultClock();
+
+    private static final OperationContext RENTRANT = new OperationContext(new OperationId("NOOP"),
+        clock);
+
+    public static void start(OperationId id) {
+      Stack<OperationContext> contexts = CONTEXT_STACK.get();
+      if (contexts.size() > 0) {
+        OperationContext prevContext = contexts.peek();
+        if (prevContext.getId() == id) {
+          contexts.push(RENTRANT);
+          return;
+        }
+      }
+      contexts.push(new OperationContext(id, clock));
+    }
+
+    public static void stop(OperationId id, Supplier<TagEncodedMetricName> nameSupplier) {
+      OperationContext context = CONTEXT_STACK.get().pop();
+      if (context == RENTRANT) {
+        return;
+      }
+      if (context.getId() != id) {
+        //TODO Log and do better error handling
+        System.err.println("Operation Context Mismatch. "
+            + "Expected: " + id + " got " + context.getId());
+        return;
+      }
+      long t = clock.getTick() - context.getStartTime();
+      String metricName = nameSupplier.get().toString();
+      Timer timer = RegistryService.getMetricRegistry().timer(metricName);
+      timer.update(t, TimeUnit.NANOSECONDS);
+    }
+  }
+
+  private static class OperationContext {
+
+    private final OperationId id;
+    private final long startTime;
+
+    public OperationContext(OperationId id, Clock clock) {
+      this.id = id;
+      this.startTime = clock.getTick();
+    }
+
+    public OperationId getId() {
+      return id;
+    }
+
+    public long getStartTime() {
+      return startTime;
     }
   }
 }

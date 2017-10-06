@@ -18,6 +18,9 @@ package ai.apptuit.metrics.jinsight.modules.jdbc;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import javax.sql.DataSource;
 import org.jboss.byteman.rule.Rule;
 
 /**
@@ -33,7 +36,40 @@ public class JdbcRuleHelper extends RuleHelper {
   public static final TagEncodedMetricName EXECUTE_STATEMENT_NAME = ROOT_NAME
       .submetric("ps.execute");
 
+  private static final OperationId GET_CONNECTION_OPERATION = new OperationId(
+      GET_CONNECTION_NAME.toString());
+  private static final OperationId PREPARE_STATEMENT_OPERATION = new OperationId(
+      PREPARE_STATEMENT_NAME.toString());
+  private static final OperationId EXECUTE_STATEMENT_OPERATION = new OperationId(
+      EXECUTE_STATEMENT_NAME.toString());
+
   public JdbcRuleHelper(Rule rule) {
     super(rule);
+  }
+
+  public void onGetConnectionEntry(DataSource ds) {
+    beginTimedOperation(GET_CONNECTION_OPERATION);
+  }
+
+  public void onGetConnectionExit(DataSource ds) {
+    endTimedOperation(GET_CONNECTION_OPERATION, GET_CONNECTION_NAME);
+  }
+
+  public void onPrepareStatementEntry(Connection connection) {
+    beginTimedOperation(PREPARE_STATEMENT_OPERATION);
+  }
+
+  public void onPrepareStatementExit(Connection connection) {
+    //TODO add datasource name as a tag
+    endTimedOperation(PREPARE_STATEMENT_OPERATION, PREPARE_STATEMENT_NAME);
+  }
+
+  public void onExecuteStatementEntry(PreparedStatement ps) {
+    beginTimedOperation(EXECUTE_STATEMENT_OPERATION);
+  }
+
+  public void onExecuteStatementExit(PreparedStatement ps) {
+    //TODO add datasource name & execution type (execute/executeUpdate/executeBath) as tags
+    endTimedOperation(EXECUTE_STATEMENT_OPERATION, EXECUTE_STATEMENT_NAME);
   }
 }

@@ -30,6 +30,9 @@ public class EhcacheRuleHelper extends RuleHelper {
 
   public static final TagEncodedMetricName ROOT_NAME = TagEncodedMetricName.decode("ehcache");
 
+  public static final OperationId GET_OPERATION = new OperationId("ehcache.get");
+  public static final OperationId PUT_OPERATION = new OperationId("ehcache.put");
+
   public EhcacheRuleHelper(Rule rule) {
     super(rule);
   }
@@ -38,6 +41,31 @@ public class EhcacheRuleHelper extends RuleHelper {
     MetricRegistry registry = RegistryService.getMetricRegistry();
     cache.registerCacheExtension(new CacheLifecycleListener(cache, registry));
 
+  }
+
+  public void onGetEntry(Cache cache) {
+    beginTimedOperation(GET_OPERATION);
+  }
+
+  public void onGetExit(Cache cache) {
+    endTimedOperation(GET_OPERATION,
+        () -> {
+          String[] tags = new String[]{"op", "get", "cache", cache.getName()};
+          return ROOT_NAME.submetric("ops").withTags(tags);
+        });
+  }
+
+
+  public void onPutEntry(Cache cache) {
+    beginTimedOperation(PUT_OPERATION);
+  }
+
+  public void onPutExit(Cache cache) {
+    endTimedOperation(PUT_OPERATION,
+        () -> {
+          String[] tags = new String[]{"op", "put", "cache", cache.getName()};
+          return ROOT_NAME.submetric("ops").withTags(tags);
+        });
   }
 
 }

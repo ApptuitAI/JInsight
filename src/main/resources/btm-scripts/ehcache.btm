@@ -14,15 +14,6 @@
 #  limitations under the License.
 #
 
-#RULE ehcache clone constructor entry
-#CLASS net.sf.ehcache.Cache
-#METHOD <init>(net.sf.ehcache.Cache)
-#HELPER ai.apptuit.metrics.jinsight.modules.common.RuleHelper
-#AT ENTRY
-#IF TRUE
-#DO traceThreadStack("main")
-#ENDRULE
-
 RULE ehcache clone constructor exit
 CLASS net.sf.ehcache.Cache
 METHOD <init>(net.sf.ehcache.Cache)
@@ -37,10 +28,8 @@ CLASS net.sf.ehcache.Cache
 METHOD get(java.lang.Object)
 HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT ENTRY
-BIND
-  tags = new String[]{"op", "get", "cache", $this.getName()}
 IF TRUE
-DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
+DO onGetEntry($0)
 ENDRULE
 
 # TODO Handle AT EXCEPTION EXIT
@@ -49,10 +38,8 @@ CLASS net.sf.ehcache.Cache
 METHOD get(java.lang.Object)
 HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT EXIT
-BIND
-  tags = new String[]{"op", "get", "cache", $this.getName()}
 IF TRUE
-DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
+DO onGetExit($0)
 ENDRULE
 
 RULE ehcache put entry
@@ -60,10 +47,8 @@ CLASS net.sf.ehcache.Cache
 METHOD put(net.sf.ehcache.Element, boolean)
 HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT ENTRY
-BIND
-  tags = new String[]{"op", "put", "cache", $this.getName()}
 IF TRUE
-DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
+DO onPutEntry($0)
 ENDRULE
 
 # TODO Handle AT EXCEPTION EXIT
@@ -72,10 +57,8 @@ CLASS net.sf.ehcache.Cache
 METHOD put(net.sf.ehcache.Element, boolean)
 HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT EXIT
-BIND
-  tags = new String[]{"op", "put", "cache", $this.getName()}
 IF TRUE
-DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
+DO onPutExit($0)
 ENDRULE
 
 RULE ehcache putIfAbsent entry
@@ -83,10 +66,8 @@ CLASS net.sf.ehcache.Cache
 METHOD putIfAbsent(net.sf.ehcache.Element)
 HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT ENTRY
-BIND
-  tags = new String[]{"op", "put", "cache", $this.getName()}
 IF TRUE
-DO startTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
+DO onPutEntry($0)
 ENDRULE
 
 # TODO Handle AT EXCEPTION EXIT
@@ -95,8 +76,6 @@ CLASS net.sf.ehcache.Cache
 METHOD putIfAbsent(net.sf.ehcache.Element)
 HELPER ai.apptuit.metrics.jinsight.modules.ehcache.EhcacheRuleHelper
 AT EXIT
-BIND
-  tags = new String[]{"op", "put", "cache", $this.getName()}
 IF TRUE
-DO stopTimer(EhcacheRuleHelper.ROOT_NAME.submetric("ops").withTags(tags))
+DO onPutExit($0)
 ENDRULE

@@ -19,11 +19,8 @@ INTERFACE javax.sql.DataSource
 METHOD getConnection()
 HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
 AT ENTRY
-#TODO add datasource name as a tag
-#BIND
-#  tags = new String[]{"op", "get", "cache", $this.getName()}
 IF TRUE
-DO startTimer(JdbcRuleHelper.GET_CONNECTION_NAME)
+DO onGetConnectionEntry($0)
 ENDRULE
 
 # TODO Handle AT EXCEPTION EXIT
@@ -32,11 +29,8 @@ INTERFACE javax.sql.DataSource
 METHOD getConnection()
 HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
 AT EXIT
-#TODO add datasource name as a tag
-#BIND
-#  tags = new String[]{"op", "get", "cache", $this.getName()}
 IF TRUE
-DO stopTimer(JdbcRuleHelper.GET_CONNECTION_NAME)
+DO onGetConnectionExit($0)
 ENDRULE
 
 
@@ -45,11 +39,8 @@ INTERFACE java.sql.Connection
 METHOD prepareStatement
 HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
 AT ENTRY
-#TODO add datasource name as a tag
-#BIND
-#  tags = new String[]{"op", "get", "cache", $this.getName()}
 IF TRUE
-DO startTimer(JdbcRuleHelper.PREPARE_STATEMENT_NAME)
+DO onPrepareStatementEntry($0)
 ENDRULE
 
 # TODO Handle AT EXCEPTION EXIT
@@ -58,11 +49,8 @@ INTERFACE java.sql.Connection
 METHOD prepareStatement
 HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
 AT EXIT
-#TODO add datasource name as a tag
-#BIND
-#  tags = new String[]{"op", "get", "cache", $this.getName()}
 IF TRUE
-DO stopTimer(JdbcRuleHelper.PREPARE_STATEMENT_NAME)
+DO onPrepareStatementExit($0)
 ENDRULE
 
 RULE PreparedStatement execute entry
@@ -70,11 +58,8 @@ INTERFACE java.sql.PreparedStatement
 METHOD execute()
 HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
 AT ENTRY
-#TODO add datasource name & execution type (execute/executeUpdate/executeBath) as tags
-#BIND
-#  tags = new String[]{"op", "get", "cache", $this.getName()}
 IF TRUE
-DO startTimer(JdbcRuleHelper.EXECUTE_STATEMENT_NAME)
+DO onExecuteStatementEntry($0)
 ENDRULE
 
 # TODO Handle AT EXCEPTION EXIT
@@ -83,11 +68,8 @@ INTERFACE java.sql.PreparedStatement
 METHOD execute()
 HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
 AT EXIT
-#TODO add datasource name & execution type (execute/executeUpdate/executeBath) as tags
-#BIND
-#  tags = new String[]{"op", "get", "cache", $this.getName()}
 IF TRUE
-DO stopTimer(JdbcRuleHelper.EXECUTE_STATEMENT_NAME)
+DO onExecuteStatementExit($0)
 ENDRULE
 
 #TODO instrument preparedStatement.executeQuery(); preparedStatement.executeUpdate();
