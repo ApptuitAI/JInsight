@@ -18,9 +18,9 @@ package ai.apptuit.metrics.dropwizard;
 
 import com.codahale.metrics.MetricRegistry;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,7 +54,7 @@ public class TagEncodedMetricName {
     if (matcher.find() && matcher.groupCount() == 2) {
       metricName = matcher.group(1);
       String[] tagValuePairs = matcher.group(2).split("\\,");
-      tags = new LinkedHashMap<>(tagValuePairs.length);
+      tags = new TreeMap<>();
       for (String tv : tagValuePairs) {
         String[] split = tv.split("\\:");
         if (split.length != 2) {
@@ -100,7 +100,7 @@ public class TagEncodedMetricName {
       if (additionalTags.length % 2 != 0) {
         throw new IllegalArgumentException("Additional Tags has to even in count");
       }
-      t = new LinkedHashMap<>(t);
+      t = new TreeMap<>(t);
       for (int i = 0; i < additionalTags.length; i += 2) {
         t.put(additionalTags[i], additionalTags[i + 1]);
       }
@@ -112,7 +112,8 @@ public class TagEncodedMetricName {
   public TagEncodedMetricName withTags(Map<String, String> additionalTags) {
     Map<String, String> t = tags;
     if (additionalTags != null && additionalTags.size() > 0) {
-      t = new LinkedHashMap<>(additionalTags);
+      t = new TreeMap<>(t);
+      t.putAll(additionalTags);
     }
     return new TagEncodedMetricName(metricName, t);
   }
