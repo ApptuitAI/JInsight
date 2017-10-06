@@ -317,6 +317,7 @@ limitations under the License.
                     <source>${btm.script.sources}/jdbc.btm</source>
                     <source>${btm.script.sources}/servlet.btm</source>
                     <source>${btm.script.sources}/log4j.btm</source>
+                    <source>${btm.script.sources}/httpclient.btm</source>
                   </sources>
                 </merger>
               </mergers>
