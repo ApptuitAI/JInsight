@@ -272,55 +272,24 @@ limitations under the License.
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.0.2</version>
-        <executions>
-          <execution>
-            <id>default-resources</id>
-            <phase>process-resources</phase>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>${project.basedir}/src/main/resources/</directory>
-                  <!--
-                  Exclude btm files since we merge them and copy merged file in
-                  see: @merge-btm-files
-                  -->
-                  <excludes>
-                    <exclude>**/*.btm</exclude>
-                  </excludes>
-                  <filtering>false</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.zcore.maven</groupId>
-        <artifactId>merge-maven-plugin</artifactId>
-        <version>0.0.3</version>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
         <executions>
           <execution>
             <id>merge-btm-files</id>
             <phase>generate-resources</phase>
             <goals>
-              <goal>merge</goal>
+              <goal>run</goal>
             </goals>
             <configuration>
-              <mergers>
-                <merger>
-                  <target>${project.build.outputDirectory}/btm-scripts/jinsight.btm</target>
-                  <sources>
-                    <source>${btm.script.sources}/ehcache.btm</source>
-                    <source>${btm.script.sources}/jdbc.btm</source>
-                    <source>${btm.script.sources}/servlet.btm</source>
-                    <source>${btm.script.sources}/log4j.btm</source>
-                    <source>${btm.script.sources}/httpclient.btm</source>
-                  </sources>
-                </merger>
-              </mergers>
+              <target>
+                <concat destfile="${project.build.outputDirectory}/btm-scripts/jinsight.btm"
+                  force="yes">
+                  <fileset dir="${project.basedir}/src">
+                    <include name="**/*.btm"/>
+                  </fileset>
+                </concat>
+              </target>
             </configuration>
           </execution>
         </executions>
