@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 /**
  * @author Rajiv Shivane
@@ -46,13 +47,21 @@ public class CountTracker {
   }
 
   public void registerTimer(Object... tagValues) {
+    register(tagValues, metricName -> registry.timer(metricName.toString()));
+  }
+
+  public void registerMeter(Object... tagValues) {
+    register(tagValues, metricName -> registry.meter(metricName.toString()));
+  }
+
+  private void register(Object[] tagValues,
+      Function<TagEncodedMetricName, Counting> countingSupplier) {
     String key = getKey(tagValues);
     Map<String, String> tagMap = new HashMap<>(tagValues.length);
     for (int i = 0; i < tags.length; i++) {
-      String str = String.valueOf(tagValues[i]);
-      tagMap.put(tags[i], str);
+      tagMap.put(tags[i], String.valueOf(tagValues[i]));
     }
-    counters.put(key, registry.timer(rootMetric.withTags(tagMap).toString()));
+    counters.put(key, countingSupplier.apply(rootMetric.withTags(tagMap)));
   }
 
   private String getKey(Object[] tagValues) {
