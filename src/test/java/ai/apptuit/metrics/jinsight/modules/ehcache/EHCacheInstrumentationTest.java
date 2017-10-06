@@ -88,11 +88,26 @@ public class EHCacheInstrumentationTest {
     int rnd = ThreadLocalRandom.current().nextInt(0, presetElements.size());
     String key = presetElementKeys.get(rnd);
 
-    TagEncodedMetricName metricName = TagEncodedMetricName.decode(
-        "ehcache.ops[op:put,cache:" + cacheName + "]");
+    TagEncodedMetricName metricName = TagEncodedMetricName.decode("ehcache.ops")
+        .withTags("op", "put", "cache", cacheName);
     long expectedCount = getTimerCount(metricName) + 1;
 
     cache.put(new Element(key, presetElements.get(key)));
+
+    assertEquals(expectedCount, getTimerCount(metricName));
+  }
+
+
+  @Test
+  public void testGet() throws Exception {
+    int rnd = ThreadLocalRandom.current().nextInt(0, presetElements.size());
+    String key = presetElementKeys.get(rnd);
+
+    TagEncodedMetricName metricName = TagEncodedMetricName.decode("ehcache.ops")
+        .withTags("op", "get", "cache", cacheName);
+    long expectedCount = getTimerCount(metricName) + 1;
+
+    cache.get(new Element(key, presetElements.get(key)));
 
     assertEquals(expectedCount, getTimerCount(metricName));
   }
