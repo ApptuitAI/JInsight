@@ -17,31 +17,18 @@
 package ai.apptuit.metrics.jinsight.modules.httpclient;
 
 import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 /**
  * @author Rajiv Shivane
  */
-public class DefaultHttpClientInstrumentationTest extends AbstractHttpClientInstrumentationTest {
+public class NestedDeprecatedClientInstrumentationTest extends
+    AbstractHttpClientInstrumentationTest {
 
   @Override
+  @SuppressWarnings("deprecation")
   protected HttpClient createClient() {
-    HttpClient httpclient;
-    httpclient = HttpClients.createDefault();
-    /*
-    httpclient = HttpClients.createMinimal();
-    httpclient = HttpClientBuilder.create().build();
-    httpclient = new DefaultHttpClient();
-    httpclient = new DecompressingHttpClient(new DefaultHttpClient())
-
-
-    HttpRequestExecutor executor = new HttpRequestExecutor();
-    executor.preProcess(request, processor, context);
-    HttpResponse response = executor.execute(request, connection, context);
-    executor.postProcess(response, processor, context);
-
-    */
-
-    return httpclient;
+    HttpClient httpclient = new org.apache.http.impl.client.DefaultHttpClient();
+    return new org.apache.http.impl.client.DecompressingHttpClient(httpclient);
   }
+
 }

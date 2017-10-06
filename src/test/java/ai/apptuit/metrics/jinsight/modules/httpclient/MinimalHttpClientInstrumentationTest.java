@@ -22,26 +22,14 @@ import org.apache.http.impl.client.HttpClients;
 /**
  * @author Rajiv Shivane
  */
-public class DefaultHttpClientInstrumentationTest extends AbstractHttpClientInstrumentationTest {
+public class MinimalHttpClientInstrumentationTest extends AbstractHttpClientInstrumentationTest {
 
   @Override
   protected HttpClient createClient() {
-    HttpClient httpclient;
-    httpclient = HttpClients.createDefault();
-    /*
-    httpclient = HttpClients.createMinimal();
-    httpclient = HttpClientBuilder.create().build();
-    httpclient = new DefaultHttpClient();
-    httpclient = new DecompressingHttpClient(new DefaultHttpClient())
+    return HttpClients.createMinimal();
+  }
 
-
-    HttpRequestExecutor executor = new HttpRequestExecutor();
-    executor.preProcess(request, processor, context);
-    HttpResponse response = executor.execute(request, connection, context);
-    executor.postProcess(response, processor, context);
-
-    */
-
-    return httpclient;
+  protected boolean clientFollowsRedirects(){
+    return false;
   }
 }

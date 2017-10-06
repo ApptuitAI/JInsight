@@ -40,7 +40,7 @@ import org.junit.Test;
 /**
  * @author Rajiv Shivane
  */
-public abstract class HttpClientInstrumentationTest {
+public abstract class AbstractHttpClientInstrumentationTest {
 
   private static final boolean DEBUG = false;
 
@@ -81,10 +81,12 @@ public abstract class HttpClientInstrumentationTest {
 
 
   @Test
-  public void testHttpGet302FollowRedirect() throws Exception {
+  public void testHttpGet302Redirect() throws Exception {
     Snapshot expectedCounts = tracker.snapshot();
     expectedCounts.increment("GET", "302");
-    expectedCounts.increment("GET", "200");
+    if (clientFollowsRedirects()) {
+      expectedCounts.increment("GET", "200");
+    }
     HttpGet request = new HttpGet(server.getEchoEndpoint(302) + "&rd=" + server.getEchoEndpoint());
 
     HttpResponse response = httpclient.execute(request);
@@ -167,5 +169,9 @@ public abstract class HttpClientInstrumentationTest {
   }
 
   protected abstract HttpClient createClient();
+
+  protected boolean clientFollowsRedirects() {
+    return true;
+  }
 
 }
