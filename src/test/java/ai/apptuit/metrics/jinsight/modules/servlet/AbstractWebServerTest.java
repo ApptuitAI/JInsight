@@ -20,15 +20,17 @@ import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
-import com.codahale.metrics.Counting;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
+import ai.apptuit.metrics.jinsight.testing.CountTracker;
+import ai.apptuit.metrics.jinsight.testing.CountTracker.Snapshot;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Scanner;
+import java.util.UUID;
+import javax.servlet.http.HttpServletResponse;
+import org.junit.Before;
+import org.junit.Test;
 
 
 /**
@@ -36,45 +38,115 @@ import java.util.Scanner;
  */
 abstract class AbstractWebServerTest {
 
-  private MetricRegistry registry;
-  private Map<String, Counting> counters;
+  private CountTracker tracker;
 
+  @Before
+  public void setup() throws Exception {
+    TagEncodedMetricName requestMetricRoot = getRootMetric().submetric("requests");
+    tracker = new CountTracker(RegistryService.getMetricRegistry(), requestMetricRoot, "method",
+        "status") {
+      @Override
+      public void validate(Snapshot snapshot) {
+        try {
+          Thread.sleep(250);
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
+        }
+        super.validate(snapshot);
+      }
+    };
 
-  public void setupMetrics(TagEncodedMetricName requestMetricRoot,
-      TagEncodedMetricName responseMetricRoot) throws Exception {
-
-    registry = RegistryService.getMetricRegistry();
-
-    counters = new HashMap<>();
-    counters.put("GET", getTimer(requestMetricRoot.withTags("method", "GET")));
-    counters.put("POST", getTimer(requestMetricRoot.withTags("method", "POST")));
-    counters.put("200", getMeter(responseMetricRoot.withTags("status", "200")));
-    counters.put("500", getMeter(responseMetricRoot.withTags("status", "500")));
+    tracker.registerTimer("GET", "200");
+    tracker.registerTimer("GET", "500");
+    tracker.registerTimer("POST", "200");
+    tracker.registerTimer("POST", "500");
   }
 
-  private Meter getMeter(TagEncodedMetricName metricName) {
-    return registry.meter(metricName.toString());
+
+  @Test
+  public void testPingPong() throws IOException, InterruptedException {
+    Snapshot snapshot = tracker.snapshot();
+    snapshot.increment("GET", "200");
+
+    URL url = pathToURL(PingPongServlet.PATH);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
+    assertEquals(PingPongServlet.PONG, getText(connection));
+
+    tracker.validate(snapshot);
   }
 
-  protected Timer getTimer(TagEncodedMetricName metricName) {
-    return registry.timer(metricName.toString());
+  @Test
+  public void testAsync() throws IOException, InterruptedException {
+    Snapshot snapshot = tracker.snapshot();
+    snapshot.increment("GET", "200");
+
+    String uuid = UUID.randomUUID().toString();
+    URL url = pathToURL(AsyncServlet.PATH + "?" + AsyncServlet.UUID_PARAM + "=" + uuid);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
+    assertEquals(uuid, getText(connection));
+    tracker.validate(snapshot);
   }
 
 
-  protected void validateCounts(Map<String, Long> expectedCounts) throws InterruptedException {
-    Thread.sleep(250); //Wait for the valve/filter to be invoked to get the latest metrics
-    assertEquals(expectedCounts, getCurrentCounts());
+  @Test
+  public void testAsyncWithError() throws IOException, InterruptedException {
+    Snapshot snapshot = tracker.snapshot();
+    snapshot.increment("GET", "500");
+
+    URL url = pathToURL(AsyncServlet.PATH);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
+    tracker.validate(snapshot);
   }
 
-  protected Map<String, Long> getCurrentCounts() {
-    Map<String, Long> currentValues = new HashMap<>(counters.size());
-    counters.forEach((k, meter) -> {
-      currentValues.put(k, meter.getCount());
-    });
-    return currentValues;
+  @Test
+  public void testPost() throws IOException, InterruptedException {
+    Snapshot snapshot = tracker.snapshot();
+    snapshot.increment("POST", "200");
+
+    String content = UUID.randomUUID().toString();
+
+    URL url = pathToURL(PingPongServlet.PATH);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setRequestMethod("POST");
+    connection.setDoOutput(true);
+    connection.getOutputStream().write(content.getBytes());
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
+    assertEquals(content, getText(connection));
+
+    tracker.validate(snapshot);
   }
+
+
+  @Test
+  public void testExceptionResponse() throws IOException, InterruptedException {
+    Snapshot snapshot = tracker.snapshot();
+    snapshot.increment("GET", "500");
+
+    URL url = pathToURL(ExceptionServlet.PATH);
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.connect();
+
+    assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
+    tracker.validate(snapshot);
+  }
+
 
   protected String getText(HttpURLConnection connection) throws IOException {
     return new Scanner(connection.getInputStream()).useDelimiter("\0").next();
   }
+
+  protected abstract TagEncodedMetricName getRootMetric();
+
+  protected abstract URL pathToURL(String path) throws MalformedURLException;
 }

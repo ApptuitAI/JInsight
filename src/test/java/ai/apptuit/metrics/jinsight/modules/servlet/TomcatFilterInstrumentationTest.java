@@ -49,8 +49,7 @@ public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
   @Before
   public void setup() throws Exception {
 
-    TagEncodedMetricName base = TOMCAT_METRIC_PREFIX.withTags("context", ROOT_CONTEXT_PATH);
-    setupMetrics(base.submetric("requests"), base.submetric("responses"));
+    super.setup();
 
     System.out.println("Tomcat [Configuring]");
     tomcatServer = new Tomcat();
@@ -83,97 +82,18 @@ public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
     System.out.println("Tomcat [Stopped]");
   }
 
-  @Test
-  public void testPingPong() throws IOException, InterruptedException {
-    Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
-    expectedCounts.compute("200", (s, aLong) -> aLong + 1);
-
-    URL url = pathToURL(PingPongServlet.PATH);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.connect();
-
-    assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
-    assertEquals(PingPongServlet.PONG, getText(connection));
-
-    validateCounts(expectedCounts);
-  }
-
-  @Test
-  public void testAsync() throws IOException, InterruptedException {
-    Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
-    expectedCounts.compute("200", (s, aLong) -> aLong + 1);
-
-    String uuid = UUID.randomUUID().toString();
-    URL url = pathToURL(AsyncServlet.PATH + "?" + AsyncServlet.UUID_PARAM + "=" + uuid);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.connect();
-
-    assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
-    assertEquals(uuid, getText(connection));
-    validateCounts(expectedCounts);
-  }
-
-
-  @Test
-  public void testAsyncWithError() throws IOException, InterruptedException {
-    Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
-    expectedCounts.compute("500", (s, aLong) -> aLong + 1);
-
-    URL url = pathToURL(AsyncServlet.PATH);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.connect();
-
-    assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
-    validateCounts(expectedCounts);
-  }
-
-  @Test
-  public void testPost() throws IOException, InterruptedException {
-    Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("POST", (s, aLong) -> aLong + 1);
-    expectedCounts.compute("200", (s, aLong) -> aLong + 1);
-
-    String content = UUID.randomUUID().toString();
-
-    URL url = pathToURL(PingPongServlet.PATH);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("POST");
-    connection.setDoOutput(true);
-    connection.getOutputStream().write(content.getBytes());
-    connection.connect();
-
-    assertEquals(HttpServletResponse.SC_OK, connection.getResponseCode());
-    assertEquals(content, getText(connection));
-
-    validateCounts(expectedCounts);
-  }
-
-
-  @Test
-  public void testExceptionResponse() throws IOException, InterruptedException {
-    Map<String, Long> expectedCounts = getCurrentCounts();
-    expectedCounts.compute("GET", (s, aLong) -> aLong + 1);
-    expectedCounts.compute("500", (s, aLong) -> aLong + 1);
-
-    URL url = pathToURL(ExceptionServlet.PATH);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.connect();
-
-    assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, connection.getResponseCode());
-    validateCounts(expectedCounts);
-  }
-
   private <T extends BaseTestServlet> T registerServlet(Context context, T servlet) {
     Tomcat.addServlet(context, servlet.getClass().getSimpleName(), servlet);
     context.addServletMappingDecoded(servlet.getPath(), servlet.getClass().getSimpleName());
     return servlet;
   }
 
-  private URL pathToURL(String path) throws MalformedURLException {
+  protected URL pathToURL(String path) throws MalformedURLException {
     return new URL("http://localhost:" + SERVER_PORT + path);
   }
 
+  @Override
+  protected TagEncodedMetricName getRootMetric() {
+    return TOMCAT_METRIC_PREFIX.withTags("context", ROOT_CONTEXT_PATH);
+  }
 }

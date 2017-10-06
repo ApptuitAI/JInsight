@@ -19,13 +19,12 @@ package ai.apptuit.metrics.jinsight.modules.servlet;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Counter;
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.codahale.metrics.Timer.Context;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.ServletException;
@@ -41,11 +40,9 @@ public class ContextMetricsHelper {
 
   private MetricRegistry registry;
   private TagEncodedMetricName requestCountRootMetric;
-  private TagEncodedMetricName responseCountRootMetric;
 
   private Counter activeRequestsCounter;
-  private Map<String, Timer> timersByMethod = new ConcurrentHashMap<>();
-  private Map<Integer, Meter> metersByStatusCode = new ConcurrentHashMap<>();
+  private Map<String, Timer> timers = new ConcurrentHashMap<>();
 
   public ContextMetricsHelper(TagEncodedMetricName serverPrefix, String contextPath) {
     if (contextPath.trim().equals("")) {
@@ -53,7 +50,6 @@ public class ContextMetricsHelper {
     }
     TagEncodedMetricName serverRootMetric = serverPrefix.withTags("context", contextPath);
     requestCountRootMetric = serverRootMetric.submetric("requests");
-    responseCountRootMetric = serverRootMetric.submetric("responses");
     registry = RegistryService.getMetricRegistry();
     activeRequestsCounter = registry
         .counter(serverRootMetric.submetric("requests.active").toString());
@@ -65,41 +61,30 @@ public class ContextMetricsHelper {
       throws IOException, ServletException {
 
     activeRequestsCounter.inc();
-    Context context = getTimerByMethod(request).time();
 
+    long startTime = System.nanoTime();
     runnable.run();
     if (request.isAsyncStarted()) {
-      request.getAsyncContext().addListener(new AsyncCompletionListener(context, response));
+      request.getAsyncContext()
+          .addListener(new AsyncCompletionListener(startTime, request, response));
     } else {
-      context.stop();
       activeRequestsCounter.dec();
-      updateStatusMetric(response);
+      updateStatusMetric(startTime, request.getMethod(), response.getStatus());
     }
   }
 
-  private void updateStatusMetric(HttpServletResponse response) {
-    getMeterByStatus(response.getStatus()).mark();
+  private void updateStatusMetric(long startTime, String method, int status) {
+    getTimer(method, status).update(System.nanoTime() - startTime, TimeUnit.NANOSECONDS);
   }
 
-  private Timer getTimerByMethod(HttpServletRequest servletRequest) {
-    return getTimerByMethod(servletRequest.getMethod());
-  }
-
-  private Timer getTimerByMethod(String method) {
-    String key = (method != null) ? method : "?";
-    return timersByMethod.computeIfAbsent(key, s -> {
+  private Timer getTimer(String method, int status) {
+    String key = String.valueOf(status) + method;
+    return timers.computeIfAbsent(key, s -> {
       TagEncodedMetricName metric = requestCountRootMetric;
       if (method != null) {
-        metric = metric.withTags("method", method);
+        metric = metric.withTags("method", method, "status", String.valueOf(status));
       }
       return registry.timer(metric.toString());
-    });
-  }
-
-  private Meter getMeterByStatus(Integer status) {
-    return metersByStatusCode.computeIfAbsent(status, s -> {
-      TagEncodedMetricName metric = responseCountRootMetric.withTags("status", status.toString());
-      return registry.meter(metric.toString());
     });
   }
 
@@ -110,12 +95,15 @@ public class ContextMetricsHelper {
 
   private class AsyncCompletionListener implements AsyncListener {
 
-    private final Context context;
     private final HttpServletResponse response;
+    private long startTime;
+    private HttpServletRequest request;
     private boolean done;
 
-    public AsyncCompletionListener(Context context, HttpServletResponse response) {
-      this.context = context;
+    public AsyncCompletionListener(long startTime, HttpServletRequest request,
+        HttpServletResponse response) {
+      this.startTime = startTime;
+      this.request = request;
       this.response = response;
       done = false;
     }
@@ -125,24 +113,21 @@ public class ContextMetricsHelper {
       if (done) {
         return;
       }
-      context.stop();
       activeRequestsCounter.dec();
-      updateStatusMetric(response);
+      updateStatusMetric(startTime, request.getMethod(), response.getStatus());
     }
 
     @Override
     public void onTimeout(AsyncEvent event) throws IOException {
-      context.stop();
       activeRequestsCounter.dec();
-      updateStatusMetric(response);
+      updateStatusMetric(startTime, request.getMethod(), response.getStatus());
       done = true;
     }
 
     @Override
     public void onError(AsyncEvent event) throws IOException {
-      context.stop();
       activeRequestsCounter.dec();
-      updateStatusMetric(response);
+      updateStatusMetric(startTime, request.getMethod(), response.getStatus());
       done = true;
     }
 
