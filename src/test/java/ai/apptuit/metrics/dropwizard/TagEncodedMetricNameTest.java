@@ -35,7 +35,7 @@ public class TagEncodedMetricNameTest {
 
   @Before
   public void setUp() throws Exception {
-    encodedMetricName=TagEncodedMetricName.decode("asdf");
+    encodedMetricName = TagEncodedMetricName.decode("asdf");
   }
 
   @Test

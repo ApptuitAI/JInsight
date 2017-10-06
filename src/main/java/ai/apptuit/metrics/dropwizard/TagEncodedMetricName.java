@@ -111,7 +111,7 @@ public class TagEncodedMetricName {
 
   public TagEncodedMetricName withTags(Map<String, String> additionalTags) {
     Map<String, String> t = tags;
-    if (additionalTags != null && additionalTags.size()>0) {
+    if (additionalTags != null && additionalTags.size() > 0) {
       t = new LinkedHashMap<>(additionalTags);
     }
     return new TagEncodedMetricName(metricName, t);
