@@ -130,4 +130,12 @@ public class TagEncodedMetricNameTest {
     assertEquals(encodedMetricName.withTags("k1", "v1").submetric("pqr"),
         encodedMetricName.submetric("pqr").withTags("k1", "v1"));
   }
+
+  @Test
+  public void testSubmetricForMetricWithTagMap() throws Exception {
+    Map<String, String> map = new HashMap<>();
+    map.put("k1", "v1");
+    assertEquals(encodedMetricName.withTags("k1", "v1").submetric("pqr"),
+        encodedMetricName.submetric("pqr").withTags(map));
+  }
 }
