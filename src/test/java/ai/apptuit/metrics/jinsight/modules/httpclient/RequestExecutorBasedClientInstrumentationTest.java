@@ -21,7 +21,6 @@ import ai.apptuit.metrics.jinsight.testing.CountTracker;
 import ai.apptuit.metrics.jinsight.testing.CountTracker.Snapshot;
 import ai.apptuit.metrics.jinsight.testing.TestWebServer;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
@@ -42,6 +41,7 @@ import org.apache.http.protocol.HttpProcessor;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.apache.http.protocol.ImmutableHttpProcessor;
 import org.apache.http.protocol.RequestContent;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -60,7 +60,7 @@ public class RequestExecutorBasedClientInstrumentationTest {
     server = new TestWebServer();
     tracker = new CountTracker(RegistryService.getMetricRegistry(),
         HttpClientRuleHelper.ROOT_NAME, "method", "status");
-    httpclient = new HTTPClient(new InetSocketAddress(InetAddress.getLocalHost(), 9000));
+    httpclient = new HTTPClient(server.getAddress());
 
     tracker.registerTimer("GET", "200");
     tracker.registerTimer("GET", "302");
@@ -72,6 +72,11 @@ public class RequestExecutorBasedClientInstrumentationTest {
     tracker.registerTimer("POST", "400");
     tracker.registerTimer("POST", "404");
     tracker.registerTimer("POST", "500");
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    server.stop();
   }
 
   @Test

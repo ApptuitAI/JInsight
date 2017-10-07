@@ -34,6 +34,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.hamcrest.CoreMatchers;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -65,6 +66,11 @@ public abstract class AbstractHttpClientInstrumentationTest {
     tracker.registerTimer("POST", "400");
     tracker.registerTimer("POST", "404");
     tracker.registerTimer("POST", "500");
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    server.stop();
   }
 
   @Test

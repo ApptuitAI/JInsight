@@ -97,6 +97,14 @@ public class TestWebServer {
     return params;
   }
 
+  public void stop() {
+    httpServer.stop(0);
+  }
+
+  public InetSocketAddress getAddress() {
+    return httpServer.getAddress();
+  }
+
   private class EchoHandler implements HttpHandler {
 
     @Override
