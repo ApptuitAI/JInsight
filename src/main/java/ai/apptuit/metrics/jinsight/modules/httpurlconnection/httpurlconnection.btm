@@ -1,0 +1,43 @@
+#
+#  Copyright 2017 Agilx, Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
+RULE HttpURLConnection connect exit
+CLASS ^java.net.HttpURLConnection
+METHOD connect
+HELPER ai.apptuit.metrics.jinsight.modules.httpurlconnection.UrlConnectionRuleHelper
+AT ENTRY
+IF TRUE
+DO onConnect($0)
+ENDRULE
+
+RULE HttpURLConnection getInputStream exit
+CLASS ^java.net.URLConnection
+METHOD getInputStream
+HELPER ai.apptuit.metrics.jinsight.modules.httpurlconnection.UrlConnectionRuleHelper
+AT EXIT
+IF $0.responseCode >= 0
+DO onGetInputStream($0, $0.responseCode)
+ENDRULE
+
+
+RULE HttpURLConnection getInputStream exception exit
+CLASS ^java.net.URLConnection
+METHOD getInputStream
+HELPER ai.apptuit.metrics.jinsight.modules.httpurlconnection.UrlConnectionRuleHelper
+AT EXCEPTION EXIT
+IF $0.responseCode >= 0
+DO onGetInputStream($0, $0.responseCode)
+ENDRULE

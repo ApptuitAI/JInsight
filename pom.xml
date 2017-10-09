@@ -59,6 +59,10 @@ limitations under the License.
 
     <!-- Aliases -->
     <btm.script.sources>${project.basedir}/src/main/resources/btm-scripts</btm.script.sources>
+    <instrumented.jar.path>
+      ${project.build.directory}/${project.build.finalName}-instrumented.jar
+    </instrumented.jar.path>
+    <byteman.jar.path>${project.build.directory}/byteman.jar</byteman.jar.path>
 
     <!-- Debug flags -->
     <!-- (comment the blank tag to enable the debug flag) -->
@@ -297,6 +301,33 @@ limitations under the License.
 
       <!-- Plugins for test phase -->
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.0.2</version>
+        <executions>
+          <execution>
+            <id>copy-byteman</id>
+            <phase>generate-test-resources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.jboss.byteman</groupId>
+                  <artifactId>byteman</artifactId>
+                  <version>${byteman.version}</version>
+                  <type>jar</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${project.build.directory}/</outputDirectory>
+                  <destFileName>byteman.jar</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>3.1.0</version>
         <configuration>
@@ -341,7 +372,7 @@ limitations under the License.
         <configuration>
           <argLine>
             ${jvm.debug.options}
-            -javaagent:${project.build.directory}/${project.build.finalName}-instrumented.jar
+            -javaagent:${instrumented.jar.path}=boot:${byteman.jar.path}
             -Djacoco-agent.destfile=${project.build.directory}/jacoco.exec
             -Djinsight.config=${project.build.testOutputDirectory}/jinsight-config-test.properties
             ${byteman.debug.options}
