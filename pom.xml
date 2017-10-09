@@ -417,13 +417,13 @@ limitations under the License.
         <version>${byteman.version}</version>
         <executions>
           <execution>
-            <id>rulecheck-test</id>
+            <id>check-byteman-rules</id>
             <phase>compile</phase>
             <goals>
               <goal>rulecheck</goal>
             </goals>
             <configuration>
-              <scriptDir>${btm.script.sources}</scriptDir>
+              <scriptDir>${project.build.sourceDirectory}</scriptDir>
               <includes>
                 <include>**/*.btm</include>
               </includes>
