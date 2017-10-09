@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import ai.apptuit.metrics.jinsight.RegistryService;
-import ai.apptuit.metrics.jinsight.modules.httpclient.HttpClientRuleHelper;
 import ai.apptuit.metrics.jinsight.testing.CountTracker;
 import ai.apptuit.metrics.jinsight.testing.CountTracker.Snapshot;
 import ai.apptuit.metrics.jinsight.testing.TestWebServer;
@@ -55,7 +54,7 @@ public class HttpAsyncClientInstrumentationTest {
   public void setUp() throws Exception {
     server = new TestWebServer();
     tracker = new CountTracker(RegistryService.getMetricRegistry(),
-        HttpClientRuleHelper.ROOT_NAME, "method", "status");
+        HttpAsyncClientRuleHelper.ROOT_NAME, "method", "status");
     httpclient = createClient();
 
     tracker.registerTimer("GET", "200");

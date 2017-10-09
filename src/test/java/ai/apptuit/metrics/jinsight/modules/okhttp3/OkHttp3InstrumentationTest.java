@@ -21,14 +21,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import ai.apptuit.metrics.jinsight.RegistryService;
-import ai.apptuit.metrics.jinsight.modules.httpurlconnection.UrlConnectionRuleHelper;
 import ai.apptuit.metrics.jinsight.testing.CountTracker;
 import ai.apptuit.metrics.jinsight.testing.CountTracker.Snapshot;
 import ai.apptuit.metrics.jinsight.testing.TestWebServer;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.ConnectException;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.UUID;
 import okhttp3.Call;
@@ -37,7 +34,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
@@ -49,7 +45,7 @@ import org.junit.Test;
 public class OkHttp3InstrumentationTest {
 
 
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
   private TestWebServer server;
   private CountTracker tracker;
   private OkHttpClient client;
@@ -59,7 +55,7 @@ public class OkHttp3InstrumentationTest {
     server = new TestWebServer();
     client = new OkHttpClient();
     tracker = new CountTracker(RegistryService.getMetricRegistry(),
-        UrlConnectionRuleHelper.ROOT_NAME, "method", "status");
+        OkHttp3RuleHelper.ROOT_NAME, "method", "status");
 
     tracker.registerTimer("GET", "200");
     tracker.registerTimer("GET", "301");
