@@ -134,9 +134,13 @@ public class RuleHelper extends Helper {
             + "Expected: " + id + " got " + context.getId());
         return;
       }
+      TagEncodedMetricName metricName = nameSupplier.get();
+      if (metricName == null) {
+        return;
+      }
+
       long t = clock.getTick() - context.getStartTime();
-      String metricName = nameSupplier.get().toString();
-      Timer timer = RegistryService.getMetricRegistry().timer(metricName);
+      Timer timer = RegistryService.getMetricRegistry().timer(metricName.toString());
       timer.update(t, TimeUnit.NANOSECONDS);
     }
   }
