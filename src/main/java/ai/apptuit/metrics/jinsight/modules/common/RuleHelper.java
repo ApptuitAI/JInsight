@@ -35,25 +35,44 @@ import org.jboss.byteman.rule.helper.Helper;
  */
 public class RuleHelper extends Helper {
 
-  private static final Map<Object, Map<String, String>> objectProperties = Collections
-      .synchronizedMap(new WeakHashMap<Object, Map<String, String>>());
+  private static final Map<Object, Map<String, Object>> objectProperties = Collections
+      .synchronizedMap(new WeakHashMap<>());
 
   public RuleHelper(Rule rule) {
     super(rule);
   }
 
   public String setObjectProperty(Object o, String propertyName, String propertyValue) {
-    Map<String, String> props = objectProperties
-        .computeIfAbsent(o, k -> Collections.synchronizedMap(new HashMap<>()));
-    return props.put(propertyName, propertyValue);
+    return setObjectProperty0(o, propertyName, propertyValue);
   }
 
-  public String getObjectProperty(Object o, String propertyName) {
-    Map<String, String> props = objectProperties.get(o);
+  public Number setObjectProperty(Object o, String propertyName, Number propertyValue) {
+    return setObjectProperty0(o, propertyName, propertyValue);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <V> V setObjectProperty0(Object o, String propertyName, V propertyValue) {
+    Map<String, Object> props = objectProperties
+        .computeIfAbsent(o, k -> Collections.synchronizedMap(new HashMap<>()));
+    return (V) props.put(propertyName, propertyValue);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <V> V getObjectProperty(Object o, String propertyName) {
+    Map<String, Object> props = objectProperties.get(o);
     if (props == null) {
       return null;
     }
-    return props.get(propertyName);
+    return (V) props.get(propertyName);
+  }
+
+  @SuppressWarnings("unchecked")
+  public <V> V removeObjectProperty(Object o, String propertyName) {
+    Map<String, Object> props = objectProperties.get(o);
+    if (props == null) {
+      return null;
+    }
+    return (V) props.remove(propertyName);
   }
 
   public void beginTimedOperation(OperationId operationId) {
