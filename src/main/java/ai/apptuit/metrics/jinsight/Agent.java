@@ -18,6 +18,7 @@ package ai.apptuit.metrics.jinsight;
 
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
+import java.util.function.BiConsumer;
 import org.jboss.byteman.agent.Main;
 
 /**
@@ -35,24 +36,31 @@ public class Agent {
       + ",modules:" + MODULE_LOADER_CLASSNAME;
 
   public static void premain(String agentArgs, Instrumentation instrumentation) throws Exception {
-    if (!canStartAgent()) {
-      return;
-    }
-    Main.premain(AGENT_PARAMS, instrumentation);
+    main0(agentArgs, instrumentation, (a, i) -> {
+      try {
+        Main.premain(a, i);
+      } catch (Exception e) {
+        throw new AgentInitializationException(e);
+      }
+    });
   }
 
   public static void agentmain(String agentArgs, Instrumentation instrumentation) throws Exception {
-    if (!canStartAgent()) {
-      return;
-    }
-    Main.agentmain(AGENT_PARAMS, instrumentation);
+    main0(agentArgs, instrumentation, (a, i) -> {
+      try {
+        Main.agentmain(a, i);
+      } catch (Exception e) {
+        throw new AgentInitializationException(e);
+      }
+    });
   }
 
-  private static boolean canStartAgent() {
+  private static void main0(String agentArgs, Instrumentation instrumentation,
+      BiConsumer<String, Instrumentation> delegate) {
     if (ClassLoader.getSystemResource(BTM_SCRIPTS_RESOURCE_PATH) == null) {
       System.err.println("Could not load " + BTM_SCRIPTS_RESOURCE_PATH + "."
           + "Agent will not be started.");
-      return false;
+      return;
     }
 
     try {
@@ -60,9 +68,22 @@ public class Agent {
     } catch (ConfigurationException | IOException | RuntimeException e) {
       System.err.println(e.getMessage());
       System.err.println("Agent will not be started.");
-      return false;
+      return;
     }
 
-    return true;
+    if (agentArgs != null && agentArgs.trim().length() > 0) {
+      agentArgs += "," + AGENT_PARAMS;
+    } else {
+      agentArgs = AGENT_PARAMS;
+    }
+
+    delegate.accept(agentArgs, instrumentation);
+  }
+
+  private static class AgentInitializationException extends RuntimeException {
+
+    public AgentInitializationException(Exception e) {
+      super(e);
+    }
   }
 }
