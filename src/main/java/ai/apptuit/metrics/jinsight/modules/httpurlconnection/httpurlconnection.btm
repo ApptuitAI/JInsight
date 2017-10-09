@@ -24,7 +24,7 @@ DO onConnect($0)
 ENDRULE
 
 RULE HttpURLConnection getInputStream exit
-CLASS ^java.net.URLConnection
+CLASS ^java.net.HttpURLConnection
 METHOD getInputStream
 HELPER ai.apptuit.metrics.jinsight.modules.httpurlconnection.UrlConnectionRuleHelper
 AT EXIT
@@ -34,7 +34,7 @@ ENDRULE
 
 
 RULE HttpURLConnection getInputStream exception exit
-CLASS ^java.net.URLConnection
+CLASS ^java.net.HttpURLConnection
 METHOD getInputStream
 HELPER ai.apptuit.metrics.jinsight.modules.httpurlconnection.UrlConnectionRuleHelper
 AT EXCEPTION EXIT
