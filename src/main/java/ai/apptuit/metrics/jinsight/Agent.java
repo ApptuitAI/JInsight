@@ -30,7 +30,8 @@ import org.jboss.byteman.agent.Main;
 public class Agent {
 
   private static final String BTM_SCRIPTS_RESOURCE_PATH = "btm-scripts/jinsight.btm";
-  private static final String MODULE_LOADER_CLASSNAME = "ai.apptuit.metrics.jinsight.ContextualModuleLoader";
+  private static final String MODULE_LOADER_CLASSNAME =
+      "ai.apptuit.metrics.jinsight.ContextualModuleLoader";
 
   private static final String AGENT_PARAMS = "resourcescript:" + BTM_SCRIPTS_RESOURCE_PATH
       + ",modules:" + MODULE_LOADER_CLASSNAME;
