@@ -34,6 +34,7 @@ import org.powermock.api.mockito.PowerMockito;
 public class MockApptuitPutClient {
 
   private static final MockApptuitPutClient instance = new MockApptuitPutClient();
+  private static final List<PutListener> listeners = new ArrayList<>();
 
   static {
     try {
@@ -56,23 +57,27 @@ public class MockApptuitPutClient {
 
     doAnswer((Answer<Void>) invocation -> {
       Object[] args = invocation.getArguments();
-      listeners.forEach(listener -> listener.onPut((Collection<DataPoint>)args[0]));
+      listeners.forEach(listener -> listener.onPut(getDataPoints(args)));
       return null;
     }).when(mockPutClient).put(anyCollectionOf(DataPoint.class));
 
   }
 
-  private static  final List<PutListener> listeners = new ArrayList<>();
+  @SuppressWarnings("unchecked")
+  private static <T> T getDataPoints(Object[] args) {
+    return (T) args[0];
+  }
 
-  public void addPutListener(PutListener listener){
+  public void addPutListener(PutListener listener) {
     listeners.add(listener);
   }
 
-  public boolean removePutListener(PutListener listener){
+  public boolean removePutListener(PutListener listener) {
     return listeners.remove(listener);
   }
 
-  public static interface PutListener{
+  public static interface PutListener {
+
     public void onPut(Collection<DataPoint> dataPoints);
   }
 
