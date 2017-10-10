@@ -80,6 +80,8 @@ public class SpymemcachedRuleHelper extends RuleHelper {
     private static final Map<String, String> classToOperationMap = new ConcurrentHashMap<>();
 
     public static <T extends Operation> String getOperationName(T operation) {
+
+      //TODO optimize. Convert multiple if/else to switch or map.get()
       String op;
       if (operation instanceof StoreOperation) {
         op = ((StoreOperation) operation).getStoreType().name();
