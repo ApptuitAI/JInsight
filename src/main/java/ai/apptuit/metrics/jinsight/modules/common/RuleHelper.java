@@ -19,6 +19,7 @@ package ai.apptuit.metrics.jinsight.modules.common;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Clock;
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import java.util.Collections;
 import java.util.HashMap;
@@ -79,13 +80,18 @@ public class RuleHelper extends Helper {
     OperationContexts.start(operationId);
   }
 
-  public void endTimedOperation(OperationId operationId, TagEncodedMetricName metricName) {
-    endTimedOperation(operationId, () -> metricName);
+  public void endTimedOperation(OperationId operationId, Timer timer) {
+    endTimedOperation(operationId, () -> timer);
   }
 
   public void endTimedOperation(OperationId operationId,
-      Supplier<TagEncodedMetricName> nameSupplier) {
-    OperationContexts.stop(operationId, nameSupplier);
+      Supplier<Timer> timerSupplier) {
+    OperationContexts.stop(operationId, timerSupplier);
+  }
+
+  protected Timer getTimer(TagEncodedMetricName metricName) {
+    MetricRegistry registry = RegistryService.getMetricRegistry();
+    return registry.timer(metricName.toString());
   }
 
   public static final class OperationId {
@@ -123,7 +129,7 @@ public class RuleHelper extends Helper {
       contexts.push(new OperationContext(id, clock));
     }
 
-    public static void stop(OperationId id, Supplier<TagEncodedMetricName> nameSupplier) {
+    public static void stop(OperationId id, Supplier<Timer> timerSupplier) {
       OperationContext context = CONTEXT_STACK.get().pop();
       if (context == RENTRANT) {
         return;
@@ -134,14 +140,12 @@ public class RuleHelper extends Helper {
             + "Expected: " + id + " got " + context.getId());
         return;
       }
-      TagEncodedMetricName metricName = nameSupplier.get();
-      if (metricName == null) {
-        return;
-      }
 
-      long t = clock.getTick() - context.getStartTime();
-      Timer timer = RegistryService.getMetricRegistry().timer(metricName.toString());
-      timer.update(t, TimeUnit.NANOSECONDS);
+      Timer timer = timerSupplier.get();
+      if (timer != null) {
+        long t = clock.getTick() - context.getStartTime();
+        timer.update(t, TimeUnit.NANOSECONDS);
+      }
     }
   }
 

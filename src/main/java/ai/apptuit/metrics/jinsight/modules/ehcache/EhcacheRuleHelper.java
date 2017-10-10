@@ -20,7 +20,11 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
 import org.jboss.byteman.rule.Rule;
 
 /**
@@ -33,13 +37,23 @@ public class EhcacheRuleHelper extends RuleHelper {
   public static final OperationId GET_OPERATION = new OperationId("ehcache.get");
   public static final OperationId PUT_OPERATION = new OperationId("ehcache.put");
 
+  private static Map<String, Timer> getTimers = new ConcurrentHashMap<>();
+  private static Map<String, Timer> putTimers = new ConcurrentHashMap<>();
+
   public EhcacheRuleHelper(Rule rule) {
     super(rule);
   }
 
   public void monitor(Cache cache) {
     MetricRegistry registry = RegistryService.getMetricRegistry();
-    cache.registerCacheExtension(new CacheLifecycleListener(cache, registry));
+    cache.registerCacheExtension(new CacheLifecycleListener(cache, registry) {
+      @Override
+      public void dispose() throws CacheException {
+        getTimers.remove(cache.getName());
+        putTimers.remove(cache.getName());
+        super.dispose();
+      }
+    });
 
   }
 
@@ -50,8 +64,11 @@ public class EhcacheRuleHelper extends RuleHelper {
   public void onGetExit(Cache cache) {
     endTimedOperation(GET_OPERATION,
         () -> {
-          String[] tags = new String[]{"op", "get", "cache", cache.getName()};
-          return ROOT_NAME.submetric("ops").withTags(tags);
+          return getTimers.computeIfAbsent(cache.getName(), s -> {
+            String[] tags = new String[]{"op", "get", "cache", cache.getName()};
+            TagEncodedMetricName metricName = ROOT_NAME.submetric("ops").withTags(tags);
+            return getTimer(metricName);
+          });
         });
   }
 
@@ -63,8 +80,11 @@ public class EhcacheRuleHelper extends RuleHelper {
   public void onPutExit(Cache cache) {
     endTimedOperation(PUT_OPERATION,
         () -> {
-          String[] tags = new String[]{"op", "put", "cache", cache.getName()};
-          return ROOT_NAME.submetric("ops").withTags(tags);
+          return putTimers.computeIfAbsent(cache.getName(), s -> {
+            String[] tags = new String[]{"op", "put", "cache", cache.getName()};
+            TagEncodedMetricName metricName = ROOT_NAME.submetric("ops").withTags(tags);
+            return getTimer(metricName);
+          });
         });
   }
 

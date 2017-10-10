@@ -17,7 +17,10 @@
 package ai.apptuit.metrics.jinsight.modules.jdbc;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import javax.sql.DataSource;
@@ -29,12 +32,18 @@ import org.jboss.byteman.rule.Rule;
 public class JdbcRuleHelper extends RuleHelper {
 
   public static final TagEncodedMetricName ROOT_NAME = TagEncodedMetricName.decode("jdbc");
+
   public static final TagEncodedMetricName GET_CONNECTION_NAME = ROOT_NAME
       .submetric("ds.getConnection");
   public static final TagEncodedMetricName PREPARE_STATEMENT_NAME = ROOT_NAME
       .submetric("conn.prepareStatement");
   public static final TagEncodedMetricName EXECUTE_STATEMENT_NAME = ROOT_NAME
       .submetric("ps.execute");
+
+  private static final Timer GET_CONNECTION_TIMER = createTimer(GET_CONNECTION_NAME);
+  private static final Timer PREPARE_STATEMENT_TIMER = createTimer(PREPARE_STATEMENT_NAME);
+  private static final Timer EXECUTE_STATEMENT_TIMER = createTimer(EXECUTE_STATEMENT_NAME);
+
 
   private static final OperationId GET_CONNECTION_OPERATION = new OperationId(
       GET_CONNECTION_NAME.toString());
@@ -47,12 +56,17 @@ public class JdbcRuleHelper extends RuleHelper {
     super(rule);
   }
 
+  private static Timer createTimer(TagEncodedMetricName name) {
+    MetricRegistry metricRegistry = RegistryService.getMetricRegistry();
+    return metricRegistry.timer(name.toString());
+  }
+
   public void onGetConnectionEntry(DataSource ds) {
     beginTimedOperation(GET_CONNECTION_OPERATION);
   }
 
   public void onGetConnectionExit(DataSource ds) {
-    endTimedOperation(GET_CONNECTION_OPERATION, GET_CONNECTION_NAME);
+    endTimedOperation(GET_CONNECTION_OPERATION, GET_CONNECTION_TIMER);
   }
 
   public void onPrepareStatementEntry(Connection connection) {
@@ -61,7 +75,7 @@ public class JdbcRuleHelper extends RuleHelper {
 
   public void onPrepareStatementExit(Connection connection) {
     //TODO add datasource name as a tag
-    endTimedOperation(PREPARE_STATEMENT_OPERATION, PREPARE_STATEMENT_NAME);
+    endTimedOperation(PREPARE_STATEMENT_OPERATION, PREPARE_STATEMENT_TIMER);
   }
 
   public void onExecuteStatementEntry(PreparedStatement ps) {
@@ -70,6 +84,6 @@ public class JdbcRuleHelper extends RuleHelper {
 
   public void onExecuteStatementExit(PreparedStatement ps) {
     //TODO add datasource name & execution type (execute/executeUpdate/executeBath) as tags
-    endTimedOperation(EXECUTE_STATEMENT_OPERATION, EXECUTE_STATEMENT_NAME);
+    endTimedOperation(EXECUTE_STATEMENT_OPERATION, EXECUTE_STATEMENT_TIMER);
   }
 }

@@ -17,11 +17,12 @@
 package ai.apptuit.metrics.jinsight.modules.httpurlconnection;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
 import com.codahale.metrics.Clock;
 import com.codahale.metrics.Timer;
 import java.net.HttpURLConnection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import org.jboss.byteman.rule.Rule;
 
@@ -34,6 +35,9 @@ public class UrlConnectionRuleHelper extends RuleHelper {
   private static final String START_TIME_PROPERTY_NAME =
       UrlConnectionRuleHelper.class + ".START_TIME";
   private static final Clock CLOCK = Clock.defaultClock();
+
+  private Map<String, Timer> timers = new ConcurrentHashMap<>();
+
 
   public UrlConnectionRuleHelper(Rule rule) {
     super(rule);
@@ -50,11 +54,15 @@ public class UrlConnectionRuleHelper extends RuleHelper {
     }
 
     long t = Clock.defaultClock().getTick() - startTime;
-    String metricName = ROOT_NAME.withTags(
-        "method", urlConnection.getRequestMethod(),
-        "status", "" + statusCode).toString();
-    Timer timer = RegistryService.getMetricRegistry().timer(metricName);
-    timer.update(t, TimeUnit.NANOSECONDS);
+    String method = urlConnection.getRequestMethod();
+    String status = "" + statusCode;
+    Timer timer = timers.computeIfAbsent(status + method, s -> {
+      TagEncodedMetricName metricName = ROOT_NAME.withTags(
+          "method", method,
+          "status", status);
+      return getTimer(metricName);
+    });
 
+    timer.update(t, TimeUnit.NANOSECONDS);
   }
 }

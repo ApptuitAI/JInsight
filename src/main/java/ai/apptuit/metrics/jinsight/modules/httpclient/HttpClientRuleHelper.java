@@ -17,7 +17,12 @@
 package ai.apptuit.metrics.jinsight.modules.httpclient;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.jboss.byteman.rule.Rule;
@@ -30,6 +35,8 @@ public class HttpClientRuleHelper extends RuleHelper {
   public static final TagEncodedMetricName ROOT_NAME = TagEncodedMetricName.decode("http.requests");
   private static final OperationId EXECUTE_METHOD_OPERATION_ID = new OperationId("ahc.execute");
 
+  private Map<String, Timer> timers = new ConcurrentHashMap<>();
+
   public HttpClientRuleHelper(Rule rule) {
     super(rule);
   }
@@ -39,9 +46,16 @@ public class HttpClientRuleHelper extends RuleHelper {
   }
 
   public void onExecuteEnd(HttpRequest request, HttpResponse response) {
-    endTimedOperation(EXECUTE_METHOD_OPERATION_ID, () -> ROOT_NAME.withTags(
-        "method", request.getRequestLine().getMethod(),
-        "status", "" + response.getStatusLine().getStatusCode())
-    );
+    endTimedOperation(EXECUTE_METHOD_OPERATION_ID, () -> {
+      String method = request.getRequestLine().getMethod();
+      String status = "" + response.getStatusLine().getStatusCode();
+      return timers.computeIfAbsent(status + method, s -> {
+        TagEncodedMetricName metricName = ROOT_NAME.withTags(
+            "method", method,
+            "status", status);
+        return getTimer(metricName);
+      });
+    });
   }
+
 }
