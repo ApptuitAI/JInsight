@@ -64,6 +64,9 @@ limitations under the License.
     </instrumented.jar.path>
     <byteman.jar.path>${project.build.directory}/byteman.jar</byteman.jar.path>
 
+    <env.memcached.addr>127.0.0.1:11211</env.memcached.addr>
+    <!--<env.memcached.addr>192.168.1.30:11211</env.memcached.addr>-->
+
     <!-- Debug flags -->
     <!-- (comment the blank tag to enable the debug flag) -->
     <jvm.debug.options>
@@ -181,6 +184,12 @@ limitations under the License.
       <version>3.9.0</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>net.spy</groupId>
+      <artifactId>spymemcached</artifactId>
+      <version>2.12.3</version>
+      <scope>provided</scope>
+    </dependency>
     <!--
     Unit testing related dependencies
     -->
@@ -231,6 +240,12 @@ limitations under the License.
       <groupId>com.googlecode.json-simple</groupId>
       <artifactId>json-simple</artifactId>
       <version>1.1.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.zafarkhaja</groupId>
+      <artifactId>java-semver</artifactId>
+      <version>0.9.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -389,6 +404,9 @@ limitations under the License.
             -Djinsight.config=${project.build.testOutputDirectory}/jinsight-config-test.properties
             ${byteman.debug.options}
           </argLine>
+          <systemPropertyVariables>
+            <memcached.addr>${env.memcached.addr}</memcached.addr>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
 

@@ -18,5 +18,8 @@ language: java
 
 script: "mvn verify"
 
+services:
+  - memcached
+
 after_success:
   - bash <(curl -s https://codecov.io/bash)
