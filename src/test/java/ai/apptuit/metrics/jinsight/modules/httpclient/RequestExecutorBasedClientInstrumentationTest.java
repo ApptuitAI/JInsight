@@ -48,7 +48,7 @@ import org.junit.Test;
 /**
  * @author Rajiv Shivane
  */
-@SuppressWarnings("deprecated")
+@SuppressWarnings("deprecation")
 public class RequestExecutorBasedClientInstrumentationTest {
 
   private TestWebServer server;
