@@ -58,11 +58,14 @@ limitations under the License.
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- Aliases -->
-    <btm.script.sources>${project.basedir}/src/main/resources/btm-scripts</btm.script.sources>
     <instrumented.jar.path>
       ${project.build.directory}/${project.build.finalName}-instrumented.jar
     </instrumented.jar.path>
     <byteman.jar.path>${project.build.directory}/byteman.jar</byteman.jar.path>
+    <jacoco.agent.rt.jar.path>${project.build.directory}/jacoco-agent-rt.jar
+    </jacoco.agent.rt.jar.path>
+    <jacoco.dest.path>${project.build.directory}/jacoco.exec</jacoco.dest.path>
+    <jacoco.includes>ai/apptuit/**/*</jacoco.includes>
 
     <env.memcached.addr>127.0.0.1:11211</env.memcached.addr>
     <!--<env.memcached.addr>192.168.1.30:11211</env.memcached.addr>-->
@@ -333,7 +336,7 @@ limitations under the License.
         <version>3.0.2</version>
         <executions>
           <execution>
-            <id>copy-byteman</id>
+            <id>copy-dependency-jars</id>
             <phase>generate-test-resources</phase>
             <goals>
               <goal>copy</goal>
@@ -348,6 +351,16 @@ limitations under the License.
                   <overWrite>false</overWrite>
                   <outputDirectory>${project.build.directory}/</outputDirectory>
                   <destFileName>byteman.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.jacoco</groupId>
+                  <artifactId>org.jacoco.agent</artifactId>
+                  <version>${jacoco.version}</version>
+                  <type>jar</type>
+                  <classifier>runtime</classifier>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${project.build.directory}/</outputDirectory>
+                  <destFileName>jacoco-agent-rt.jar</destFileName>
                 </artifactItem>
               </artifactItems>
             </configuration>
@@ -397,10 +410,15 @@ limitations under the License.
           </dependency>
         </dependencies>
         <configuration>
+          <!--
+          <includes>
+            <include>ai/apptuit/metrics/client/*.java</include>
+          </includes>
+          -->
           <argLine>
             ${jvm.debug.options}
+            -javaagent:${jacoco.agent.rt.jar.path}=destfile=${jacoco.dest.path},includes=${jacoco.includes}
             -javaagent:${instrumented.jar.path}=boot:${byteman.jar.path}
-            -Djacoco-agent.destfile=${project.build.directory}/jacoco.exec
             -Djinsight.config=${project.build.testOutputDirectory}/jinsight-config-test.properties
             ${byteman.debug.options}
           </argLine>
@@ -503,17 +521,16 @@ limitations under the License.
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>${jacoco.version}</version>
+        <configuration>
+          <includes>
+            <include>${jacoco.includes}</include>
+          </includes>
+        </configuration>
         <executions>
           <execution>
-            <id>default-instrument</id>
+            <id>default-prepare-agent</id>
             <goals>
-              <goal>instrument</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>default-restore-instrumented-classes</id>
-            <goals>
-              <goal>restore-instrumented-classes</goal>
+              <goal>prepare-agent</goal>
             </goals>
           </execution>
           <execution>
