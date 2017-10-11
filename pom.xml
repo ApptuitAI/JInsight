@@ -61,11 +61,12 @@ limitations under the License.
     <instrumented.jar.path>
       ${project.build.directory}/${project.build.finalName}-instrumented.jar
     </instrumented.jar.path>
-    <byteman.jar.path>${project.build.directory}/byteman.jar</byteman.jar.path>
-    <jacoco.agent.rt.jar.path>${project.build.directory}/jacoco-agent-rt.jar
-    </jacoco.agent.rt.jar.path>
-    <jacoco.dest.path>${project.build.directory}/jacoco.exec</jacoco.dest.path>
+    <byteman.jar.dir>${project.build.outputDirectory}/META-INF/boot/</byteman.jar.dir>
+
     <jacoco.includes>ai/apptuit/**/*</jacoco.includes>
+    <jacoco.rt.jar.path>${project.build.directory}/jacoco-agent-rt.jar</jacoco.rt.jar.path>
+    <jacoco.dest.path>${project.build.directory}/jacoco.exec</jacoco.dest.path>
+    <jacoco.agent.opts>destfile=${jacoco.dest.path},includes=${jacoco.includes}</jacoco.agent.opts>
 
     <env.memcached.addr>127.0.0.1:11211</env.memcached.addr>
     <!--<env.memcached.addr>192.168.1.30:11211</env.memcached.addr>-->
@@ -111,6 +112,7 @@ limitations under the License.
       <groupId>org.jboss.byteman</groupId>
       <artifactId>byteman</artifactId>
       <version>${byteman.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
@@ -349,7 +351,7 @@ limitations under the License.
                   <version>${byteman.version}</version>
                   <type>jar</type>
                   <overWrite>false</overWrite>
-                  <outputDirectory>${project.build.directory}/</outputDirectory>
+                  <outputDirectory>${byteman.jar.dir}/</outputDirectory>
                   <destFileName>byteman.jar</destFileName>
                 </artifactItem>
                 <artifactItem>
@@ -417,8 +419,8 @@ limitations under the License.
           -->
           <argLine>
             ${jvm.debug.options}
-            -javaagent:${jacoco.agent.rt.jar.path}=destfile=${jacoco.dest.path},includes=${jacoco.includes}
-            -javaagent:${instrumented.jar.path}=boot:${byteman.jar.path}
+            -javaagent:${jacoco.rt.jar.path}=${jacoco.agent.opts}
+            -javaagent:${instrumented.jar.path}
             -Djinsight.config=${project.build.testOutputDirectory}/jinsight-config-test.properties
             ${byteman.debug.options}
           </argLine>
