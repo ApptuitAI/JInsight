@@ -120,8 +120,7 @@ public class RuleHelper extends Helper {
     public static void start(OperationId id) {
       Stack<OperationContext> contexts = CONTEXT_STACK.get();
       if (contexts.size() > 0) {
-        OperationContext prevContext = contexts.peek();
-        if (prevContext.getId() == id) {
+        if (lastId() == id) {
           contexts.push(RENTRANT);
           return;
         }
@@ -130,14 +129,16 @@ public class RuleHelper extends Helper {
     }
 
     public static void stop(OperationId id, Supplier<Timer> timerSupplier) {
-      OperationContext context = CONTEXT_STACK.get().pop();
-      if (context == RENTRANT) {
-        return;
-      }
-      if (context.getId() != id) {
+      OperationId lastId = lastId();
+      if (lastId != id) {
         //TODO Log and do better error handling
         System.err.println("Operation Context Mismatch. "
-            + "Expected: " + id + " got " + context.getId());
+            + "Expected: " + id + " got " + lastId);
+        return;
+      }
+
+      OperationContext context = CONTEXT_STACK.get().pop();
+      if (context == RENTRANT) {
         return;
       }
 
@@ -146,6 +147,18 @@ public class RuleHelper extends Helper {
         long t = clock.getTick() - context.getStartTime();
         timer.update(t, TimeUnit.NANOSECONDS);
       }
+    }
+
+    private static OperationId lastId() {
+      Stack<OperationContext> contexts = CONTEXT_STACK.get();
+      OperationContext prevContext = null;
+      for (int i = contexts.size() - 1; i >= 0; i--) {
+        prevContext = contexts.get(i);
+        if (prevContext != RENTRANT) {
+          break;
+        }
+      }
+      return prevContext != null ? prevContext.getId() : null;
     }
   }
 
