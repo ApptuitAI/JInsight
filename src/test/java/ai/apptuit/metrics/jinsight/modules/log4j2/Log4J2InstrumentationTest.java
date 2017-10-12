@@ -36,6 +36,7 @@ import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.properties.PropertiesConfiguration;
 import org.apache.logging.log4j.core.config.properties.PropertiesConfigurationFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,6 +49,7 @@ public class Log4J2InstrumentationTest {
   private MetricRegistry registry;
   private Logger logger;
   private Map<String, Meter> meters;
+  private Level origLevel;
 
   @Before
   public void setUp() throws Exception {
@@ -68,8 +70,14 @@ public class Log4J2InstrumentationTest {
     ));
 
     logger = LogManager.getLogger(Log4J2InstrumentationTest.class.getName());
+    origLevel = logger.getLevel();
     setLogLevel(logger, Level.ALL);
 
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    setLogLevel(logger, origLevel);
   }
 
   @Test
