@@ -16,6 +16,8 @@
 
 package ai.apptuit.metrics.jinsight.modules.log4j;
 
+import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.APPENDS_BASE_NAME;
+import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.THROWABLES_BASE_NAME;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
@@ -48,16 +50,16 @@ public class Log4JInstrumentationTest {
     registry = RegistryService.getMetricRegistry();
 
     meters = new HashMap<>();
-    meters.put("total", getMeter(Log4JRuleHelper.ROOT_NAME.submetric("total")));
-    meters.put("trace", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "trace")));
-    meters.put("debug", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "debug")));
-    meters.put("info", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "info")));
-    meters.put("warn", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "warn")));
-    meters.put("error", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "error")));
-    meters.put("fatal", getMeter(Log4JRuleHelper.ROOT_NAME.withTags("level", "fatal")));
-    meters.put("throwCount", getMeter(Log4JRuleHelper.THROWABLES_BASE_NAME.submetric("total")));
+    meters.put("total", getMeter(APPENDS_BASE_NAME.submetric("total")));
+    meters.put("trace", getMeter(APPENDS_BASE_NAME.withTags("level", "trace")));
+    meters.put("debug", getMeter(APPENDS_BASE_NAME.withTags("level", "debug")));
+    meters.put("info", getMeter(APPENDS_BASE_NAME.withTags("level", "info")));
+    meters.put("warn", getMeter(APPENDS_BASE_NAME.withTags("level", "warn")));
+    meters.put("error", getMeter(APPENDS_BASE_NAME.withTags("level", "error")));
+    meters.put("fatal", getMeter(APPENDS_BASE_NAME.withTags("level", "fatal")));
+    meters.put("throwCount", getMeter(THROWABLES_BASE_NAME.submetric("total")));
     meters.put("throw[RuntimeException]", getMeter(
-        Log4JRuleHelper.THROWABLES_BASE_NAME
+        THROWABLES_BASE_NAME
             .withTags("class", RuntimeException.class.getName())
     ));
 

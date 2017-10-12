@@ -26,8 +26,13 @@ import com.codahale.metrics.MetricRegistry;
  */
 public class LogEventTracker {
 
+  public static final TagEncodedMetricName APPENDS_BASE_NAME = TagEncodedMetricName
+      .decode("logger.appends");
+  public static final TagEncodedMetricName THROWABLES_BASE_NAME = TagEncodedMetricName
+      .decode("logger.throwables");
+
   private static final MetricRegistry registry = RegistryService.getMetricRegistry();
-  private final TagEncodedMetricName rootName;
+
   private final TagEncodedMetricName throwablesBaseName;
   private final Meter total;
   private final Meter trace;
@@ -38,17 +43,20 @@ public class LogEventTracker {
   private final Meter fatal;
   private final Meter totalThrowables;
 
-  public LogEventTracker(TagEncodedMetricName rootName, TagEncodedMetricName throwablesBaseName) {
-    this.rootName = rootName;
-    this.throwablesBaseName = throwablesBaseName;
+  public LogEventTracker() {
+    this(APPENDS_BASE_NAME, THROWABLES_BASE_NAME);
+  }
 
-    total = registry.meter(rootName.submetric("total").toString());
-    trace = registry.meter(rootName.withTags("level", "trace").toString());
-    debug = registry.meter(rootName.withTags("level", "debug").toString());
-    info = registry.meter(rootName.withTags("level", "info").toString());
-    warn = registry.meter(rootName.withTags("level", "warn").toString());
-    error = registry.meter(rootName.withTags("level", "error").toString());
-    fatal = registry.meter(rootName.withTags("level", "fatal").toString());
+  private LogEventTracker(TagEncodedMetricName appendsBase, TagEncodedMetricName throwablesBase) {
+    this.throwablesBaseName = throwablesBase;
+
+    total = registry.meter(appendsBase.submetric("total").toString());
+    trace = registry.meter(appendsBase.withTags("level", "trace").toString());
+    debug = registry.meter(appendsBase.withTags("level", "debug").toString());
+    info = registry.meter(appendsBase.withTags("level", "info").toString());
+    warn = registry.meter(appendsBase.withTags("level", "warn").toString());
+    error = registry.meter(appendsBase.withTags("level", "error").toString());
+    fatal = registry.meter(appendsBase.withTags("level", "fatal").toString());
     totalThrowables = registry.meter(this.throwablesBaseName.submetric("total").toString());
   }
 
@@ -86,7 +94,7 @@ public class LogEventTracker {
     }
   }
 
-  enum LogLevel {
+  public enum LogLevel {
     TRACE, DEBUG, INFO, WARN, ERROR, FATAL
   }
 

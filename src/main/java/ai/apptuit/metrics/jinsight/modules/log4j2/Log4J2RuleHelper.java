@@ -16,9 +16,10 @@
 
 package ai.apptuit.metrics.jinsight.modules.log4j2;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
+import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.impl.ThrowableProxy;
 import org.jboss.byteman.rule.Rule;
 
 /**
@@ -26,18 +27,18 @@ import org.jboss.byteman.rule.Rule;
  */
 public class Log4J2RuleHelper extends RuleHelper {
 
-  public static final TagEncodedMetricName ROOT_NAME = TagEncodedMetricName.decode("log4j.appends");
-  public static final TagEncodedMetricName THROWABLES_BASE_NAME = TagEncodedMetricName
-      .decode("log4j.throwables");
-
-  private static final InstrumentedAppender appender = new InstrumentedAppender();
+  private static final LogEventTracker tracker = new LogEventTracker();
 
   public Log4J2RuleHelper(Rule rule) {
     super(rule);
   }
 
   public void appendersCalled(LogEvent event) {
-    appender.append(event);
+    ThrowableProxy throwableProxy = event.getThrownProxy();
+    String throwable = (throwableProxy != null) ? throwableProxy.getName() : null;
+    LogEventTracker.LogLevel level = LogEventTracker.LogLevel.valueOf(event.getLevel().toString());
+    tracker.track(level, (throwableProxy != null), throwable);
+
   }
 
 }

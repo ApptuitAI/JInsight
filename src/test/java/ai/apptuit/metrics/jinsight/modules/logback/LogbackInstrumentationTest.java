@@ -16,8 +16,8 @@
 
 package ai.apptuit.metrics.jinsight.modules.logback;
 
-import static ai.apptuit.metrics.jinsight.modules.logback.LogbackRuleHelper.APPENDS_BASE_NAME;
-import static ai.apptuit.metrics.jinsight.modules.logback.LogbackRuleHelper.THROWABLES_BASE_NAME;
+import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.APPENDS_BASE_NAME;
+import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.THROWABLES_BASE_NAME;
 import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;

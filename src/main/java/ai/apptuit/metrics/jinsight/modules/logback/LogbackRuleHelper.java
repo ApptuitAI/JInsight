@@ -16,7 +16,6 @@
 
 package ai.apptuit.metrics.jinsight.modules.logback;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
 import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.LogLevel;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -28,13 +27,7 @@ import org.jboss.byteman.rule.Rule;
  */
 public class LogbackRuleHelper extends RuleHelper {
 
-  public static final TagEncodedMetricName APPENDS_BASE_NAME = TagEncodedMetricName
-      .decode("logback.appends");
-
-  public static final TagEncodedMetricName THROWABLES_BASE_NAME = TagEncodedMetricName
-      .decode("logback.throwables");
-
-  private static final LogEventTracker tracker = new LogEventTracker(APPENDS_BASE_NAME, THROWABLES_BASE_NAME);
+  private static final LogEventTracker tracker = new LogEventTracker();
 
   public LogbackRuleHelper(Rule rule) {
     super(rule);
