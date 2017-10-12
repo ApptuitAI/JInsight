@@ -7,35 +7,27 @@
 
 Open source java agent to transparently collect metrics about various sub-systems in your application.
 
-The goal of the project is to provide out of the box monitoring for:
- * [x] JVM metrics
-   * [x] Heap
-   * [x] GC
-   * [x] Threads
-   * [x] Classloading
-   * [x] Threads
- * [ ] Web Server metrics
-   * [ ] Thread Pools
-   * [ ] Active sessions
-   * [x] Active requests
-   * [x] Response status 
-   * [x] Request latency  
- * [ ] Logging metrics
-   * [x] Log4J v1 & v2
-   * [ ] Logback
- * [ ] Cache metrics
-   * [x] EHCache
-   * [ ] Memcache
-   * [ ] Redis
- * [ ] JDBC metrics (Connection time, PreparedStatement execution time etc)
-   * [ ] Connection time
-   * [ ] PreparedStatement execution time
-   * [ ] Commit time
- * [ ] URL connection metrics
-   * [ ] Connection time
-   * [ ] Time to submit request
-   * [ ] Time to response headers
-   * [ ] Response status
+JInsight currently collects metrics about the following modules/frameworks:
+ * **JVM metrics**  
+   [✓] Heap, [✓] GC, [✓] Threads, [✓] Classloading, [✓] Threads
+ * **Web Server metrics**  
+   [✓] Tomcat 8.x,  [✓] Jetty 9.X
+ * **Logging metrics**  
+   [✓] Log4J v1, [✓] Log4J v2, [✓] Logback
+ * **Cache metrics**  
+   [✓] EHCache, [✓] SpyMemcached client, [✓] Whalin memcached client,
+   [x] Redis - Jedis client, [x] Redis - Redisson
+ * **JDBC metrics**  
+   [✓] Generic JDBC Driver
+ * **Connection pool metrics**  
+   [ X ] C3PO, [ X ] HikraiCP
+ * **NoSQL Databases**  
+   [ X ] Cassandra, [ X ] Mongo
+ * **URL connection metrics**  
+   [✓] java.net.HttpURLConnection,
+   [✓] Apache HTTP Client, [✓] Apache Aysnc HTTP Client, [✓] OKHttp
+ * **Frameworks**  
+   [ X ] Spring, [ X ] Hibernate, [ X ] Jersey, [ X ] GRPC
 
 Refer the [Metrics Reference Guide](https://github.com/ApptuitAI/JInsight/wiki/Metrics) for a comprehensive list of metrics supported out-of-the-box
 
