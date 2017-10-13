@@ -45,7 +45,7 @@ public class RegistryService {
   }
 
   RegistryService(ConfigService configService, ApptuitReporterFactory factory) {
-    this.registry = new MetricRegistry();
+    this.registry = new TracingMetricRegistry();
 
     String hostname;
     try {
