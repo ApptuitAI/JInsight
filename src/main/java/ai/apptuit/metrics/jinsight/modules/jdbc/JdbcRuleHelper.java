@@ -42,7 +42,6 @@ public class JdbcRuleHelper extends RuleHelper {
 
   private static final Timer GET_CONNECTION_TIMER = createTimer(GET_CONNECTION_NAME);
   private static final Timer PREPARE_STATEMENT_TIMER = createTimer(PREPARE_STATEMENT_NAME);
-  private static final Timer EXECUTE_STATEMENT_TIMER = createTimer(EXECUTE_STATEMENT_NAME);
 
 
   private static final OperationId GET_CONNECTION_OPERATION = new OperationId(
@@ -51,6 +50,9 @@ public class JdbcRuleHelper extends RuleHelper {
       PREPARE_STATEMENT_NAME.toString());
   private static final OperationId EXECUTE_STATEMENT_OPERATION = new OperationId(
       EXECUTE_STATEMENT_NAME.toString());
+
+  private static final String PREP_STMT_SQL_QUERY_STRING = "jdbc.ps.sql";
+  private static final StringUniqueIdService uidService = new StringUniqueIdService();
 
   public JdbcRuleHelper(Rule rule) {
     super(rule);
@@ -65,17 +67,26 @@ public class JdbcRuleHelper extends RuleHelper {
     beginTimedOperation(GET_CONNECTION_OPERATION);
   }
 
-  public void onGetConnectionExit(DataSource ds) {
+  public void onGetConnectionExit(DataSource ds, Connection connection) {
     endTimedOperation(GET_CONNECTION_OPERATION, GET_CONNECTION_TIMER);
+  }
+
+  public void onGetConnectionError(DataSource ds) {
+    endTimedOperation(GET_CONNECTION_OPERATION, () -> null);
   }
 
   public void onPrepareStatementEntry(Connection connection) {
     beginTimedOperation(PREPARE_STATEMENT_OPERATION);
   }
 
-  public void onPrepareStatementExit(Connection connection) {
+  public void onPrepareStatementExit(Connection connection, String sql, PreparedStatement ps) {
     //TODO add datasource name as a tag
     endTimedOperation(PREPARE_STATEMENT_OPERATION, PREPARE_STATEMENT_TIMER);
+    setObjectProperty(ps, PREP_STMT_SQL_QUERY_STRING, sql);
+  }
+
+  public void onPrepareStatementError(Connection connection) {
+    endTimedOperation(PREPARE_STATEMENT_OPERATION, () -> null);
   }
 
   public void onExecuteStatementEntry(PreparedStatement ps) {
@@ -84,6 +95,16 @@ public class JdbcRuleHelper extends RuleHelper {
 
   public void onExecuteStatementExit(PreparedStatement ps) {
     //TODO add datasource name & execution type (execute/executeUpdate/executeBath) as tags
-    endTimedOperation(EXECUTE_STATEMENT_OPERATION, EXECUTE_STATEMENT_TIMER);
+    endTimedOperation(EXECUTE_STATEMENT_OPERATION, () -> {
+      String sql = getObjectProperty(ps, PREP_STMT_SQL_QUERY_STRING);
+      String sqlId = uidService.getUniqueId(sql);
+      String metricName = EXECUTE_STATEMENT_NAME.withTags("sql", sqlId).toString();
+      return RegistryService.getMetricRegistry().timer(metricName);
+    });
   }
+
+  public void onExecuteStatementError(PreparedStatement ps) {
+    endTimedOperation(EXECUTE_STATEMENT_OPERATION, () -> null);
+  }
+
 }

@@ -23,14 +23,22 @@ IF TRUE
 DO onGetConnectionEntry($0)
 ENDRULE
 
-# TODO Handle AT EXCEPTION EXIT
 RULE DataSource getConnection exit
 INTERFACE javax.sql.DataSource
 METHOD getConnection()
 HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
 AT EXIT
 IF TRUE
-DO onGetConnectionExit($0)
+DO onGetConnectionExit($0, $!)
+ENDRULE
+
+RULE DataSource getConnection error
+INTERFACE javax.sql.DataSource
+METHOD getConnection()
+HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
+AT EXCEPTION EXIT
+IF TRUE
+DO onGetConnectionError($0)
 ENDRULE
 
 
@@ -43,14 +51,22 @@ IF TRUE
 DO onPrepareStatementEntry($0)
 ENDRULE
 
-# TODO Handle AT EXCEPTION EXIT
 RULE Connection prepareStatement exit
 INTERFACE java.sql.Connection
 METHOD prepareStatement
 HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
 AT EXIT
 IF TRUE
-DO onPrepareStatementExit($0)
+DO onPrepareStatementExit($0, $1, $!)
+ENDRULE
+
+RULE Connection prepareStatement exception
+INTERFACE java.sql.Connection
+METHOD prepareStatement
+HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
+AT EXCEPTION EXIT
+IF TRUE
+DO onPrepareStatementError($0)
 ENDRULE
 
 RULE PreparedStatement execute entry
@@ -62,7 +78,6 @@ IF TRUE
 DO onExecuteStatementEntry($0)
 ENDRULE
 
-# TODO Handle AT EXCEPTION EXIT
 RULE PreparedStatement execute exit
 INTERFACE java.sql.PreparedStatement
 METHOD execute()
@@ -70,6 +85,15 @@ HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
 AT EXIT
 IF TRUE
 DO onExecuteStatementExit($0)
+ENDRULE
+
+RULE PreparedStatement execute error
+INTERFACE java.sql.PreparedStatement
+METHOD execute()
+HELPER ai.apptuit.metrics.jinsight.modules.jdbc.JdbcRuleHelper
+AT EXCEPTION EXIT
+IF TRUE
+DO onExecuteStatementError($0)
 ENDRULE
 
 #TODO instrument preparedStatement.executeQuery(); preparedStatement.executeUpdate();
