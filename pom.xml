@@ -489,7 +489,7 @@ limitations under the License.
               <includes>
                 <include>**/*.btm</include>
               </includes>
-              <verbose>true</verbose>
+              <verbose>false</verbose>
             </configuration>
           </execution>
         </executions>
