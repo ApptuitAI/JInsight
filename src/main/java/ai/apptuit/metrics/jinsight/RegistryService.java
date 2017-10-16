@@ -25,6 +25,7 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -98,14 +99,17 @@ public class RegistryService {
   private Map<String, String> getGlobalTags(ConfigService configService) {
     Map<String, String> globalTags = configService.getGlobalTags();
     String hostname = globalTags.get(HOST_TAG_NAME);
-    if (hostname == null || "".equals(hostname.trim())) {
-      try {
-        hostname = InetAddress.getLocalHost().getCanonicalHostName();
-      } catch (UnknownHostException e) {
-        hostname = "?";
-      }
-      globalTags.put(HOST_TAG_NAME, hostname);
+    if (hostname != null && !"".equals(hostname.trim())) {
+      return globalTags;
     }
-    return globalTags;
+
+    try {
+      hostname = InetAddress.getLocalHost().getCanonicalHostName();
+    } catch (UnknownHostException e) {
+      hostname = "?";
+    }
+    Map<String, String> retVal = new HashMap<>(globalTags);
+    retVal.put(HOST_TAG_NAME, hostname);
+    return retVal;
   }
 }
