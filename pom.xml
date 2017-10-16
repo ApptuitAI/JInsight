@@ -62,6 +62,7 @@ limitations under the License.
       ${project.build.directory}/${project.build.finalName}-instrumented.jar
     </instrumented.jar.path>
     <byteman.jar.dir>${project.build.outputDirectory}/META-INF/boot/</byteman.jar.dir>
+    <byteman.merge.dir>${project.build.outputDirectory}/META-INF/btm-scripts/</byteman.merge.dir>
 
     <jacoco.includes>ai/apptuit/**/*</jacoco.includes>
     <jacoco.rt.jar.path>${project.build.directory}/jacoco-agent-rt.jar</jacoco.rt.jar.path>
@@ -331,7 +332,7 @@ limitations under the License.
             </goals>
             <configuration>
               <target>
-                <concat destfile="${project.build.outputDirectory}/btm-scripts/jinsight.btm"
+                <concat destfile="${byteman.merge.dir}/jinsight.btm"
                   force="yes">
                   <fileset dir="${project.basedir}/src">
                     <include name="**/*.btm"/>

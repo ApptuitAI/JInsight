@@ -35,7 +35,7 @@ import org.jboss.byteman.agent.Main;
 public class Agent {
 
   private static final String BYTEMAN_JAR_RESOURCE_NAME = "META-INF/boot/byteman.jar";
-  private static final String BTM_SCRIPTS_RESOURCE_PATH = "btm-scripts/jinsight.btm";
+  private static final String BTM_SCRIPTS_RESOURCE_PATH = "META-INF/btm-scripts/jinsight.btm";
   private static final String MODULE_LOADER_CLASSNAME =
       "ai.apptuit.metrics.jinsight.ContextualModuleLoader";
 
