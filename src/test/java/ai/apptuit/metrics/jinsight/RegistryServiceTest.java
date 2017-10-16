@@ -19,8 +19,6 @@ package ai.apptuit.metrics.jinsight;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.calls;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -35,7 +33,6 @@ import java.util.Map;
 import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InOrder;
 
 /**
  * @author Rajiv Shivane
@@ -51,6 +48,7 @@ public class RegistryServiceTest {
     mockFactory = mock(ApptuitReporterFactory.class);
     when(mockFactory.build(any(MetricRegistry.class))).thenReturn(mock(ScheduledReporter.class));
     mockConfigService = mock(ConfigService.class);
+    when(mockConfigService.getGlobalTags()).thenReturn(ConfigService.getInstance().getGlobalTags());
   }
 
   @Test
@@ -103,10 +101,8 @@ public class RegistryServiceTest {
 
     new RegistryService(mockConfigService, mockFactory);
 
-    InOrder inOrder = inOrder(mockFactory, mockFactory);
-    inOrder.verify(mockFactory, calls(1)).addGlobalTag(eq("host"), anyString());
-    inOrder.verify(mockFactory, calls(1)).addGlobalTag(eq("host"), eq("override"));
-    verify(mockFactory, times(2)).addGlobalTag(anyString(), anyString());
+    verify(mockFactory).addGlobalTag(eq("host"), eq("override"));
+    verify(mockFactory, times(1)).addGlobalTag(anyString(), anyString());
   }
 
 

@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 public class RegistryService {
 
   private static final RegistryService singleton = new RegistryService();
+  private static final String HOST_TAG_NAME = "host";
   private MetricRegistry registry = null;
 
   private RegistryService() {
@@ -46,13 +47,6 @@ public class RegistryService {
 
   RegistryService(ConfigService configService, ApptuitReporterFactory factory) {
     this.registry = new TracingMetricRegistry();
-
-    String hostname;
-    try {
-      hostname = InetAddress.getLocalHost().getCanonicalHostName();
-    } catch (UnknownHostException e) {
-      hostname = "?";
-    }
 
     ReportingMode mode = null;
     String configMode = configService.getReportingMode();
@@ -73,7 +67,8 @@ public class RegistryService {
       //TODO Log bad configuration option
       //e.printStackTrace();
     }
-    ScheduledReporter reporter = createReporter(factory, hostname, configService.getGlobalTags(),
+
+    ScheduledReporter reporter = createReporter(factory, getGlobalTags(configService),
         configService.getApiToken(), apiUrl, mode);
     reporter.start(5, TimeUnit.SECONDS);
 
@@ -88,16 +83,29 @@ public class RegistryService {
     return singleton;
   }
 
-  private ScheduledReporter createReporter(ApptuitReporterFactory factory, String hostname,
+  private ScheduledReporter createReporter(ApptuitReporterFactory factory,
       Map<String, String> globalTags, String apiToken, String apiUrl, ReportingMode reportingMode) {
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
-    factory.addGlobalTag("host", hostname);
     globalTags.forEach(factory::addGlobalTag);
     factory.setApiKey(apiToken);
     factory.setApiUrl(apiUrl);
     factory.setReportingMode(reportingMode);
 
     return factory.build(registry);
+  }
+
+  private Map<String, String> getGlobalTags(ConfigService configService) {
+    Map<String, String> globalTags = configService.getGlobalTags();
+    String hostname = globalTags.get(HOST_TAG_NAME);
+    if (hostname == null || "".equals(hostname.trim())) {
+      try {
+        hostname = InetAddress.getLocalHost().getCanonicalHostName();
+      } catch (UnknownHostException e) {
+        hostname = "?";
+      }
+      globalTags.put(HOST_TAG_NAME, hostname);
+    }
+    return globalTags;
   }
 }
