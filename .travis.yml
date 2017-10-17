@@ -15,12 +15,29 @@
 #
 
 language: java
+sudo: false
 
-script: "mvn verify -Denv.server.ip=127.0.0.1"
+install: true
+
+addons:
+  sonarcloud:
+    organization: "apptuitai"
+    token:
+      secure: "$SONAR_TOKEN"
+
+jdk:
+  - oraclejdk8
 
 services:
   - memcached
   - redis-server
 
+script: "mvn verify sonar:sonar -Denv.server.ip=127.0.0.1"
+
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.sonar/cache'
