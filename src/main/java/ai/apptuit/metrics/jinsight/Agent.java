@@ -102,12 +102,10 @@ public class Agent {
       return null;
     }
     try {
+      //TODO Improve. Can we skip extraction if the hash matches?
       File bytemanJar = File.createTempFile("byteman", ".jar");
       bytemanJar.deleteOnExit();
-      long numBytes = Files.copy(bytemanStream, bytemanJar.toPath(),
-          StandardCopyOption.REPLACE_EXISTING);
-      //System.out.println("bytemanJar = " + bytemanJar);
-      //System.out.println("numBytes = " + numBytes);
+      Files.copy(bytemanStream, bytemanJar.toPath(), StandardCopyOption.REPLACE_EXISTING);
       return new JarFile(bytemanJar);
     } catch (IOException e) {
       //TODO Log

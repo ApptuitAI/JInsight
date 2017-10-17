@@ -16,9 +16,12 @@
 
 package ai.apptuit.metrics.client;
 
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -94,11 +97,15 @@ public class DataPoint {
     ps.append("}");
   }
 
-  public void toTextLine(PrintStream ps, Map<String, String> globalTags) {
-    PrintWriter writer = new PrintWriter(ps);
-    toTextPlain(writer, globalTags);
-    writer.append('\n');
-    writer.flush();
+  public void toTextLine(OutputStream out, Map<String, String> globalTags) {
+    try {
+      PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
+      toTextPlain(writer, globalTags);
+      writer.append('\n');
+      writer.flush();
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private void toTextPlain(PrintWriter ps, Map<String, String> globalTags) {
@@ -106,8 +113,9 @@ public class DataPoint {
         .append(Long.toString(getTimestamp())).append(" ")
         .append(String.valueOf(getValue()));
 
-    Map<String, String> tagsToMarshall = new LinkedHashMap<>(getTags());
+    Map<String, String> tagsToMarshall = getTags();
     if (globalTags != null) {
+      tagsToMarshall = new LinkedHashMap<>(getTags());
       tagsToMarshall.putAll(globalTags);
     }
     tagsToMarshall.forEach((key, value) -> ps.append(" ").append(key).append("=").append(value));

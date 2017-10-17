@@ -499,8 +499,7 @@ limitations under the License.
           <logViolationsToConsole>true</logViolationsToConsole>
           <failOnViolation>${enforce.code.style}</failOnViolation>
           <violationSeverity>warning</violationSeverity>
-          <outputFile>${project.build.directory}/reports/checkstyle-results-java.xml
-          </outputFile>
+          <outputFile>${project.build.directory}/reports/checkstyle-results-java.xml</outputFile>
         </configuration>
         <executions>
           <execution>
@@ -539,7 +538,6 @@ limitations under the License.
           <effort>Max</effort>
           <failOnError>${enforce.findbugs}</failOnError>
           <includeTests>false</includeTests>
-          <maxRank>9</maxRank>
           <xmlOutputDirectory>${project.build.directory}/reports/</xmlOutputDirectory>
           <outputDirectory>${project.build.directory}/reports/</outputDirectory>
         </configuration>

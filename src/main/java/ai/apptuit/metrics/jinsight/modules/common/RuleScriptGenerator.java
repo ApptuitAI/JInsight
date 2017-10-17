@@ -66,8 +66,8 @@ public class RuleScriptGenerator {
     }
     //System.out.println(outputFile);
     //System.out.println(helpers);
-    PrintStream ps = new PrintStream(
-        new BufferedOutputStream(new FileOutputStream(outputFile, true)));
+    FileOutputStream fileOutputStream = new FileOutputStream(outputFile, true);
+    PrintStream ps = new PrintStream(new BufferedOutputStream(fileOutputStream), false, "UTF-8");
     new RuleScriptGenerator(helpers).generateRules(ps);
     ps.flush();
     ps.close();

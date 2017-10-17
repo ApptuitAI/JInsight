@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class ConfigService {
   private static final File DEFAULT_CONFIG_FILE = new File(JINSIGHT_HOME, DEFAULT_CONFIG_FILE_NAME);
 
 
-  private static ConfigService singleton = null;
+  private static volatile ConfigService singleton = null;
   private final String apiToken;
   private final String apiUrl;
   private final String reportingMode;
@@ -111,8 +112,8 @@ public class ConfigService {
 
   private static Properties loadProperties(File configFilePath) throws IOException {
     Properties config = new Properties();
-    try (FileInputStream fileInputStream = new FileInputStream(configFilePath)) {
-      config.load(new BufferedInputStream(fileInputStream));
+    try (InputStream inputStream = new BufferedInputStream(new FileInputStream(configFilePath))) {
+      config.load(inputStream);
     }
     return config;
   }

@@ -163,7 +163,7 @@ public class ApptuitPutClient {
         outputStream = new GZIPOutputStream(outputStream);
       }
 
-      PrintStream ps = new PrintStream(outputStream);
+      PrintStream ps = new PrintStream(outputStream, false, "UTF-8");
       ps.println("[");
       Iterator<DataPoint> iterator = dataPoints.iterator();
       while (iterator.hasNext()) {

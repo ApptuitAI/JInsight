@@ -126,7 +126,7 @@ public class DataPointTest {
         Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toTextLine(new PrintStream(out), null);
+    dataPoint.toTextLine(out, null);
 
     assertEquals("proc.stat.cpu " + epoch + " " + value + "\n", out.toString());
   }
@@ -139,7 +139,7 @@ public class DataPointTest {
         epoch, value, tagEncodedMetricName.getTags());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toTextLine(new PrintStream(out), null);
+    dataPoint.toTextLine(out, null);
 
     assertEquals("proc.stat.cpu " + epoch + " " + value + " host=myhost type=idle\n",
         out.toString());
@@ -153,7 +153,7 @@ public class DataPointTest {
         epoch, value, Collections.emptyMap());
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    dataPoint.toTextLine(new PrintStream(out), tagEncodedMetricName.getTags());
+    dataPoint.toTextLine(out, tagEncodedMetricName.getTags());
 
     assertEquals("proc.stat.cpu " + epoch + " " + value + " host=myhost type=idle\n",
         out.toString());
