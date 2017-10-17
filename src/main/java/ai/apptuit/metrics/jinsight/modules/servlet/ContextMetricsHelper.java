@@ -90,7 +90,7 @@ public class ContextMetricsHelper {
 
   public interface MeasurableJob {
 
-    public void run() throws IOException, ServletException;
+    void run() throws IOException, ServletException;
   }
 
   private class AsyncCompletionListener implements AsyncListener {

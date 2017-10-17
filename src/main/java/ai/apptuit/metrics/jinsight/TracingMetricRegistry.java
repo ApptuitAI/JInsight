@@ -107,7 +107,7 @@ class TracingMetricRegistry extends MetricRegistry {
 
   interface TraceableMetric extends Metric {
 
-    public String getMetricName();
+    String getMetricName();
 
   }
 

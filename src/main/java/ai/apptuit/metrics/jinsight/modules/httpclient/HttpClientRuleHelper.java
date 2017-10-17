@@ -17,9 +17,7 @@
 package ai.apptuit.metrics.jinsight.modules.httpclient;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
-import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

@@ -119,11 +119,9 @@ public class RuleHelper extends Helper {
 
     public static void start(OperationId id) {
       Stack<OperationContext> contexts = CONTEXT_STACK.get();
-      if (contexts.size() > 0) {
-        if (lastId() == id) {
-          contexts.push(RENTRANT);
-          return;
-        }
+      if (contexts.size() > 0 && lastId() == id) {
+        contexts.push(RENTRANT);
+        return;
       }
       contexts.push(new OperationContext(id, clock));
     }

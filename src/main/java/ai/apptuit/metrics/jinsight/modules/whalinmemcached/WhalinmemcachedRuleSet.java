@@ -20,7 +20,6 @@ import ai.apptuit.metrics.jinsight.modules.common.AbstractRuleSet;
 import com.whalin.MemCached.MemCachedClient;
 import java.util.ArrayList;
 import java.util.List;
-import redis.clients.jedis.Jedis;
 
 /**
  * @author Rajiv Shivane

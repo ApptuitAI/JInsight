@@ -133,21 +133,6 @@ public class ApptuitReporterFactory {
     this.includesAttributes = includesAttributes;
   }
 
-  /**
-   * Gets a {@link MetricFilter} that specifically includes and excludes configured metrics.
-   * <p/>
-   * Filtering works in 4 ways: <dl> <dt><i>unfiltered</i></dt> <dd>All metrics are reported</dd>
-   * <dt><i>excludes</i>-only</dt> <dd>All metrics are reported, except those whose name is listed
-   * in <i>excludes</i>.</dd> <dt><i>includes</i>-only</dt> <dd>Only metrics whose name is listed in
-   * <i>includes</i> are reported.</dd> <dt>mixed (both <i>includes</i> and <i>excludes</i></dt>
-   * <dd>Only metrics whose name is listed in <i>includes</i> and <em>not</em> listed in
-   * <i>excludes</i> are reported; <i>excludes</i> takes precedence over <i>includes</i>.</dd>
-   * </dl>
-   *
-   * @return the filter for selecting metrics based on the configured excludes/includes.
-   * @see #getIncludes()
-   * @see #getExcludes()
-   */
   public MetricFilter getFilter() {
     final StringMatchingStrategy stringMatchingStrategy = getUseRegexFilters()
         ? REGEX_STRING_MATCHING_STRATEGY : DEFAULT_STRING_MATCHING_STRATEGY;
