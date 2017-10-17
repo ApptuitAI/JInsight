@@ -16,7 +16,7 @@ JInsight currently collects metrics about the following modules/frameworks:
    [✓] Log4J v1, [✓] Log4J v2, [✓] Logback
  * **Cache metrics**  
    [✓] EHCache, [✓] SpyMemcached client, [✓] Whalin memcached client,
-   [x] Redis - Jedis client, [x] Redis - Redisson
+   [✓] Redis - Jedis client, [x] Redis - Redisson
  * **JDBC metrics**  
    [✓] Generic JDBC Driver
  * **Connection pool metrics**  
