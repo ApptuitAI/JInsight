@@ -81,7 +81,8 @@ public class CountTracker {
       }
       keyBuilder.append(String.valueOf(value));
     }
-    return keyBuilder.toString();
+    String s = keyBuilder.toString();
+    return s.length() == 0 ? rootMetric.toString() : s;
   }
 
   public Snapshot snapshot() {
@@ -97,9 +98,7 @@ public class CountTracker {
   }
 
   public void validate(Snapshot snapshot) {
-    Map<String, Long> currentCounts = getCurrentCounts();
-    Map<String, Long> expectedCounts = snapshot.getExpectedCounts();
-    assertEquals(expectedCounts, currentCounts);
+    snapshot.validate();
   }
 
   public class Snapshot {
@@ -125,12 +124,18 @@ public class CountTracker {
       incrementValues.compute(key, (s, aLong) -> aLong != null ? aLong + increment : increment);
     }
 
-    public Map<String, Long> getExpectedCounts() {
+    private Map<String, Long> getExpectedCounts() {
       Map<String, Long> expectedCounts = new TreeMap<>(snapshotValues);
       incrementValues.forEach((key, aLong) -> {
         expectedCounts.compute(key, (s, aLong1) -> aLong + aLong1);
       });
       return expectedCounts;
+    }
+
+    public void validate() {
+      Map<String, Long> currentCounts = getCurrentCounts();
+      Map<String, Long> expectedCounts = getExpectedCounts();
+      assertEquals(expectedCounts, currentCounts);
     }
   }
 }
