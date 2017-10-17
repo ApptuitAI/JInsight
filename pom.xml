@@ -693,6 +693,11 @@ limitations under the License.
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>${jacoco.version}</version>
+        <configuration>
+          <includes>
+            <include>${jacoco.includes}</include>
+          </includes>
+        </configuration>
         <reportSets>
           <reportSet>
             <reports>
@@ -739,9 +744,12 @@ limitations under the License.
         </reportSets>
       </plugin>
       <plugin>
-        <groupId>com.github.hazendaz.spotbugs</groupId>
+        <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>3.0.6</version>
+        <version>3.1.0-RC6</version>
+        <configuration>
+          <effort>Max</effort>
+        </configuration>
       </plugin>
 
       <plugin>
