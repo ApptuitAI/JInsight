@@ -69,8 +69,10 @@ limitations under the License.
     <jacoco.dest.path>${project.build.directory}/jacoco.exec</jacoco.dest.path>
     <jacoco.agent.opts>destfile=${jacoco.dest.path},includes=${jacoco.includes}</jacoco.agent.opts>
 
-    <env.memcached.addr>127.0.0.1:11211</env.memcached.addr>
-    <!--<env.memcached.addr>192.168.1.30:11211</env.memcached.addr>-->
+    <env.server.ip>127.0.0.1</env.server.ip>
+    <!--<env.server.ip>jinsight-services</env.server.ip>-->
+    <env.memcached.addr>${env.server.ip}:11211</env.memcached.addr>
+    <env.redis.addr>${env.server.ip}:6379</env.redis.addr>
 
     <!-- Debug flags -->
     <!-- (comment the blank tag to enable the debug flag) -->
@@ -208,6 +210,12 @@ limitations under the License.
       <version>3.0.2</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>redis.clients</groupId>
+      <artifactId>jedis</artifactId>
+      <version>2.9.0</version>
+      <scope>provided</scope>
+    </dependency>
     <!--
     Unit testing related dependencies
     -->
@@ -280,7 +288,7 @@ limitations under the License.
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>8.2</version>
+            <version>8.3</version>
           </dependency>
         </dependencies>
         <configuration>
@@ -326,18 +334,29 @@ limitations under the License.
         <executions>
           <execution>
             <id>merge-btm-files</id>
-            <phase>generate-resources</phase>
+            <phase>compile</phase>
             <goals>
               <goal>run</goal>
             </goals>
             <configuration>
               <target>
+                <path id="ruleset.path.ref">
+                  <fileset dir="${project.build.outputDirectory}" includes="**/*RuleSet.class"/>
+                </path>
+                <pathconvert pathsep=" " property="ruleset.classes" refid="ruleset.path.ref">
+                  <map from="${project.build.outputDirectory}" to=""/>
+                </pathconvert>
                 <concat destfile="${byteman.merge.dir}/jinsight.btm"
                   force="yes">
                   <fileset dir="${project.basedir}/src">
                     <include name="**/*.btm"/>
                   </fileset>
                 </concat>
+                <java classname="ai.apptuit.metrics.jinsight.modules.common.RuleScriptGenerator"
+                  classpathref="maven.test.classpath" failonerror="true">
+                  <arg value="${byteman.merge.dir}/jinsight.btm"/>
+                  <arg line="${ruleset.classes}"/>
+                </java>
               </target>
             </configuration>
           </execution>
@@ -439,6 +458,7 @@ limitations under the License.
           </argLine>
           <systemPropertyVariables>
             <memcached.addr>${env.memcached.addr}</memcached.addr>
+            <redis.addr>${env.redis.addr}</redis.addr>
           </systemPropertyVariables>
         </configuration>
       </plugin>
@@ -486,7 +506,7 @@ limitations under the License.
               <goal>rulecheck</goal>
             </goals>
             <configuration>
-              <scriptDir>${project.build.sourceDirectory}</scriptDir>
+              <scriptDir>${byteman.merge.dir}</scriptDir>
               <includes>
                 <include>**/*.btm</include>
               </includes>

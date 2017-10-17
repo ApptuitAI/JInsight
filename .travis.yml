@@ -20,6 +20,7 @@ script: "mvn verify"
 
 services:
   - memcached
+  - redis-server
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
