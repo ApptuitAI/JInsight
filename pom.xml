@@ -353,7 +353,8 @@ limitations under the License.
                   </fileset>
                 </concat>
                 <java classname="ai.apptuit.metrics.jinsight.modules.common.RuleScriptGenerator"
-                  classpathref="maven.test.classpath" failonerror="true">
+                  classpathref="maven.test.classpath" failonerror="true" fork="true">
+                  <jvmarg value="-javaagent:${jacoco.rt.jar.path}=${jacoco.agent.opts}"/>
                   <arg value="${byteman.merge.dir}/jinsight.btm"/>
                   <arg line="${ruleset.classes}"/>
                 </java>
@@ -371,7 +372,7 @@ limitations under the License.
         <executions>
           <execution>
             <id>copy-dependency-jars</id>
-            <phase>generate-test-resources</phase>
+            <phase>generate-resources</phase>
             <goals>
               <goal>copy</goal>
             </goals>
