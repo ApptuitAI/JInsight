@@ -102,6 +102,7 @@ limitations under the License.
     <minimum.complexity.coverage>0.60</minimum.complexity.coverage>
     <minimum.instruction.coverage>0.80</minimum.instruction.coverage>
     <max.agent.file.size>2.5</max.agent.file.size>
+    <skipTests>false</skipTests>
   </properties>
 
   <dependencies>
@@ -598,6 +599,7 @@ limitations under the License.
                   </limits>
                 </rule>
               </rules>
+              <skip>${skipTests}</skip>
             </configuration>
           </execution>
         </executions>
