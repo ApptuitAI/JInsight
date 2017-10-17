@@ -58,9 +58,7 @@ limitations under the License.
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- Aliases -->
-    <instrumented.jar.path>
-      ${project.build.directory}/${project.build.finalName}-instrumented.jar
-    </instrumented.jar.path>
+    <built.jar.path>${project.build.directory}/${project.build.finalName}.jar</built.jar.path>
     <byteman.jar.dir>${project.build.outputDirectory}/META-INF/boot/</byteman.jar.dir>
     <byteman.merge.dir>${project.build.outputDirectory}/META-INF/btm-scripts/</byteman.merge.dir>
 
@@ -375,8 +373,9 @@ limitations under the License.
       </plugin>
       <!-- Plugins for test phase -->
       <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.1.0</version>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.2</version>
         <configuration>
           <archive>
             <manifestEntries>
@@ -389,19 +388,27 @@ limitations under the License.
         </configuration>
         <executions>
           <execution>
-            <id>instrumented-jar</id>
+            <id>default-jar</id>
             <phase>generate-test-resources</phase>
             <goals>
-              <goal>single</goal>
+              <goal>jar</goal>
             </goals>
-            <configuration>
-              <attach>false</attach>
-              <descriptorRefs>
-                <descriptorRef>jar-with-dependencies</descriptorRef>
-              </descriptorRefs>
-              <finalName>${project.build.finalName}-instrumented</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
-            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <createDependencyReducedPom>false</createDependencyReducedPom>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>generate-test-resources</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -425,7 +432,7 @@ limitations under the License.
           <argLine>
             ${jvm.debug.options}
             -javaagent:${jacoco.rt.jar.path}=${jacoco.agent.opts}
-            -javaagent:${instrumented.jar.path}
+            -javaagent:${built.jar.path}
             -Djinsight.config=${project.build.testOutputDirectory}/jinsight-config-test.properties
             ${byteman.debug.options}
           </argLine>
@@ -437,36 +444,6 @@ limitations under the License.
       </plugin>
 
       <!-- Plugins for package phase -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>
-        <configuration>
-          <archive>
-            <manifestEntries>
-              <Premain-Class>ai.apptuit.metrics.jinsight.Agent</Premain-Class>
-              <Agent-Class>ai.apptuit.metrics.jinsight.Agent</Agent-Class>
-              <Can-Redefine-Classes>true</Can-Redefine-Classes>
-              <Can-Retransform-Classes>true</Can-Retransform-Classes>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.1.0</version>
-        <configuration>
-          <createDependencyReducedPom>false</createDependencyReducedPom>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
