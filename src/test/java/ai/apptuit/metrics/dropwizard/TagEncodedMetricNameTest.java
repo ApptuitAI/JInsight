@@ -45,7 +45,7 @@ public class TagEncodedMetricNameTest {
     Map<String, String> expectedTags = new HashMap<>();
     expectedTags.put("k", "0");
     expectedTags.put("k2", "7");
-    assertEquals(expectedTags, metric.tags);
+    assertEquals(expectedTags, metric.getTags());
   }
 
   @Test
@@ -55,7 +55,7 @@ public class TagEncodedMetricNameTest {
     assertEquals("asdf", metric.getMetricName());
     Map<String, String> expectedTags = new HashMap<>();
     expectedTags.put("k", "0");
-    assertEquals(expectedTags, metric.tags);
+    assertEquals(expectedTags, metric.getTags());
   }
 
   @Test
@@ -64,7 +64,7 @@ public class TagEncodedMetricNameTest {
     metric = encodedMetricName;
     assertEquals("asdf", metric.getMetricName());
     Map<String, String> expectedTags = new HashMap<>();
-    assertEquals(expectedTags, metric.tags);
+    assertEquals(expectedTags, metric.getTags());
   }
 
   @Test(expected = IllegalArgumentException.class)

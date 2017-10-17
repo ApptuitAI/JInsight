@@ -17,8 +17,6 @@
 package ai.apptuit.metrics.jinsight.modules.servlet;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -33,8 +31,6 @@ public class AsyncServlet extends BaseTestServlet {
 
   static final String PATH = "/async";
   static final String UUID_PARAM = "uuid";
-
-  private static final Map<String, Object> monitors = new ConcurrentHashMap<>();
 
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response)

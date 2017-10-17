@@ -32,7 +32,7 @@ public class TagEncodedMetricName {
   private static final Pattern TAG_ENCODED_METRICNAME_PATTERN = Pattern
       .compile("([\\w\\.-]+)\\[([\\w\\W]+)\\]");
   private static final char TAG_VALUE_SEPARATOR = ':';
-  final Map<String, String> tags;
+  private final Map<String, String> tags;
   private final String metricName;
 
   private TagEncodedMetricName(String metricName, Map<String, String> tags) {

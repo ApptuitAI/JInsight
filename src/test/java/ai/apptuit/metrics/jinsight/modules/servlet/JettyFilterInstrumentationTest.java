@@ -18,23 +18,16 @@ package ai.apptuit.metrics.jinsight.modules.servlet;
 
 import static ai.apptuit.metrics.jinsight.modules.servlet.ContextMetricsHelper.ROOT_CONTEXT_PATH;
 import static ai.apptuit.metrics.jinsight.modules.servlet.JettyRuleHelper.JETTY_METRIC_PREFIX;
-import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Map;
-import java.util.UUID;
-import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 /**
  * @author Rajiv Shivane

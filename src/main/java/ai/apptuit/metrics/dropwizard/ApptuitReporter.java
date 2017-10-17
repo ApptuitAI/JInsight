@@ -76,6 +76,7 @@ public class ApptuitReporter extends ScheduledReporter {
       default:
         ApptuitPutClient putClient = new ApptuitPutClient(key, globalTags, apiUrl);
         this.dataPointsReporter = putClient::put;
+        break;
     }
   }
 
@@ -229,7 +230,7 @@ public class ApptuitReporter extends ScheduledReporter {
       }
       */
 
-      DataPoint dataPoint = new DataPoint(name.getMetricName(), epoch, value, name.tags);
+      DataPoint dataPoint = new DataPoint(name.getMetricName(), epoch, value, name.getTags());
       dataPoints.add(dataPoint);
       debug(dataPoint);
     }
