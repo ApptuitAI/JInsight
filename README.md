@@ -1,4 +1,4 @@
-[![Download](https://api.bintray.com/packages/apptuitai/maven/jinsight/images/download.svg)](https://bintray.com/apptuitai/maven/jinsight/_latestVersion)
+[![Download](https://api.bintray.com/packages/apptuitai/maven/jinsight/images/download.svg)](https://github.com/ApptuitAI/JInsight/releases/latest)
 [![Build Status](https://img.shields.io/travis/ApptuitAI/JInsight.svg)](https://travis-ci.org/ApptuitAI/JInsight)
 [![Sonar Cloud](https://sonarcloud.io/api/badges/gate?key=ai.apptuit:jinsight)](https://sonarcloud.io/dashboard?id=ai.apptuit:jinsight)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/54bc7668658440afa60e071c24e670c6)](https://www.codacy.com/app/ApptuitAI/JInsight)
