@@ -279,52 +279,41 @@ limitations under the License.
 
     <plugins>
 
-      <!-- Plugins for validate phase -->
+      <!-- Plugins for post compile phase -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.17</version>
-        <dependencies>
-          <dependency>
-            <groupId>com.puppycrawl.tools</groupId>
-            <artifactId>checkstyle</artifactId>
-            <version>8.3</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <configLocation>google_checks.xml</configLocation>
-          <encoding>UTF-8</encoding>
-          <logViolationsToConsole>true</logViolationsToConsole>
-          <failOnViolation>${enforce.code.style}</failOnViolation>
-          <violationSeverity>warning</violationSeverity>
-          <outputFile>${project.build.directory}/reports/checkstyle-results-java.xml
-          </outputFile>
-        </configuration>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.0.2</version>
         <executions>
           <execution>
-            <id>java-style-check</id>
-            <phase>validate</phase>
+            <id>copy-dependency-jars</id>
+            <phase>compile</phase>
             <goals>
-              <goal>check</goal>
+              <goal>copy</goal>
             </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.rat</groupId>
-        <artifactId>apache-rat-plugin</artifactId>
-        <version>0.12</version>
-        <configuration>
-          <ignoreErrors>${ignore.license.checks}</ignoreErrors>
-          <reportStyle>xml</reportStyle>
-          <reportFile>${project.build.directory}/reports/license-check-results.xml</reportFile>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.jboss.byteman</groupId>
+                  <artifactId>byteman</artifactId>
+                  <version>${byteman.version}</version>
+                  <type>jar</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${byteman.jar.dir}/</outputDirectory>
+                  <destFileName>byteman.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.jacoco</groupId>
+                  <artifactId>org.jacoco.agent</artifactId>
+                  <version>${jacoco.version}</version>
+                  <type>jar</type>
+                  <classifier>runtime</classifier>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${project.build.directory}/</outputDirectory>
+                  <destFileName>jacoco-agent-rt.jar</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -363,45 +352,28 @@ limitations under the License.
           </execution>
         </executions>
       </plugin>
-
-      <!-- Plugins for test phase -->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.0.2</version>
+        <groupId>org.jboss.byteman</groupId>
+        <artifactId>byteman-rulecheck-maven-plugin</artifactId>
+        <version>${byteman.version}</version>
         <executions>
           <execution>
-            <id>copy-dependency-jars</id>
-            <phase>generate-resources</phase>
+            <id>check-byteman-rules</id>
+            <phase>compile</phase>
             <goals>
-              <goal>copy</goal>
+              <goal>rulecheck</goal>
             </goals>
             <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.jboss.byteman</groupId>
-                  <artifactId>byteman</artifactId>
-                  <version>${byteman.version}</version>
-                  <type>jar</type>
-                  <overWrite>false</overWrite>
-                  <outputDirectory>${byteman.jar.dir}/</outputDirectory>
-                  <destFileName>byteman.jar</destFileName>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>org.jacoco</groupId>
-                  <artifactId>org.jacoco.agent</artifactId>
-                  <version>${jacoco.version}</version>
-                  <type>jar</type>
-                  <classifier>runtime</classifier>
-                  <overWrite>false</overWrite>
-                  <outputDirectory>${project.build.directory}/</outputDirectory>
-                  <destFileName>jacoco-agent-rt.jar</destFileName>
-                </artifactItem>
-              </artifactItems>
+              <scriptDir>${byteman.merge.dir}</scriptDir>
+              <includes>
+                <include>**/*.btm</include>
+              </includes>
+              <verbose>false</verbose>
             </configuration>
           </execution>
         </executions>
       </plugin>
+      <!-- Plugins for test phase -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <version>3.1.0</version>
@@ -496,27 +468,6 @@ limitations under the License.
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.jboss.byteman</groupId>
-        <artifactId>byteman-rulecheck-maven-plugin</artifactId>
-        <version>${byteman.version}</version>
-        <executions>
-          <execution>
-            <id>check-byteman-rules</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>rulecheck</goal>
-            </goals>
-            <configuration>
-              <scriptDir>${byteman.merge.dir}</scriptDir>
-              <includes>
-                <include>**/*.btm</include>
-              </includes>
-              <verbose>false</verbose>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
         <version>3.0.1</version>
@@ -531,6 +482,54 @@ limitations under the License.
       </plugin>
 
       <!-- Plugins for verify phase -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.17</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>8.3</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <configLocation>google_checks.xml</configLocation>
+          <encoding>UTF-8</encoding>
+          <logViolationsToConsole>true</logViolationsToConsole>
+          <failOnViolation>${enforce.code.style}</failOnViolation>
+          <violationSeverity>warning</violationSeverity>
+          <outputFile>${project.build.directory}/reports/checkstyle-results-java.xml
+          </outputFile>
+        </configuration>
+        <executions>
+          <execution>
+            <id>java-style-check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <version>0.12</version>
+        <configuration>
+          <ignoreErrors>${ignore.license.checks}</ignoreErrors>
+          <reportStyle>xml</reportStyle>
+          <reportFile>${project.build.directory}/reports/license-check-results.xml</reportFile>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
@@ -563,12 +562,6 @@ limitations under the License.
           </includes>
         </configuration>
         <executions>
-          <execution>
-            <id>default-prepare-agent</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-          </execution>
           <execution>
             <id>default-report</id>
             <phase>prepare-package</phase>
