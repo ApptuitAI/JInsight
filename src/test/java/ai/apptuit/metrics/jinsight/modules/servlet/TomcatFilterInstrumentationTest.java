@@ -27,8 +27,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 
 /**
@@ -37,18 +37,17 @@ import org.junit.Before;
 public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
 
   private static final int SERVER_PORT = 9898;
-  private Tomcat tomcatServer;
+  private static Tomcat tomcatServer;
 
-  @Before
-  public void setup() throws Exception {
-
-    super.setup();
+  @BeforeClass
+  public static void setUp() throws Exception {
 
     System.out.println("Tomcat [Configuring]");
     tomcatServer = new Tomcat();
     tomcatServer.setPort(SERVER_PORT);
 
-    Path tempDirectory = Files.createTempDirectory(this.getClass().getSimpleName());
+    Path tempDirectory = Files
+        .createTempDirectory(TomcatFilterInstrumentationTest.class.getSimpleName());
     File baseDir = new File(tempDirectory.toFile(), "tomcat");
     tomcatServer.setBaseDir(baseDir.getAbsolutePath());
 
@@ -65,17 +64,18 @@ public class TomcatFilterInstrumentationTest extends AbstractWebServerTest {
     System.out.println("Tomcat [Starting]");
     tomcatServer.start();
     System.out.println("Tomcat [Started]");
+
   }
 
-  @After
-  public void destroy() throws Exception {
+  @AfterClass
+  public static void tearDown() throws Exception {
     System.out.println("Tomcat [Stopping]");
     tomcatServer.stop();
     tomcatServer.destroy();
     System.out.println("Tomcat [Stopped]");
   }
 
-  private <T extends BaseTestServlet> T registerServlet(Context context, T servlet) {
+  private static <T extends BaseTestServlet> T registerServlet(Context context, T servlet) {
     Tomcat.addServlet(context, servlet.getClass().getSimpleName(), servlet);
     context.addServletMappingDecoded(servlet.getPath(), servlet.getClass().getSimpleName());
     return servlet;

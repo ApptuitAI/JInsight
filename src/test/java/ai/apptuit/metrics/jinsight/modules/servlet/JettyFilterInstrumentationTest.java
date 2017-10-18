@@ -26,21 +26,19 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 /**
  * @author Rajiv Shivane
  */
 public class JettyFilterInstrumentationTest extends AbstractWebServerTest {
 
-  private int serverPort;
-  private Server jetty;
+  private static int serverPort;
+  private static Server jetty;
 
-  @Before
-  public void setup() throws Exception {
-    super.setup();
-
+  @BeforeClass
+  public static void setUp() throws Exception {
     System.out.println("Jetty [Configuring]");
 
     ServletContextHandler servletContext = new ServletContextHandler();
@@ -58,8 +56,8 @@ public class JettyFilterInstrumentationTest extends AbstractWebServerTest {
     serverPort = ((ServerConnector) jetty.getConnectors()[0]).getLocalPort();
   }
 
-  @After
-  public void destroy() throws Exception {
+  @AfterClass
+  public static void tearDown() throws Exception {
     System.out.println("Jetty [Stopping]");
     jetty.stop();
     jetty.join();
