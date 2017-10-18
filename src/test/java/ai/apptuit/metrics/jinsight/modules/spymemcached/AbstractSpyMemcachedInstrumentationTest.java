@@ -32,6 +32,8 @@ import java.net.SocketAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.spy.memcached.AddrUtil;
 import net.spy.memcached.CASResponse;
 import net.spy.memcached.CASValue;
@@ -51,6 +53,10 @@ public abstract class AbstractSpyMemcachedInstrumentationTest {
 
   @Before
   public void setUp() throws Exception {
+
+    System.setProperty("net.spy.log.LoggerImpl", "net.spy.memcached.compat.log.SunLogger");
+    Logger.getLogger("net.spy.memcached").setLevel(Level.WARNING);
+
     String memcachedAddr = System.getProperty("memcached.addr");
     List<InetSocketAddress> addresses = AddrUtil.getAddresses(memcachedAddr);
     memcacheClient = getMemcacheClient(addresses);
@@ -451,7 +457,7 @@ public abstract class AbstractSpyMemcachedInstrumentationTest {
       System.out.println("memcached version = " + version);
       version = version.replaceAll("([0-9A-Za-z\\-\\.]*).*", "$1");
       if (Version.valueOf(version).lessThan(Version.valueOf("1.4.8"))) {
-        System.err.println("Memcache version ["+version + "] less than 1.4.8."
+        System.err.println("Memcache version [" + version + "] less than 1.4.8."
             + " Skipping touch command tests");
         return true;
       }
