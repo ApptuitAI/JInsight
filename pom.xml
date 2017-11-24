@@ -402,6 +402,12 @@ limitations under the License.
         <version>3.1.0</version>
         <configuration>
           <createDependencyReducedPom>false</createDependencyReducedPom>
+          <relocations>
+            <relocation>
+              <pattern>com.codahale.metrics</pattern>
+              <shadedPattern>ai.apptuit.metrics.codahale</shadedPattern>
+            </relocation>
+          </relocations>
         </configuration>
         <executions>
           <execution>
