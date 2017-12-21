@@ -82,7 +82,10 @@ public class ContextualModuleLoader implements ModuleSystem<ModuleClassLoader> {
         clazz = findClass(name);
         resolveClass(clazz);
         return clazz;
+      } else if (name.startsWith("ai.apptuit") || name.startsWith("com.codahale.metrics")) {
+        return ClassLoader.getSystemClassLoader().loadClass(name);
       }
+
       return super.loadClass(name);
     }
   }
