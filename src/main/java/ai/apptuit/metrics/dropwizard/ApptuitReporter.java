@@ -30,6 +30,7 @@ import com.codahale.metrics.Snapshot;
 import com.codahale.metrics.Timer;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,8 +51,7 @@ public class ApptuitReporter extends ScheduledReporter {
   private final DataPointsReporter dataPointsReporter;
 
   protected ApptuitReporter(MetricRegistry registry, MetricFilter filter, TimeUnit rateUnit,
-      TimeUnit durationUnit,
-      Map<String, String> globalTags, String key, String apiUrl,
+      TimeUnit durationUnit, Map<String, String> globalTags, String key, URL apiUrl,
       ReportingMode reportingMode) {
     super(registry, REPORTER_NAME, filter, rateUnit, durationUnit);
 

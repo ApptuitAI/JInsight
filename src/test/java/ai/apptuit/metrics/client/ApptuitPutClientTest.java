@@ -17,7 +17,6 @@
 package ai.apptuit.metrics.client;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import ai.apptuit.metrics.client.ApptuitPutClient.DatapointsHttpEntity;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
@@ -31,6 +30,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,8 +67,6 @@ public class ApptuitPutClientTest {
     for (int numDataPoints = 1; numDataPoints <= 10; numDataPoints++) {
       ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
       DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags, false);
-      assertEquals(DatapointsHttpEntity.APPLICATION_JSON, entity.getContentType().getValue());
-      assertNull(entity.getContentEncoding());
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       entity.writeTo(baos);
@@ -91,10 +89,6 @@ public class ApptuitPutClientTest {
       PipedInputStream pis = new PipedInputStream();
 
       entity.writeTo(new PipedOutputStream(pis));
-
-      assertEquals(DatapointsHttpEntity.APPLICATION_JSON, entity.getContentType().getValue());
-      assertEquals(DatapointsHttpEntity.CONTENT_ENCODING_GZIP,
-          entity.getContentEncoding().getValue());
 
       String jsonText = streamToString(pis);
       DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(jsonText);
@@ -135,9 +129,8 @@ public class ApptuitPutClientTest {
 
     try {
 
-      String apiEndPoint = "http://localhost:" + port + path;
-      ApptuitPutClient client = new ApptuitPutClient(token, globalTags,
-          apiEndPoint);
+      URL apiEndPoint = new URL("http://localhost:" + port + path);
+      ApptuitPutClient client = new ApptuitPutClient(token, globalTags, apiEndPoint);
       client.put(dataPoints);
 
     } finally {

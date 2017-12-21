@@ -20,6 +20,8 @@ import com.codahale.metrics.MetricAttribute;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -154,8 +156,12 @@ public class ApptuitReporterFactory {
 
 
   public ScheduledReporter build(MetricRegistry registry) {
-    return new ApptuitReporter(registry, getFilter(), getRateUnit(), getDurationUnit(), globalTags,
-        apiKey, apiUrl, reportingMode);
+    try {
+      return new ApptuitReporter(registry, getFilter(), getRateUnit(), getDurationUnit(),
+          globalTags, apiKey, apiUrl != null ? new URL(apiUrl) : null, reportingMode);
+    } catch (MalformedURLException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
   private interface StringMatchingStrategy {

@@ -16,22 +16,21 @@
 
 package ai.apptuit.metrics.client;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.AbstractHttpEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 
 /**
  * @author Rajiv Shivane
@@ -40,22 +39,37 @@ public class ApptuitPutClient {
 
   private static final boolean DEBUG = true;
   private static final boolean GZIP = true;
+
   private static final int CONNECT_TIMEOUT_MS = 5000;
   private static final int SOCKET_TIMEOUT_MS = 15000;
-  private static final int CONNECTION_REQUEST_TIMEOUT_MS = 1000;
-  private static final String DEFAULT_PUT_API_URI = "https://api.apptuit.ai/api/put?details";
 
-  private final String apiEndPoint;
+  private static final String CONTENT_TYPE = "Content-Type";
+  private static final String APPLICATION_JSON = "application/json";
+  private static final String CONTENT_ENCODING = "Content-Encoding";
+  private static final String CONTENT_ENCODING_GZIP = "gzip";
+  private static final int BUFFER_SIZE = 8 * 1024;
+  private static final int MAX_RESP_LENGTH = 5 * 1024 * 1024;
+
+  private static final URL DEFAULT_PUT_API_URI;
+
+  static {
+    try {
+      DEFAULT_PUT_API_URI = new URL("https://api.apptuit.ai/api/put?details");
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private final URL apiEndPoint;
 
   private Map<String, String> globalTags;
   private String token;
-  private CloseableHttpClient httpclient;
 
   public ApptuitPutClient(String token, Map<String, String> globalTags) {
     this(token, globalTags, null);
   }
 
-  public ApptuitPutClient(String token, Map<String, String> globalTags, String apiEndPoint) {
+  public ApptuitPutClient(String token, Map<String, String> globalTags, URL apiEndPoint) {
     this.globalTags = globalTags;
     this.token = token;
     this.apiEndPoint = (apiEndPoint != null) ? apiEndPoint : DEFAULT_PUT_API_URI;
@@ -65,32 +79,58 @@ public class ApptuitPutClient {
 
     DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags);
 
-    HttpPost httpPost = new HttpPost(apiEndPoint);
-    httpPost.setEntity(entity);
-    httpPost.setHeader("Authorization", "Bearer " + token);
-
-    httpPost.setConfig(RequestConfig.copy(
-        RequestConfig.DEFAULT)
-        .setConnectTimeout(CONNECT_TIMEOUT_MS)
-        .setSocketTimeout(SOCKET_TIMEOUT_MS)
-        .setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT_MS)
-        .build()
-    );
-
     try {
-      HttpResponse response = getHttpclient().execute(httpPost);
-      int status = response.getStatusLine().getStatusCode();
+      HttpURLConnection urlConnection = (HttpURLConnection) apiEndPoint.openConnection();
+      urlConnection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+      urlConnection.setReadTimeout(SOCKET_TIMEOUT_MS);
+      urlConnection.setChunkedStreamingMode(0);
 
+      urlConnection.setRequestProperty(CONTENT_TYPE, APPLICATION_JSON);
+      if (GZIP) {
+        urlConnection.setRequestProperty(CONTENT_ENCODING, CONTENT_ENCODING_GZIP);
+      }
+      urlConnection.setRequestProperty("Authorization", "Bearer " + token);
+      urlConnection.setRequestMethod("POST");
+      urlConnection.setDoInput(true);
+      urlConnection.setDoOutput(true);
+      OutputStream outputStream = new BufferedOutputStream(urlConnection.getOutputStream(),
+          BUFFER_SIZE);
+      entity.writeTo(outputStream);
+      outputStream.flush();
+
+      int status = urlConnection.getResponseCode();
       debug("-------------------" + status + "---------------------");
-      HttpEntity respEntity = response.getEntity();
-      String responseBody = respEntity != null ? EntityUtils.toString(respEntity) : null;
+      InputStream inputStr = urlConnection.getInputStream();
+      String encoding = urlConnection.getContentEncoding() == null ? "UTF-8"
+          : urlConnection.getContentEncoding();
+      String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
       debug(responseBody);
     } catch (IOException e) {
       //TODO log
       debug(e);
-    } finally {
-      httpPost.releaseConnection();
     }
+  }
+
+  private String consumeResponse(InputStream inputStr, Charset encoding) {
+    StringBuilder body = new StringBuilder();
+    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStr, encoding));
+    try {
+      int i;
+      char[] cbuf = new char[BUFFER_SIZE];
+      while ((i = reader.read(cbuf)) > 0) {
+        if (body == null) {
+          continue;
+        }
+        if (body.length() + i >= MAX_RESP_LENGTH) {
+          body = null;
+        } else {
+          body.append(cbuf, 0, i);
+        }
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return body == null ? "Response too long" : body.toString();
   }
 
   private void debug(Object o) {
@@ -102,18 +142,7 @@ public class ApptuitPutClient {
     }
   }
 
-  private CloseableHttpClient getHttpclient() {
-    if (httpclient == null) {
-      httpclient = HttpClients.createDefault();
-    }
-
-    return httpclient;
-  }
-
-  static class DatapointsHttpEntity extends AbstractHttpEntity {
-
-    public static final String APPLICATION_JSON = "application/json";
-    public static final String CONTENT_ENCODING_GZIP = "gzip";
+  static class DatapointsHttpEntity {
 
     private final Collection<DataPoint> dataPoints;
     private final Map<String, String> globalTags;
@@ -129,35 +158,8 @@ public class ApptuitPutClient {
       this.dataPoints = dataPoints;
       this.globalTags = globalTags;
       this.doZip = doZip;
-
-      setContentType(APPLICATION_JSON);
-      if (doZip) {
-        setContentEncoding(CONTENT_ENCODING_GZIP);
-      }
     }
 
-    @Override
-    public boolean isRepeatable() {
-      return true;
-    }
-
-    @Override
-    public long getContentLength() {
-      return -1;
-    }
-
-    @Override
-    public InputStream getContent() throws IOException, IllegalStateException {
-      throw new UnsupportedOperationException(
-          "Can not getContent as stream. Use writeTo(OutputStream) instead.");
-    }
-
-    @Override
-    public boolean isStreaming() {
-      return true;
-    }
-
-    @Override
     public void writeTo(OutputStream outputStream) throws IOException {
       if (doZip) {
         outputStream = new GZIPOutputStream(outputStream);
