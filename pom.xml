@@ -23,7 +23,7 @@ limitations under the License.
 
   <groupId>ai.apptuit</groupId>
   <artifactId>jinsight</artifactId>
-  <version>0.5.0</version>
+  <version>0.5.1</version>
   <packaging>jar</packaging>
 
   <name>JInsight</name>
@@ -402,12 +402,6 @@ limitations under the License.
         <version>3.1.0</version>
         <configuration>
           <createDependencyReducedPom>false</createDependencyReducedPom>
-          <relocations>
-            <relocation>
-              <pattern>org.slf4j</pattern>
-              <shadedPattern>ai.apptuit.metrics.relo.slf4j</shadedPattern>
-            </relocation>
-          </relocations>
         </configuration>
         <executions>
           <execution>
