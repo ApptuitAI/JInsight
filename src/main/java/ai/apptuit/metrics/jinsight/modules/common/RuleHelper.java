@@ -30,11 +30,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Rajiv Shivane
  */
 public class RuleHelper extends Helper {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(RuleHelper.class);
 
   private static final Map<Object, Map<String, Object>> objectProperties = Collections
       .synchronizedMap(new WeakHashMap<>());
@@ -129,9 +133,8 @@ public class RuleHelper extends Helper {
     public static void stop(OperationId id, Supplier<Timer> timerSupplier) {
       OperationId lastId = lastId();
       if (lastId != id) {
-        //TODO Log and do better error handling
-        System.err.println("Operation Context Mismatch. "
-            + "Expected: " + id + " got " + lastId);
+        //TODO better error handling
+        LOGGER.error("Operation Context Mismatch. Expected: " + id + " got " + lastId);
         return;
       }
 

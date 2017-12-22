@@ -21,16 +21,21 @@ import static java.lang.management.ManagementFactory.getOperatingSystemMXBean;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
+import com.sun.management.UnixOperatingSystemMXBean;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Rajiv Shivane
  */
 class FileDescriptorMetrics implements MetricSet {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(FileDescriptorMetrics.class);
 
   private OperatingSystemMXBean osMxBean;
 
@@ -45,8 +50,10 @@ class FileDescriptorMetrics implements MetricSet {
 
   public Map<String, Metric> getMetrics() {
     final Map<String, Metric> gauges = new HashMap<>();
-    gauges.put("open", (Gauge<Long>) () -> getMetricLong("getOpenFileDescriptorCount"));
-    gauges.put("max", (Gauge<Long>) () -> getMetricLong("getMaxFileDescriptorCount"));
+    if (osMxBean instanceof UnixOperatingSystemMXBean) {
+      gauges.put("open", (Gauge<Long>) () -> getMetricLong("getOpenFileDescriptorCount"));
+      gauges.put("max", (Gauge<Long>) () -> getMetricLong("getMaxFileDescriptorCount"));
+    }
     return gauges;
   }
 
@@ -54,8 +61,7 @@ class FileDescriptorMetrics implements MetricSet {
     try {
       return invoke(name);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      //e.printStackTrace();
-      //TODO Log
+      LOGGER.error("Error fetching file descriptor metrics from OperatingSystemMXBean", e);
       return -1L;
     }
   }

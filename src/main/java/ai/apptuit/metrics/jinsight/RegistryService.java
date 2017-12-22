@@ -28,6 +28,8 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides access to the MetricRegistry that is pre-configured to use {@link
@@ -37,6 +39,8 @@ import java.util.concurrent.TimeUnit;
  * @author Rajiv Shivane
  */
 public class RegistryService {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(RegistryService.class);
 
   private static final RegistryService singleton = new RegistryService();
   private static final String HOST_TAG_NAME = "host";
@@ -55,18 +59,20 @@ public class RegistryService {
       try {
         mode = ReportingMode.valueOf(configMode.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
-        //TODO Log bad configuration option
-        //e.printStackTrace();
+        LOGGER.error("Un-supported reporting mode [" + configMode + "]");
+        LOGGER.debug(e.toString(), e);
       }
     }
 
     String apiUrl = configService.getApiUrl();
-    try {
-      new URL(apiUrl);
-    } catch (MalformedURLException e) {
-      apiUrl = null;
-      //TODO Log bad configuration option
-      //e.printStackTrace();
+    if (apiUrl != null) {
+      try {
+        new URL(apiUrl);
+      } catch (MalformedURLException e) {
+        LOGGER.error("Malformed API URL [" + apiUrl + "]. Using default URL instead");
+        LOGGER.debug(e.toString(), e);
+        apiUrl = null;
+      }
     }
 
     ScheduledReporter reporter = createReporter(factory, getGlobalTags(configService),
