@@ -33,7 +33,7 @@ services:
   - redis-server
 
 script:
-  -  if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_BRANCH" = "master" ]]; then "mvn verify sonar:sonar -Denv.server.ip=127.0.0.1"; else "mvn verify -Denv.server.ip=127.0.0.1"; fi
+  -  if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_BRANCH" = "master" ]]; then mvn verify sonar:sonar -Denv.server.ip=127.0.0.1; else mvn verify -Denv.server.ip=127.0.0.1; fi
 
 before_install:
   - sudo apt-get install jq
