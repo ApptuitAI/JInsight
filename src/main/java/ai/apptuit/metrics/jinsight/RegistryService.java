@@ -59,7 +59,8 @@ public class RegistryService {
       try {
         mode = ReportingMode.valueOf(configMode.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
-        LOGGER.error("Un-supported reporting mode [" + configMode + "]", e);
+        LOGGER.error("Un-supported reporting mode [" + configMode + "]");
+        LOGGER.debug(e.toString(), e);
       }
     }
 
@@ -68,7 +69,8 @@ public class RegistryService {
       try {
         new URL(apiUrl);
       } catch (MalformedURLException e) {
-        LOGGER.error("Malformed API URL [" + apiUrl + "]. Using default URL instead", e);
+        LOGGER.error("Malformed API URL [" + apiUrl + "]. Using default URL instead");
+        LOGGER.debug(e.toString(), e);
         apiUrl = null;
       }
     }

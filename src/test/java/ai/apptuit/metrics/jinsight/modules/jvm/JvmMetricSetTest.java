@@ -49,8 +49,6 @@ public class JvmMetricSetTest {
         "jvm.buffers.mapped.used",
         "jvm.classloading.loaded",
         "jvm.classloading.unloaded",
-        "jvm.fd.max",
-        "jvm.fd.open",
         "jvm.gc.ps_marksweep.count",
         "jvm.gc.ps_marksweep.time",
         "jvm.gc.ps_scavenge.count",
@@ -115,6 +113,14 @@ public class JvmMetricSetTest {
         "jvm.thread.waiting.count",
         "jvm.uptime"
     );
-    assertEquals(new TreeSet<>(expected), registry.getNames());
+    TreeSet<String> expectedMetrics = new TreeSet<>(expected);
+
+    String osName = System.getProperty("os.name").toLowerCase();
+    if (!osName.contains("windows")) {
+      expectedMetrics.add("jvm.fd.max");
+      expectedMetrics.add("jvm.fd.open");
+    }
+
+    assertEquals(expectedMetrics, registry.getNames());
   }
 }
