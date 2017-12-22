@@ -31,15 +31,21 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Rajiv Shivane
  */
 public class ApptuitPutClient {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(ApptuitPutClient.class);
+
   private static final boolean DEBUG = true;
   private static final boolean GZIP = true;
 
+  private static final int BUFFER_SIZE = 8 * 1024;
+  private static final int MAX_RESP_LENGTH = 5 * 1024 * 1024;
   private static final int CONNECT_TIMEOUT_MS = 5000;
   private static final int SOCKET_TIMEOUT_MS = 15000;
 
@@ -47,8 +53,6 @@ public class ApptuitPutClient {
   private static final String APPLICATION_JSON = "application/json";
   private static final String CONTENT_ENCODING = "Content-Encoding";
   private static final String CONTENT_ENCODING_GZIP = "gzip";
-  private static final int BUFFER_SIZE = 8 * 1024;
-  private static final int MAX_RESP_LENGTH = 5 * 1024 * 1024;
 
   private static final URL DEFAULT_PUT_API_URI;
 
@@ -106,8 +110,8 @@ public class ApptuitPutClient {
       String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
       debug(responseBody);
     } catch (IOException e) {
-      //TODO log
-      debug(e);
+      //TODO: Return status to caller, so they can choose to retry etc
+      LOGGER.error("Error posting data", e);
     }
   }
 
@@ -128,17 +132,14 @@ public class ApptuitPutClient {
         }
       }
     } catch (IOException e) {
-      e.printStackTrace();
+      LOGGER.error("Error reading response", e);
     }
     return body == null ? "Response too long" : body.toString();
   }
 
-  private void debug(Object o) {
+  private void debug(String s) {
     if (DEBUG) {
-      if (o instanceof Throwable) {
-        ((Throwable) o).printStackTrace();
-      }
-      System.out.println(o);
+      LOGGER.info(s);
     }
   }
 
