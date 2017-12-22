@@ -21,7 +21,7 @@ install: true
 
 addons:
   sonarcloud:
-    organization: "apptuitai"
+    organization: "$SONAR_ORG"
     token:
       secure: "$SONAR_TOKEN"
 
@@ -32,7 +32,8 @@ services:
   - memcached
   - redis-server
 
-script: "mvn verify sonar:sonar -Denv.server.ip=127.0.0.1"
+script:
+  -  if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_BRANCH" = "master" ]]; then "mvn verify sonar:sonar -Denv.server.ip=127.0.0.1"; else "mvn verify -Denv.server.ip=127.0.0.1"; fi
 
 before_install:
   - sudo apt-get install jq
