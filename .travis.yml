@@ -33,18 +33,18 @@ services:
   - redis-server
 
 script:
-  -  mvn verify -Denv.server.ip=127.0.0.1
-  -  if [[ "$SONAR_ENABLED" = "true" ]]; then sonar-scanner; fi
+  - if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]]; then mvn verify sonar:sonar -Denv.server.ip=127.0.0.1; else mvn verify -Denv.server.ip=127.0.0.1; fi
 
 before_install:
   - sudo apt-get install jq
-  - wget -O ~/codacy-coverage-reporter-assembly-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
+  - wget -O ~/.codacy/reporter/codacy-reporter-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-  - java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml
+  - java -cp ~/.codacy/reporter/codacy-reporter-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml
 
 cache:
   directories:
     - '$HOME/.m2/repository'
     - '$HOME/.sonar/cache'
+    - '$HOME/.codacy/reporter'
