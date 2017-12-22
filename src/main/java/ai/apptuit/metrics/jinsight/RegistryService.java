@@ -64,11 +64,13 @@ public class RegistryService {
     }
 
     String apiUrl = configService.getApiUrl();
-    try {
-      new URL(apiUrl);
-    } catch (MalformedURLException e) {
-      apiUrl = null;
-      LOGGER.error("Malformed API URL [" + apiUrl + "]", e);
+    if (apiUrl != null) {
+      try {
+        new URL(apiUrl);
+      } catch (MalformedURLException e) {
+        LOGGER.error("Malformed API URL [" + apiUrl + "]. Using default URL instead", e);
+        apiUrl = null;
+      }
     }
 
     ScheduledReporter reporter = createReporter(factory, getGlobalTags(configService),
