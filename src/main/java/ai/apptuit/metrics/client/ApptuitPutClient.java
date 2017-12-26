@@ -83,8 +83,10 @@ public class ApptuitPutClient {
 
     DatapointsHttpEntity entity = new DatapointsHttpEntity(dataPoints, globalTags);
 
+    HttpURLConnection urlConnection;
+    int status;
     try {
-      HttpURLConnection urlConnection = (HttpURLConnection) apiEndPoint.openConnection();
+      urlConnection = (HttpURLConnection) apiEndPoint.openConnection();
       urlConnection.setConnectTimeout(CONNECT_TIMEOUT_MS);
       urlConnection.setReadTimeout(SOCKET_TIMEOUT_MS);
       urlConnection.setChunkedStreamingMode(0);
@@ -102,17 +104,31 @@ public class ApptuitPutClient {
       entity.writeTo(outputStream);
       outputStream.flush();
 
-      int status = urlConnection.getResponseCode();
+      status = urlConnection.getResponseCode();
       debug("-------------------" + status + "---------------------");
-      InputStream inputStr = urlConnection.getInputStream();
+    } catch (IOException e) {
+      //TODO: Return status to caller, so they can choose to retry etc
+      LOGGER.error("Error posting data", e);
+      return;
+    }
+
+    try {
+      InputStream inputStr;
+      if (status < HttpURLConnection.HTTP_BAD_REQUEST) {
+        inputStr = urlConnection.getInputStream();
+      } else {
+        /* error from server */
+        inputStr = urlConnection.getErrorStream();
+      }
+
       String encoding = urlConnection.getContentEncoding() == null ? "UTF-8"
           : urlConnection.getContentEncoding();
       String responseBody = consumeResponse(inputStr, Charset.forName(encoding));
       debug(responseBody);
     } catch (IOException e) {
-      //TODO: Return status to caller, so they can choose to retry etc
-      LOGGER.error("Error posting data", e);
+      LOGGER.error("Error draining response", e);
     }
+
   }
 
   private String consumeResponse(InputStream inputStr, Charset encoding) {
