@@ -30,6 +30,8 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +39,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
+import org.json.simple.parser.ParseException;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -46,8 +52,25 @@ import org.junit.Test;
 
 public class ApptuitPutClientTest {
 
+  private static MockServer httpServer;
+
   private TagEncodedMetricName tagEncodedMetricName;
   private HashMap<String, String> globalTags;
+
+  private static String streamToString(InputStream inputStream) throws IOException {
+    return new Scanner(new GZIPInputStream(inputStream)).useDelimiter("\0").next();
+  }
+
+  @BeforeClass
+  public static void setUpClass() throws Exception {
+    httpServer = new MockServer();
+    httpServer.start();
+  }
+
+  @AfterClass
+  public static void tearDownClass() throws Exception {
+    httpServer.stop(0);
+  }
 
   @Before
   public void setUp() throws Exception {
@@ -58,7 +81,11 @@ public class ApptuitPutClientTest {
     globalTags.put("host", "rajiv");
     globalTags.put("env", "dev");
     globalTags.put("dev", "rajiv");
+  }
 
+  @After
+  public void tearDown() throws Exception {
+    httpServer.resetCapturedData();
   }
 
 
@@ -78,7 +105,6 @@ public class ApptuitPutClientTest {
       }
     }
   }
-
 
   @Test
   public void testEntityMarshallingWithGZIP() throws Exception {
@@ -101,50 +127,36 @@ public class ApptuitPutClientTest {
   }
 
   @Test
-  public void testPut() throws Exception {
+  public void testPut200() throws Exception {
+    testPut(200);
+  }
+
+  @Test
+  public void testPut400() throws Exception {
+    testPut(400);
+  }
+
+  private void testPut(int status) throws MalformedURLException, ParseException {
     //Util.enableHttpClientTracing();
 
     int numDataPoints = 10;
     ArrayList<DataPoint> dataPoints = createDataPoints(numDataPoints);
 
-    int port = 9797;
-    String path = "/api/endpoint";
-    String token = "MOCK_APPTUIT_TOKEN";
+    URL apiEndPoint = httpServer.getUrl(status);
+    ApptuitPutClient client = new ApptuitPutClient(MockServer.token, globalTags, apiEndPoint);
+    client.put(dataPoints);
 
-    HttpServer httpServer = HttpServer.create(new InetSocketAddress(port), 0);
-
-    List<HttpExchange> exchanges = new ArrayList<>();
-    List<String> requestBodies = new ArrayList<>();
-    httpServer.createContext(path, exchange -> {
-      exchanges.add(exchange);
-      requestBodies.add(streamToString(exchange.getRequestBody()));
-
-      byte[] response = "{\"success\":1,\"failed\":0,\"errors\":[]}".getBytes();
-      exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length);
-      exchange.getResponseBody().write(response);
-      exchange.close();
-    });
-
-    httpServer.start();
-
-    try {
-
-      URL apiEndPoint = new URL("http://localhost:" + port + path);
-      ApptuitPutClient client = new ApptuitPutClient(token, globalTags, apiEndPoint);
-      client.put(dataPoints);
-
-    } finally {
-      httpServer.stop(0);
-    }
+    List<HttpExchange> exchanges = httpServer.getExchanges();
+    List<String> requestBodies = httpServer.getRequestBodies();
 
     HttpExchange exchange = exchanges.get(0);
     assertEquals("POST", exchange.getRequestMethod());
-    assertEquals(path, exchange.getRequestURI().getPath());
+    assertEquals(MockServer.path, exchange.getRequestURI().getPath());
 
     Headers headers = exchange.getRequestHeaders();
     assertEquals("gzip", headers.getFirst("Content-Encoding"));
     assertEquals("application/json", headers.getFirst("Content-Type"));
-    assertEquals("Bearer " + token, headers.getFirst("Authorization"));
+    assertEquals("Bearer " + MockServer.token, headers.getFirst("Authorization"));
 
     DataPoint[] unmarshalledDPs = Util.jsonToDataPoints(requestBodies.get(0));
 
@@ -152,10 +164,6 @@ public class ApptuitPutClientTest {
     for (int i = 0; i < numDataPoints; i++) {
       assertEquals(getExpectedDataPoint(dataPoints.get(i), globalTags), unmarshalledDPs[i]);
     }
-  }
-
-  private String streamToString(InputStream inputStream) throws IOException {
-    return new Scanner(new GZIPInputStream(inputStream)).useDelimiter("\0").next();
   }
 
   private ArrayList<DataPoint> createDataPoints(int numDataPoints) {
@@ -175,6 +183,89 @@ public class ApptuitPutClientTest {
     tags.putAll(globalTags);
     return new DataPoint(dataPoint.getMetric(), dataPoint.getTimestamp(), dataPoint.getValue(),
         tags);
+  }
+
+  private static class MockServer {
+
+    private static final int port = 9797;
+    private static final String path = "/api/endpoint";
+    private static final String token = "MOCK_APPTUIT_TOKEN";
+    private static final String SUCCESS_RESPONSE_BODY = "{\"success\":1,\"failed\":0,\"errors\":[]}";
+    private static final String STATUS400_RESPONSE_BODY = "{\"success\":223,\"failed\":2,\"errors\":[{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"DELETE\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"},{\"datapoint\":{\"metric\":\"tomcat.requests.duration.mean\",\"timestamp\":1513650393,\"value\":\"NaN\",\"tags\":{\"method\":\"POST\",\"context\":\"ROOT\",\"host\":\"ade-instance.c.pivotal-canto-171605.internal\",\"env\":\"dev\",\"collector\":\"jinsight\",\"status\":\"200\"}},\"error\":\"Unable to parse value to a number\"}]}";
+
+    private HttpServer httpServer;
+    private List<HttpExchange> exchanges = new ArrayList<>();
+    private List<String> requestBodies = new ArrayList<>();
+
+    public MockServer() throws IOException {
+      httpServer = HttpServer.create(new InetSocketAddress(port), 0);
+      httpServer.createContext(path, this::handleExchange);
+    }
+
+    public void start() {
+      httpServer.start();
+    }
+
+    public void stop(int i) {
+      httpServer.stop(i);
+    }
+
+    private URL getUrl() throws MalformedURLException {
+      return getUrl(HttpURLConnection.HTTP_OK);
+    }
+
+    private URL getUrl(int code) throws MalformedURLException {
+      String url = "http://localhost:" + port + path;
+      if (code != 200) {
+        url += "?status=" + code;
+      }
+      return new URL(url);
+    }
+
+    public List<HttpExchange> getExchanges() {
+      return exchanges;
+    }
+
+    public List<String> getRequestBodies() {
+      return requestBodies;
+    }
+
+    public void resetCapturedData() {
+      exchanges.clear();
+      requestBodies.clear();
+    }
+
+    private void handleExchange(HttpExchange exchange) throws IOException {
+      exchanges.add(exchange);
+      requestBodies.add(streamToString(exchange.getRequestBody()));
+
+      int status = getResponseType(exchange);
+      byte[] response = null;
+      switch (status) {
+        case HttpURLConnection.HTTP_BAD_REQUEST:
+          response = STATUS400_RESPONSE_BODY.getBytes();
+          break;
+        default:
+          response = SUCCESS_RESPONSE_BODY.getBytes();
+          status = HttpURLConnection.HTTP_OK;
+          break;
+      }
+      exchange.sendResponseHeaders(status, response.length);
+      exchange.getResponseBody().write(response);
+      exchange.close();
+    }
+
+    private int getResponseType(HttpExchange exchange) {
+      URI uri = exchange.getRequestURI();
+      String rawQuery = uri.getRawQuery();
+      if (rawQuery == null) {
+        return HttpURLConnection.HTTP_OK;
+      }
+      if ("status=400".equals(rawQuery)) {
+        return HttpURLConnection.HTTP_BAD_REQUEST;
+      }
+      return HttpURLConnection.HTTP_OK;
+    }
   }
 
 }
