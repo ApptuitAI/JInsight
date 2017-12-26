@@ -248,6 +248,7 @@ public class ApptuitPutClientTest {
         default:
           response = SUCCESS_RESPONSE_BODY.getBytes();
           status = HttpURLConnection.HTTP_OK;
+          break;
       }
       exchange.sendResponseHeaders(status, response.length);
       exchange.getResponseBody().write(response);
@@ -260,7 +261,7 @@ public class ApptuitPutClientTest {
       if (rawQuery == null) {
         return HttpURLConnection.HTTP_OK;
       }
-      if (rawQuery.equals("status=400")) {
+      if ("status=400".equals(rawQuery)) {
         return HttpURLConnection.HTTP_BAD_REQUEST;
       }
       return HttpURLConnection.HTTP_OK;
