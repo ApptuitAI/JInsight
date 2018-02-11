@@ -17,6 +17,11 @@
 language: java
 sudo: false
 
+env:
+  matrix:
+    - METRICS_VERSION=3.2.6
+    - METRICS_VERSION=4.0.2
+
 install: true
 
 addons:
@@ -33,7 +38,12 @@ services:
   - redis-server
 
 script:
-  - if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]]; then mvn verify sonar:sonar -Denv.server.ip=127.0.0.1; else mvn verify -Denv.server.ip=127.0.0.1; fi
+  - |
+    if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]]; then
+      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1 -Dmetrics.version=$METRICS_VERSION;
+    else
+      mvn verify -Denv.server.ip=127.0.0.1 -Dmetrics.version=$METRICS_VERSION;
+    fi
 
 before_install:
   - sudo apt-get install jq
