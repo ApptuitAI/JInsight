@@ -23,7 +23,7 @@ limitations under the License.
 
   <groupId>ai.apptuit</groupId>
   <artifactId>jinsight</artifactId>
-  <version>0.5.3</version>
+  <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>JInsight</name>
