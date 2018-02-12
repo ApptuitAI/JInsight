@@ -50,6 +50,7 @@ install:
   - sudo apt-get install -y xmlstarlet
 
 before_script:
+  - if [[ "$METRICS_VERSION" = "3.2.6" ]]; then export IS_PRIMARY_MATRIX_JOB=true; fi
   - xmlstarlet ed --inplace -u "/_:project/_:properties/_:metrics.version" -v "$METRICS_VERSION" pom.xml;
   - SEMVER_REGEX="^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$"
   - |
@@ -59,18 +60,22 @@ before_script:
     fi
   - echo $TRAVIS_TAG
   - echo $PACKAGE_VERSION
+  - echo $IS_PRIMARY_MATRIX_JOB
 
 script:
   - |
-    if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]]; then
+    if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && [[ "$IS_PRIMARY_MATRIX_JOB" = "true" ]]; then
       mvn verify sonar:sonar -Denv.server.ip=127.0.0.1
     else
       mvn verify -Denv.server.ip=127.0.0.1
     fi
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
-  - java -cp ~/.codacy/reporter/codacy-reporter-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml
+  - |
+    if [[ "$IS_PRIMARY_MATRIX_JOB" = "true" ]]; then
+      bash <(curl -s https://codecov.io/bash);
+      java -cp ~/.codacy/reporter/codacy-reporter-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml;
+    fi
 
 deploy:
   - provider: script
@@ -78,4 +83,4 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-      condition: $PACKAGE_VERSION != "" && $METRICS_VERSION == "3.2.6" && $BINTRAY_API_KEY != ""
+      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
