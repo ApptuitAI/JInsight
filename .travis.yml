@@ -22,9 +22,12 @@ env:
     - METRICS_VERSION=3.2.6
     - METRICS_VERSION=4.0.2
 
-install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y xmlstarlet
+jdk:
+  - oraclejdk8
+
+services:
+  - memcached
+  - redis-server
 
 addons:
   sonarcloud:
@@ -32,12 +35,19 @@ addons:
     token:
       secure: "$SONAR_TOKEN"
 
-jdk:
-  - oraclejdk8
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.sonar/cache'
+    - '$HOME/.codacy/reporter'
 
-services:
-  - memcached
-  - redis-server
+before_install:
+  - sudo apt-get install jq
+  - wget -O ~/.codacy/reporter/codacy-reporter-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
+
+install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y xmlstarlet
 
 before_script:
   - xmlstarlet ed --inplace -u "/_:project/_:properties/_:metrics.version" -v "$METRICS_VERSION" pom.xml;
@@ -58,10 +68,6 @@ script:
       mvn verify -Denv.server.ip=127.0.0.1
     fi
 
-before_install:
-  - sudo apt-get install jq
-  - wget -O ~/.codacy/reporter/codacy-reporter-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
-
 after_success:
   - bash <(curl -s https://codecov.io/bash)
   - java -cp ~/.codacy/reporter/codacy-reporter-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml
@@ -73,9 +79,3 @@ deploy:
     on:
       tags: true
       condition: $PACKAGE_VERSION != "" && $METRICS_VERSION == "3.2.6" && $BINTRAY_API_KEY != ""
-
-cache:
-  directories:
-    - '$HOME/.m2/repository'
-    - '$HOME/.sonar/cache'
-    - '$HOME/.codacy/reporter'
