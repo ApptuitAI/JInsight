@@ -63,8 +63,7 @@ Instrumenting a JVM with JInsight Java Agent is refreshingly simple:
 
 Refer the  **[Agent installation guide](https://github.com/ApptuitAI/JInsight/wiki/UsageJInsightAgent)** for detailed instructions.
 
-If you want additional metrics specific to your application/workflows, beyond the [out-of-the-box metrics](https://github.com/ApptuitAI/JInsight/wiki/Metrics) provided by the agent, jinsight provides a rich toolkit to capture metrics from your code. Refer the **[API integration guide](https://github.com/ApptuitAI/JInsight/wiki/UsageDropwizard)** for help instrumenting your code with metrics.
-
+If you want to programmatically capture metrics specific to your application/workflows, beyond the [out-of-the-box metrics](https://github.com/ApptuitAI/JInsight/wiki/Metrics) provided by the JInsight agent, we recommend using [Dropwizard Metrics](http://metrics.dropwizard.io/) library for it. The **[metrics-apptuit](https://github.com/ApptuitAI/metrics-apptuit/wiki/UsageDropwizard)** library can be used to push the metrics collected by Dropwizard to  ApptuitAI.
 
 ## LICENSE
 

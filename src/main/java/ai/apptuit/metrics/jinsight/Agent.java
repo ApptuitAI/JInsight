@@ -24,9 +24,9 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.function.BiConsumer;
 import java.util.jar.JarFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jboss.byteman.agent.Main;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The main agent class for JInsight. A wrapper around ByteMan Agent to easy configuration and
@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Agent {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(Agent.class);
+  private static final Logger LOGGER = Logger.getLogger(Agent.class.getName());
 
   private static final String BYTEMAN_JAR_RESOURCE_NAME = "META-INF/boot/byteman.jar";
   private static final String BTM_SCRIPTS_RESOURCE_PATH = "META-INF/btm-scripts/jinsight.btm";
@@ -112,7 +112,7 @@ public class Agent {
       Files.copy(bytemanStream, bytemanJar.toPath(), StandardCopyOption.REPLACE_EXISTING);
       return new JarFile(bytemanJar);
     } catch (IOException e) {
-      LOGGER.error("Error extracting byteman.jar.", e);
+      LOGGER.log(Level.SEVERE, "Error extracting byteman.jar.", e);
     }
     return null;
   }

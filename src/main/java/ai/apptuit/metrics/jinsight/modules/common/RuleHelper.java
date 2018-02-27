@@ -28,17 +28,16 @@ import java.util.Stack;
 import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Rajiv Shivane
  */
 public class RuleHelper extends Helper {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(RuleHelper.class);
+  private static final Logger LOGGER = Logger.getLogger(RuleHelper.class.getName());
 
   private static final Map<Object, Map<String, Object>> objectProperties = Collections
       .synchronizedMap(new WeakHashMap<>());
@@ -134,7 +133,7 @@ public class RuleHelper extends Helper {
       OperationId lastId = lastId();
       if (lastId != id) {
         //TODO better error handling
-        LOGGER.error("Operation Context Mismatch. Expected: " + id + " got " + lastId);
+        LOGGER.severe("Operation Context Mismatch. Expected: " + id + " got " + lastId);
         return;
       }
 

@@ -27,15 +27,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Rajiv Shivane
  */
 class FileDescriptorMetrics implements MetricSet {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FileDescriptorMetrics.class);
+  private static final Logger LOGGER = Logger.getLogger(FileDescriptorMetrics.class.getName());
 
   private OperatingSystemMXBean osMxBean;
 
@@ -61,7 +61,8 @@ class FileDescriptorMetrics implements MetricSet {
     try {
       return invoke(name);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      LOGGER.error("Error fetching file descriptor metrics from OperatingSystemMXBean", e);
+      LOGGER.log(Level.SEVERE,
+          "Error fetching file descriptor metrics from OperatingSystemMXBean", e);
       return -1L;
     }
   }

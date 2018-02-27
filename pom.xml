@@ -53,6 +53,12 @@ limitations under the License.
     </repository>
   </distributionManagement>
 
+  <repositories>
+    <repository>
+      <id>jinsight-bintray</id>
+      <url>https://dl.bintray.com/apptuitai/maven</url>
+    </repository>
+  </repositories>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -89,10 +95,10 @@ limitations under the License.
     <netty.version>4.1.15.Final</netty.version>
     <surefire.version>2.20.1</surefire.version>
     <junit.version>4.12</junit.version>
-    <powermock.version>1.7.3</powermock.version>
     <jacoco.version>0.8.0</jacoco.version>
     <byteman.version>3.0.11</byteman.version>
     <metrics.version>3.2.6</metrics.version>
+    <apptuit.reporter.version>0.6.0</apptuit.reporter.version>
 
     <!-- Acceptance Criteria -->
     <enforce.code.style>false</enforce.code.style>
@@ -105,6 +111,11 @@ limitations under the License.
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>ai.apptuit</groupId>
+      <artifactId>metrics-apptuit</artifactId>
+      <version>${apptuit.reporter.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.jboss.byteman</groupId>
       <artifactId>byteman</artifactId>
@@ -121,16 +132,12 @@ limitations under the License.
       <artifactId>metrics-jvm</artifactId>
       <version>${metrics.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-jdk14</artifactId>
-      <version>1.7.25</version>
-    </dependency>
 
 
     <!--
     BCI Testing related dependencies
     -->
+
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
@@ -231,24 +238,6 @@ limitations under the License.
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito</artifactId>
-      <version>${powermock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <version>${powermock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-testng</artifactId>
-      <version>${powermock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.jacoco</groupId>
       <artifactId>org.jacoco.agent</artifactId>
       <classifier>runtime</classifier>
@@ -274,10 +263,9 @@ limitations under the License.
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <build>
-
     <plugins>
-
       <!-- Plugins for post compile phase -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -402,7 +390,27 @@ limitations under the License.
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.1.0</version>
         <configuration>
-          <createDependencyReducedPom>false</createDependencyReducedPom>
+          <createDependencyReducedPom>true</createDependencyReducedPom>
+          <keepDependenciesWithProvidedScope>true</keepDependenciesWithProvidedScope>
+          <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+          <relocations>
+            <relocation>
+              <pattern>com.codahale.metrics</pattern>
+              <shadedPattern>ai.apptuit.metrics.jinsight.relo.codahale</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.slf4j</pattern>
+              <shadedPattern>ai.apptuit.metrics.jinsight.relo.slf4j</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>ai.apptuit.metrics.client</pattern>
+              <shadedPattern>ai.apptuit.metrics.jinsight.relo.client</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>ai.apptuit.metrics.dropwizard</pattern>
+              <shadedPattern>ai.apptuit.metrics.jinsight.relo.dwizreporter</shadedPattern>
+            </relocation>
+          </relocations>
         </configuration>
         <executions>
           <execution>
@@ -497,6 +505,9 @@ limitations under the License.
           <ignoreErrors>${ignore.license.checks}</ignoreErrors>
           <reportStyle>xml</reportStyle>
           <reportFile>${project.build.directory}/reports/license-check-results.xml</reportFile>
+          <excludes>
+            <exclude>${project.basedir}/dependency-reduced-pom.xml</exclude>
+          </excludes>
         </configuration>
         <executions>
           <execution>
