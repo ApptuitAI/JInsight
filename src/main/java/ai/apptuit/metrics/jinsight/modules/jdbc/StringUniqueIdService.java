@@ -22,15 +22,15 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Rajiv Shivane
  */
 public class StringUniqueIdService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(StringUniqueIdService.class);
+  private static final Logger LOGGER = Logger.getLogger(StringUniqueIdService.class.getName());
   private static final int MAX_SIZE = 1000;
   private static Map<String, String> sqlIdCache = Collections.synchronizedMap(new LruMap(MAX_SIZE));
 
@@ -61,7 +61,7 @@ public class StringUniqueIdService {
       }
       sqlId = sb.toString();
     } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
-      LOGGER.error("Error generating unique id.", e);
+      LOGGER.log(Level.SEVERE, "Error generating unique id.", e);
     }
     return sqlId;
   }

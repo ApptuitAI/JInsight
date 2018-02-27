@@ -28,8 +28,8 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Provides access to the MetricRegistry that is pre-configured to use {@link
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RegistryService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(RegistryService.class);
+  private static final Logger LOGGER = Logger.getLogger(RegistryService.class.getName());
 
   private static final RegistryService singleton = new RegistryService();
   private static final String HOST_TAG_NAME = "host";
@@ -59,8 +59,8 @@ public class RegistryService {
       try {
         mode = ReportingMode.valueOf(configMode.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
-        LOGGER.error("Un-supported reporting mode [" + configMode + "]");
-        LOGGER.debug(e.toString(), e);
+        LOGGER.severe("Un-supported reporting mode [" + configMode + "]");
+        LOGGER.log(Level.FINE, e.toString(), e);
       }
     }
 
@@ -69,8 +69,8 @@ public class RegistryService {
       try {
         new URL(apiUrl);
       } catch (MalformedURLException e) {
-        LOGGER.error("Malformed API URL [" + apiUrl + "]. Using default URL instead");
-        LOGGER.debug(e.toString(), e);
+        LOGGER.severe("Malformed API URL [" + apiUrl + "]. Using default URL instead");
+        LOGGER.log(Level.FINE, e.toString(), e);
         apiUrl = null;
       }
     }

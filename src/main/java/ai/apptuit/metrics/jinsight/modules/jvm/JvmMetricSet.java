@@ -31,15 +31,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Rajiv Shivane
  */
 public class JvmMetricSet implements MetricSet {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(JvmMetricSet.class);
+  private static final Logger LOGGER = Logger.getLogger(JvmMetricSet.class.getName());
 
   private final Map<String, Metric> metrics = new HashMap<>();
 
@@ -56,7 +56,7 @@ public class JvmMetricSet implements MetricSet {
     try {
       metrics.put("jvm.processCPU", new ProcessCpuTicksGauge());
     } catch (ClassNotFoundException | IOException e) {
-      LOGGER.error("Error fetching process CPU usage metrics.", e);
+      LOGGER.log(Level.SEVERE,"Error fetching process CPU usage metrics.", e);
     }
   }
 
