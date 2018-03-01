@@ -21,14 +21,9 @@ import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -43,7 +38,6 @@ public class RegistryService {
   private static final Logger LOGGER = Logger.getLogger(RegistryService.class.getName());
 
   private static final RegistryService singleton = new RegistryService();
-  private static final String HOST_TAG_NAME = "host";
   private MetricRegistry registry = null;
 
   private RegistryService() {
@@ -53,30 +47,10 @@ public class RegistryService {
   RegistryService(ConfigService configService, ApptuitReporterFactory factory) {
     this.registry = new TracingMetricRegistry();
 
-    ReportingMode mode = null;
-    String configMode = configService.getReportingMode();
-    if (configMode != null) {
-      try {
-        mode = ReportingMode.valueOf(configMode.trim().toUpperCase());
-      } catch (IllegalArgumentException e) {
-        LOGGER.severe("Un-supported reporting mode [" + configMode + "]");
-        LOGGER.log(Level.FINE, e.toString(), e);
-      }
-    }
+    ReportingMode mode = configService.getReportingMode();
 
-    String apiUrl = configService.getApiUrl();
-    if (apiUrl != null) {
-      try {
-        new URL(apiUrl);
-      } catch (MalformedURLException e) {
-        LOGGER.severe("Malformed API URL [" + apiUrl + "]. Using default URL instead");
-        LOGGER.log(Level.FINE, e.toString(), e);
-        apiUrl = null;
-      }
-    }
-
-    ScheduledReporter reporter = createReporter(factory, getGlobalTags(configService),
-        configService.getApiToken(), apiUrl, mode);
+    ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
+        configService.getApiToken(), configService.getApiUrl(), mode);
     reporter.start(5, TimeUnit.SECONDS);
 
     registry.registerAll(new JvmMetricSet());
@@ -91,31 +65,14 @@ public class RegistryService {
   }
 
   private ScheduledReporter createReporter(ApptuitReporterFactory factory,
-      Map<String, String> globalTags, String apiToken, String apiUrl, ReportingMode reportingMode) {
+      Map<String, String> globalTags, String apiToken, URL apiUrl, ReportingMode reportingMode) {
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
     globalTags.forEach(factory::addGlobalTag);
     factory.setApiKey(apiToken);
-    factory.setApiUrl(apiUrl);
+    factory.setApiUrl(apiUrl != null ? apiUrl.toString() : null);
     factory.setReportingMode(reportingMode);
 
     return factory.build(registry);
-  }
-
-  private Map<String, String> getGlobalTags(ConfigService configService) {
-    Map<String, String> globalTags = configService.getGlobalTags();
-    String hostname = globalTags.get(HOST_TAG_NAME);
-    if (hostname != null && !"".equals(hostname.trim())) {
-      return globalTags;
-    }
-
-    try {
-      hostname = InetAddress.getLocalHost().getCanonicalHostName();
-    } catch (UnknownHostException e) {
-      hostname = "?";
-    }
-    Map<String, String> retVal = new HashMap<>(globalTags);
-    retVal.put(HOST_TAG_NAME, hostname);
-    return retVal;
   }
 }
