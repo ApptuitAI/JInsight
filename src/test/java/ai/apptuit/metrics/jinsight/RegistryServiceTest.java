@@ -28,8 +28,10 @@ import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,19 +65,18 @@ public class RegistryServiceTest {
 
   @Test
   public void testApiUrl() throws Exception {
-    String apiUrl = "https://localhost.locadomain/api/put?uid=" + UUID.randomUUID().toString();
+    URL apiUrl = new URL("https://localhost.locadomain/api/put?uid=" + UUID.randomUUID().toString());
     when(mockConfigService.getApiUrl()).thenReturn(apiUrl);
 
     new RegistryService(mockConfigService, mockFactory);
 
-    verify(mockFactory).setApiUrl(apiUrl);
+    verify(mockFactory).setApiUrl(apiUrl.toString());
   }
 
 
   @Test
-  public void testBadApiUrl() throws Exception {
-    String apiUrl = UUID.randomUUID().toString();
-    when(mockConfigService.getApiUrl()).thenReturn(apiUrl);
+  public void testNullApiUrl() throws Exception {
+    when(mockConfigService.getApiUrl()).thenReturn(null);
 
     new RegistryService(mockConfigService, mockFactory);
 
@@ -83,26 +84,24 @@ public class RegistryServiceTest {
   }
 
   @Test
-  public void testGlobalHostTagAlways() throws Exception {
-    Map<String, String> globalTags = new HashMap<>();
-    when(mockConfigService.getGlobalTags()).thenReturn(globalTags);
+  public void testGlobalHostTagByDefault() throws Exception {
+    Properties properties = new Properties();
+    properties.setProperty("apptuit.access_token", UUID.randomUUID().toString());
+    ConfigService configService = new ConfigService(properties);
+    new RegistryService(configService, mockFactory);
 
-    new RegistryService(mockConfigService, mockFactory);
-
+    verify(mockFactory, times(1)).addGlobalTag(anyString(), anyString());
     verify(mockFactory).addGlobalTag(eq("host"), anyString());
   }
 
-
   @Test
-  public void testGlobalTagsOverrideDefaultHostTag() throws Exception {
-    Map<String, String> globalTags = new HashMap<>();
-    globalTags.put("host", "override");
-    when(mockConfigService.getGlobalTags()).thenReturn(globalTags);
+  public void testNoGlobalHostTagForXCollector() throws Exception {
+    Properties properties = new Properties();
+    properties.setProperty("apptuit.reporting_mode", "xcollector");
+    ConfigService configService = new ConfigService(properties);
+    new RegistryService(configService, mockFactory);
 
-    new RegistryService(mockConfigService, mockFactory);
-
-    verify(mockFactory).addGlobalTag(eq("host"), eq("override"));
-    verify(mockFactory, times(1)).addGlobalTag(anyString(), anyString());
+    verify(mockFactory, times(0)).addGlobalTag(eq("host"), anyString());
   }
 
 
@@ -115,36 +114,17 @@ public class RegistryServiceTest {
 
     new RegistryService(mockConfigService, mockFactory);
 
-    verify(mockFactory, times(3)).addGlobalTag(anyString(), anyString());
+    verify(mockFactory, times(2)).addGlobalTag(anyString(), anyString());
     verify(mockFactory, times(1)).addGlobalTag(eq("k1"), eq("v1"));
     verify(mockFactory, times(1)).addGlobalTag(eq("k2"), eq("v2"));
-    verify(mockFactory, times(1)).addGlobalTag(eq("host"), anyString());
   }
 
   @Test
   public void testReportingModeNoOp() throws Exception {
-    when(mockConfigService.getReportingMode()).thenReturn("NO_OP");
+    when(mockConfigService.getReportingMode()).thenReturn(ReportingMode.NO_OP);
 
     new RegistryService(mockConfigService, mockFactory);
 
     verify(mockFactory).setReportingMode(ReportingMode.NO_OP);
-  }
-
-  @Test
-  public void testReportingModeNoOpCaseInsensitive() throws Exception {
-    when(mockConfigService.getReportingMode()).thenReturn("no_op");
-
-    new RegistryService(mockConfigService, mockFactory);
-
-    verify(mockFactory).setReportingMode(ReportingMode.NO_OP);
-  }
-
-  @Test
-  public void testReportingModeBad() throws Exception {
-    when(mockConfigService.getReportingMode()).thenReturn("junk");
-
-    new RegistryService(mockConfigService, mockFactory);
-
-    verify(mockFactory).setReportingMode(null);
   }
 }
