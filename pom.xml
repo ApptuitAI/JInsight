@@ -507,7 +507,7 @@ limitations under the License.
           <reportFile>${project.build.directory}/reports/license-check-results.xml</reportFile>
           <excludes>
             <exclude>${project.basedir}/dependency-reduced-pom.xml</exclude>
-            <exclude>${project.basedir}/pkg/**/*</exclude>
+            <exclude>pkg/**/*</exclude>
           </excludes>
         </configuration>
         <executions>
