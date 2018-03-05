@@ -16,7 +16,6 @@
 
 language: java
 sudo: false
-dist: xenial
 
 env:
   matrix:
@@ -49,7 +48,8 @@ before_install:
 install:
   - sudo apt-get -qq update
   - sudo apt-get install -y xmlstarlet
-  - sudo apt-get install -y lintian rpmlint
+  - sudo apt-get install -y lintian
+#  - sudo apt-get install -y rpmlint
 
 before_script:
   - if [[ "$METRICS_VERSION" = "3.2.6" ]]; then export IS_PRIMARY_MATRIX_JOB=true; fi
@@ -81,7 +81,7 @@ after_success:
       java -cp ~/.codacy/reporter/codacy-reporter-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml;
     fi
   - make lint -C pkg/deb
-  - make lint -C pkg/rpm
+#  - make lint -C pkg/rpm
 
 before_deploy:
   - PACKAGE_DATE=$(git log -1 --pretty="format:%ad" $TRAVIS_TAG --date=short);
