@@ -53,7 +53,9 @@ deb:
             -e 's/@PACKAGE_REVISION@/$(PACKAGE_REVISION)/' \
 	    DEBIAN/control; \
         } >$(WORK_DIR)/DEBIAN/control
+
 	cd $(WORK_DIR); find . -type f ! -regex '.*?DEBIAN.*' -printf '%P ' | xargs md5sum > DEBIAN/md5sums
+	chmod 644 $(WORK_DIR)/DEBIAN/md5sums
 
 	sudo chown -R root:root $(WORK_DIR)
 	dpkg-deb -b $(WORK_DIR) $(DEST_DIR)/$(DEB)
