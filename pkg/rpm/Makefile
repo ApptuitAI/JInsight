@@ -48,7 +48,6 @@ rpm:
         } > $(WORK_DIR)/jinsight-t.spec
 	rpmbuild --define "_topdir $(WORK_DIR)" -bb $(WORK_DIR)/jinsight-t.spec --target $(RPM_TARGET)
 	mv $(WORK_DIR)/RPMS/$(RPM_TARGET)/$(RPM) $(DEST_DIR)
-	mv $(WORK_DIR)/RPMS/$(RPM_TARGET)/$(RPM) $(DEST_DIR)
 
 lint:
 	rpmlint $(DEST_DIR)/$(RPM)
