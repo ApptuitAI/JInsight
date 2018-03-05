@@ -23,7 +23,7 @@ limitations under the License.
 
   <groupId>ai.apptuit</groupId>
   <artifactId>jinsight</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>JInsight</name>
@@ -507,6 +507,7 @@ limitations under the License.
           <reportFile>${project.build.directory}/reports/license-check-results.xml</reportFile>
           <excludes>
             <exclude>${project.basedir}/dependency-reduced-pom.xml</exclude>
+            <exclude>${project.basedir}/pkg/**/*</exclude>
           </excludes>
         </configuration>
         <executions>

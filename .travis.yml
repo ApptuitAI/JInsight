@@ -48,6 +48,7 @@ before_install:
 install:
   - sudo apt-get -qq update
   - sudo apt-get install -y xmlstarlet
+  - sudo apt-get install -y lintian rpmlint
 
 before_script:
   - if [[ "$METRICS_VERSION" = "3.2.6" ]]; then export IS_PRIMARY_MATRIX_JOB=true; fi
@@ -69,6 +70,8 @@ script:
     else
       mvn verify -Denv.server.ip=127.0.0.1
     fi
+  - make -C pkg/deb
+  - make -C pkg/rpm
 
 after_success:
   - |
@@ -76,11 +79,35 @@ after_success:
       bash <(curl -s https://codecov.io/bash);
       java -cp ~/.codacy/reporter/codacy-reporter-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml;
     fi
+  - make lint -C pkg/deb
+  - make lint -C pkg/rpm
+
+before_deploy:
+  - PACKAGE_DATE=$(git log -1 --pretty="format:%ad" $TRAVIS_TAG --date=short);
+  - echo $PACKAGE_DATE;
+  - sed -e "s/@PACKAGE_DATE@/$PACKAGE_DATE/" -e "s/@PACKAGE_VERSION@/$PACKAGE_VERSION/" -i pkg/deb/bintray-descriptor.json;
+  - cat pkg/deb/bintray-descriptor.json;
+  - sed -e "s/@PACKAGE_DATE@/$PACKAGE_DATE/" -e "s/@PACKAGE_VERSION@/$PACKAGE_VERSION/" -i pkg/rpm/bintray-descriptor.json;
+  - cat pkg/rpm/bintray-descriptor.json;
 
 deploy:
   - provider: script
     script: "mvn -s .maven.settings.xml deploy -DskipTests"
     skip_cleanup: true
+    on:
+      tags: true
+      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
+  - provider: bintray
+    file: "pkg/deb/bintray-descriptor.json"
+    user: "$BINTRAY_USER"
+    key: "$BINTRAY_API_KEY"
+    on:
+      tags: true
+      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
+  - provider: bintray
+    file: "pkg/rpm/bintray-descriptor.json"
+    user: "$BINTRAY_USER"
+    key: "$BINTRAY_API_KEY"
     on:
       tags: true
       condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""

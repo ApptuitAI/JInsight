@@ -2,3 +2,5 @@
 .idea/
 target/
 dependency-reduced-pom.xml
+pkg/build
+pkg/dist
