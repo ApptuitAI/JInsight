@@ -53,7 +53,7 @@ public class ConfigService {
   private static final String HOST_TAG_NAME = "host";
 
   private static final File JINSIGHT_HOME = new File(System.getProperty("user.home"), ".jinsight");
-  private static final File DEFAULT_CONFIG_FILE = new File(JINSIGHT_HOME, DEFAULT_CONFIG_FILE_NAME);
+  private static final File UNIX_JINSIGHT_CONF_DIR = new File("/etc/jinsight/");
   private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
 
 
@@ -127,28 +127,36 @@ public class ConfigService {
     }
 
     Properties config;
+    File configFile;
     String configFilePath = System.getProperty(CONFIG_SYSTEM_PROPERTY);
     if (configFilePath != null && configFilePath.trim().length() > 0) {
-      File configFile = new File(configFilePath);
+      configFile = new File(configFilePath);
       if (!configFile.exists() || !configFile.canRead()) {
         throw new FileNotFoundException("Could not find or read config file: ["
             + configFile.getAbsolutePath() + "]");
       }
       config = loadProperties(new File(configFilePath));
-    } else if (DEFAULT_CONFIG_FILE.exists() && DEFAULT_CONFIG_FILE.canRead()) {
-      configFilePath = DEFAULT_CONFIG_FILE.getAbsolutePath();
-      config = loadProperties(DEFAULT_CONFIG_FILE);
     } else {
-      throw new ConfigurationException("Could not find configuration file. "
-          + "Set the path to configuration file using the system property \""
-          + CONFIG_SYSTEM_PROPERTY + "\"");
+      configFile = new File(UNIX_JINSIGHT_CONF_DIR, DEFAULT_CONFIG_FILE_NAME);
+      if (configFile.exists() && configFile.canRead()) {
+        config = loadProperties(configFile);
+      } else {
+        configFile = new File(JINSIGHT_HOME, DEFAULT_CONFIG_FILE_NAME);
+        if (configFile.exists() && configFile.canRead()) {
+          config = loadProperties(configFile);
+        } else {
+          throw new ConfigurationException("Could not find configuration file. "
+                  + "Set the path to configuration file using the system property \""
+                  + CONFIG_SYSTEM_PROPERTY + "\"");
+        }
+      }
     }
 
     try {
       singleton = new ConfigService(config);
     } catch (ConfigurationException e) {
       throw new ConfigurationException("Error loading configuration from the file ["
-          + configFilePath + "]: " + e.getMessage(), e);
+          + configFile + "]: " + e.getMessage(), e);
     }
   }
 

@@ -40,14 +40,23 @@ cache:
     - '$HOME/.m2/repository'
     - '$HOME/.sonar/cache'
     - '$HOME/.codacy/reporter'
+    - '$HOME/.rpmlint/'
 
 before_install:
   - sudo apt-get install jq
   - wget -O ~/.codacy/reporter/codacy-reporter-latest.jar $(curl https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
+  - |
+    wget -O ~/.rpmlint/rpmlint-1.9.tar.gz https://github.com/rpm-software-management/rpmlint/archive/rpmlint-1.9.tar.gz;
+    tar xvfz ~/.rpmlint/rpmlint-1.9.tar.gz -C ~/.rpmlint;
+    BUILDER=$USER sudo make install -C ~$BUILDER/.rpmlint/rpmlint-rpmlint-1.9
+
 
 install:
   - sudo apt-get -qq update
   - sudo apt-get install -y xmlstarlet
+  - sudo apt-get install -y rpm python-rpm
+  - sudo apt-get install -y lintian
+#  - sudo apt-get install -y rpmlint
 
 before_script:
   - if [[ "$METRICS_VERSION" = "3.2.6" ]]; then export IS_PRIMARY_MATRIX_JOB=true; fi
@@ -69,6 +78,8 @@ script:
     else
       mvn verify -Denv.server.ip=127.0.0.1
     fi
+  - make -C pkg/deb
+  - make -C pkg/rpm
 
 after_success:
   - |
@@ -76,11 +87,35 @@ after_success:
       bash <(curl -s https://codecov.io/bash);
       java -cp ~/.codacy/reporter/codacy-reporter-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml;
     fi
+  - make lint -C pkg/deb
+  - make lint -C pkg/rpm
+
+before_deploy:
+  - PACKAGE_DATE=$(git log -1 --pretty="format:%ad" $TRAVIS_TAG --date=short);
+  - echo $PACKAGE_DATE;
+  - sed -e "s/@PACKAGE_DATE@/$PACKAGE_DATE/" -e "s/@PACKAGE_VERSION@/$PACKAGE_VERSION/" -i pkg/deb/bintray-descriptor.json;
+  - cat pkg/deb/bintray-descriptor.json;
+  - sed -e "s/@PACKAGE_DATE@/$PACKAGE_DATE/" -e "s/@PACKAGE_VERSION@/$PACKAGE_VERSION/" -i pkg/rpm/bintray-descriptor.json;
+  - cat pkg/rpm/bintray-descriptor.json;
 
 deploy:
   - provider: script
     script: "mvn -s .maven.settings.xml deploy -DskipTests"
     skip_cleanup: true
+    on:
+      tags: true
+      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
+  - provider: bintray
+    file: "pkg/deb/bintray-descriptor.json"
+    user: "$BINTRAY_USER"
+    key: "$BINTRAY_API_KEY"
+    on:
+      tags: true
+      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
+  - provider: bintray
+    file: "pkg/rpm/bintray-descriptor.json"
+    user: "$BINTRAY_USER"
+    key: "$BINTRAY_API_KEY"
     on:
       tags: true
       condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""

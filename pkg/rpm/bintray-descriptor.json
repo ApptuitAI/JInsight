@@ -1,0 +1,20 @@
+{
+  "package": {
+    "name": "jinsight",
+    "repo": "rpm",
+    "subject": "apptuitai"
+  },
+
+  "version": {
+    "name": "@PACKAGE_VERSION@",
+    "desc": "Version @PACKAGE_VERSION@",
+    "released": "@PACKAGE_DATE@",
+    "vcs_tag": "v@PACKAGE_VERSION@"
+  },
+
+  "files":
+  [
+    {"includePattern": "pkg/dist/(.*\\.rpm)", "uploadPattern": "/$1"}
+  ],
+  "publish": true
+}

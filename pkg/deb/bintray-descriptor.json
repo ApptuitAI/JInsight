@@ -1,0 +1,26 @@
+{
+  "package": {
+    "name": "jinsight",
+    "repo": "debian",
+    "subject": "apptuitai"
+  },
+
+  "version": {
+    "name": "@PACKAGE_VERSION@",
+    "desc": "Version @PACKAGE_VERSION@",
+    "released": "@PACKAGE_DATE@",
+    "vcs_tag": "v@PACKAGE_VERSION@"
+  },
+
+  "files":
+  [
+    {"includePattern": "pkg/dist/(.*\\.deb)", "uploadPattern": "/pool/j/jinsight/$1",
+      "matrixParams": {
+        "deb_distribution": "stable,jessie,stretch,artful,wheezy,xenial,zesty,trusty",
+        "deb_component": "jinsight,main,jinsight-v0.x",
+        "deb_architecture": "arm64,armhf,i386,mipsel,mips,ppc64el,s390x,amd64,armel,mips64el"
+      }
+    }
+  ],
+  "publish": true
+}

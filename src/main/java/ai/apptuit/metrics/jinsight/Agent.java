@@ -69,7 +69,7 @@ public class Agent {
   private static void main0(String agentArgs, Instrumentation instrumentation,
       BiConsumer<String, Instrumentation> delegate) {
     if (ClassLoader.getSystemResource(BTM_SCRIPTS_RESOURCE_PATH) == null) {
-      System.err.println("Could not load " + BTM_SCRIPTS_RESOURCE_PATH + "."
+      LOGGER.severe("Could not load " + BTM_SCRIPTS_RESOURCE_PATH + "."
           + "Agent will not be started.");
       return;
     }
@@ -77,8 +77,8 @@ public class Agent {
     try {
       ConfigService.initialize();
     } catch (ConfigurationException | IOException | RuntimeException e) {
-      System.err.println(e.getMessage());
-      System.err.println("Agent will not be started.");
+      LOGGER.severe(e.getMessage());
+      LOGGER.severe("Agent will not be started.");
       return;
     }
 
@@ -90,13 +90,14 @@ public class Agent {
 
     JarFile bytemanJar = createBytemanJar();
     if (bytemanJar == null) {
-      System.err.println("Could not locate: " + BYTEMAN_JAR_RESOURCE_NAME);
-      System.err.println("Agent will not be started.");
+      LOGGER.severe("Could not locate: " + BYTEMAN_JAR_RESOURCE_NAME);
+      LOGGER.severe("Agent will not be started.");
       return;
     }
 
     instrumentation.appendToBootstrapClassLoaderSearch(bytemanJar);
     delegate.accept(agentArgs, instrumentation);
+    LOGGER.info("JInsight initialized. Reporting mode: "+ConfigService.getInstance().getReportingMode());
   }
 
   private static JarFile createBytemanJar() {
