@@ -46,35 +46,37 @@ public class JedisRuleSet extends AbstractRuleSet {
   }
 
   private void interceptJedisPool() {
-    addRule(Pool.class, "getResource", "AT ENTRY", "onPoolGetStart($0)");
-    addRule(Pool.class, "getResource", "AT EXIT", "onPoolGetEnd($0)");
-    addRule(Pool.class, "getResource", "AT EXCEPTION EXIT", "onPoolGetError($0)");
-    addRule(Pool.class, "returnResource", "AT ENTRY", "onPoolReleaseStart($0)");
-    addRule(Pool.class, "returnBrokenResource", "AT ENTRY", "onPoolReleaseStart($0)");
-    addRule(Pool.class, "returnResourceObject", "AT ENTRY", "onPoolReleaseStart($0)");
-    addRule(Pool.class, "returnResource", "AT EXIT", "onPoolReleaseEnd($0)");
-    addRule(Pool.class, "returnBrokenResource", "AT EXIT", "onPoolReleaseEnd($0)");
-    addRule(Pool.class, "returnResourceObject", "AT EXIT", "onPoolReleaseEnd($0)");
-    addRule(Pool.class, "returnResource", "AT EXCEPTION EXIT", "onPoolReleaseError($0)");
-    addRule(Pool.class, "returnBrokenResource", "AT EXCEPTION EXIT", "onPoolReleaseError($0)");
-    addRule(Pool.class, "returnResourceObject", "AT EXCEPTION EXIT", "onPoolReleaseError($0)");
+    addRule(Pool.class, "getResource", RuleInfo.AT_ENTRY, "onPoolGetStart($0)");
+    addRule(Pool.class, "getResource", RuleInfo.AT_EXIT, "onPoolGetEnd($0)");
+    addRule(Pool.class, "getResource", RuleInfo.AT_EXCEPTION_EXIT, "onPoolGetError($0)");
+    addRule(Pool.class, "returnResource", RuleInfo.AT_ENTRY, "onPoolReleaseStart($0)");
+    addRule(Pool.class, "returnBrokenResource", RuleInfo.AT_ENTRY, "onPoolReleaseStart($0)");
+    addRule(Pool.class, "returnResourceObject", RuleInfo.AT_ENTRY, "onPoolReleaseStart($0)");
+    addRule(Pool.class, "returnResource", RuleInfo.AT_EXIT, "onPoolReleaseEnd($0)");
+    addRule(Pool.class, "returnBrokenResource", RuleInfo.AT_EXIT, "onPoolReleaseEnd($0)");
+    addRule(Pool.class, "returnResourceObject", RuleInfo.AT_EXIT, "onPoolReleaseEnd($0)");
+    addRule(Pool.class, "returnResource", RuleInfo.AT_EXCEPTION_EXIT, "onPoolReleaseError($0)");
+    addRule(Pool.class, "returnBrokenResource", RuleInfo.AT_EXCEPTION_EXIT,
+        "onPoolReleaseError($0)");
+    addRule(Pool.class, "returnResourceObject", RuleInfo.AT_EXCEPTION_EXIT,
+        "onPoolReleaseError($0)");
   }
 
   private void interceptJedisPipeline() {
-    addRule(Pipeline.class, RuleInfo.CONSTRUCTOR_METHOD, "AT EXIT",
+    addRule(Pipeline.class, RuleInfo.CONSTRUCTOR_METHOD, RuleInfo.AT_EXIT,
         "onPipelineBegin($0)");
-    addRule(Pipeline.class, "sync", "AT EXIT",
+    addRule(Pipeline.class, "sync", RuleInfo.AT_EXIT,
         "onPipelineSync($0)");
   }
 
   private void interceptJedisTransaction() {
-    addRule(Transaction.class, RuleInfo.CONSTRUCTOR_METHOD, "AT EXIT",
+    addRule(Transaction.class, RuleInfo.CONSTRUCTOR_METHOD, RuleInfo.AT_EXIT,
         "onTransactionBegin($0)");
-    addRule(Transaction.class, "exec", "AT EXIT",
+    addRule(Transaction.class, "exec", RuleInfo.AT_EXIT,
         "onTransactionExec($0)");
-    addRule(Transaction.class, "execGetResponse", "AT EXIT",
+    addRule(Transaction.class, "execGetResponse", RuleInfo.AT_EXIT,
         "onTransactionExec($0)");
-    addRule(Transaction.class, "discard", "AT EXIT",
+    addRule(Transaction.class, "discard", RuleInfo.AT_EXIT,
         "onTransactionDiscard($0)");
   }
 
@@ -93,11 +95,11 @@ public class JedisRuleSet extends AbstractRuleSet {
 
   private void addRulesForOperation(Method method) {
     String methodName = method.getName();
-    addRule(Jedis.class, methodName, "AT ENTRY",
+    addRule(Jedis.class, methodName, RuleInfo.AT_ENTRY,
         "onOperationStart(\"" + methodName + "\", $0)");
-    addRule(Jedis.class, methodName, "AT EXIT",
+    addRule(Jedis.class, methodName, RuleInfo.AT_EXIT,
         "onOperationEnd(\"" + methodName + "\", $0)");
-    addRule(Jedis.class, methodName, "AT EXCEPTION EXIT",
+    addRule(Jedis.class, methodName, RuleInfo.AT_EXCEPTION_EXIT,
         "onOperationError(\"" + methodName + "\", $0)");
   }
 

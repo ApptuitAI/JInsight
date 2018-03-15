@@ -78,7 +78,7 @@ class CacheLifecycleListener implements CacheExtension {
 
   @Override
   public void dispose() throws CacheException {
-    registeredMetrics.forEach(metricName -> metricRegistry.remove(metricName));
+    registeredMetrics.forEach(metricRegistry::remove);
     status = Status.STATUS_SHUTDOWN;
   }
 

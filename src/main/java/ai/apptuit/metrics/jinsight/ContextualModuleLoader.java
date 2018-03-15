@@ -50,6 +50,7 @@ public class ContextualModuleLoader implements ModuleSystem<ModuleClassLoader> {
   }
 
   public void destroyLoader(ModuleClassLoader helperLoader) {
+    moduleLoaders.remove(helperLoader.getParent());
   }
 
   public Class<?> loadHelperAdapter(ModuleClassLoader helperLoader, String helperAdapterName,
@@ -78,14 +79,12 @@ public class ContextualModuleLoader implements ModuleSystem<ModuleClassLoader> {
         if (clazz != null) {
           return clazz;
         }
-        //TODO synchronization
-        clazz = findClass(name);
-        resolveClass(clazz);
-        return clazz;
-      } else if (name.startsWith("ai.apptuit") || name.startsWith("com.codahale.metrics")) {
-        return ClassLoader.getSystemClassLoader().loadClass(name);
+        synchronized (this) {
+          clazz = findClass(name);
+          resolveClass(clazz);
+          return clazz;
+        }
       }
-
       return super.loadClass(name);
     }
   }

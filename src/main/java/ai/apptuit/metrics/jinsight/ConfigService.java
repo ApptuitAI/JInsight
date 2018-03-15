@@ -80,11 +80,9 @@ public class ConfigService {
     }
     reportingMode = (mode == null) ? DEFAULT_REPORTING_MODE : mode;
 
-    if (apiToken == null) {
-      if (reportingMode == ReportingMode.API_PUT) {
-        throw new ConfigurationException(
-            "Could not find the property [" + ACCESS_TOKEN_PROPERTY_NAME + "]");
-      }
+    if (apiToken == null && reportingMode == ReportingMode.API_PUT) {
+      throw new ConfigurationException(
+          "Could not find the property [" + ACCESS_TOKEN_PROPERTY_NAME + "]");
     }
 
     String configUrl = config.getProperty(API_ENDPOINT_PROPERTY_NAME);
@@ -126,7 +124,17 @@ public class ConfigService {
           ConfigService.class.getSimpleName() + " already initialized.");
     }
 
-    Properties config;
+    File configFile = getConfigFile();
+    try {
+      Properties config = loadProperties(configFile);
+      singleton = new ConfigService(config);
+    } catch (ConfigurationException e) {
+      throw new ConfigurationException("Error loading configuration from the file ["
+          + configFile + "]: " + e.getMessage(), e);
+    }
+  }
+
+  private static File getConfigFile() throws FileNotFoundException, ConfigurationException {
     File configFile;
     String configFilePath = System.getProperty(CONFIG_SYSTEM_PROPERTY);
     if (configFilePath != null && configFilePath.trim().length() > 0) {
@@ -135,29 +143,21 @@ public class ConfigService {
         throw new FileNotFoundException("Could not find or read config file: ["
             + configFile.getAbsolutePath() + "]");
       }
-      config = loadProperties(new File(configFilePath));
-    } else {
+    } else if (canLoadDefaultProperties(UNIX_JINSIGHT_CONF_DIR)) {
       configFile = new File(UNIX_JINSIGHT_CONF_DIR, DEFAULT_CONFIG_FILE_NAME);
-      if (configFile.exists() && configFile.canRead()) {
-        config = loadProperties(configFile);
-      } else {
-        configFile = new File(JINSIGHT_HOME, DEFAULT_CONFIG_FILE_NAME);
-        if (configFile.exists() && configFile.canRead()) {
-          config = loadProperties(configFile);
-        } else {
-          throw new ConfigurationException("Could not find configuration file. "
-                  + "Set the path to configuration file using the system property \""
-                  + CONFIG_SYSTEM_PROPERTY + "\"");
-        }
-      }
+    } else if (canLoadDefaultProperties(JINSIGHT_HOME)) {
+      configFile = new File(JINSIGHT_HOME, DEFAULT_CONFIG_FILE_NAME);
+    } else {
+      throw new ConfigurationException("Could not find configuration file. "
+          + "Set the path to configuration file using the system property \""
+          + CONFIG_SYSTEM_PROPERTY + "\"");
     }
+    return configFile;
+  }
 
-    try {
-      singleton = new ConfigService(config);
-    } catch (ConfigurationException e) {
-      throw new ConfigurationException("Error loading configuration from the file ["
-          + configFile + "]: " + e.getMessage(), e);
-    }
+  private static boolean canLoadDefaultProperties(File folder) {
+    File configFile = new File(folder, DEFAULT_CONFIG_FILE_NAME);
+    return (configFile.exists() && configFile.canRead());
   }
 
   private static Properties loadProperties(File configFilePath) throws IOException {
@@ -199,27 +199,24 @@ public class ConfigService {
       return globalTags;
     }
 
-    globalTags = Collections.unmodifiableMap(_getGlobalTags());
+    globalTags = Collections.unmodifiableMap(createGlobalTagsMap());
     return globalTags;
   }
 
-  private Map<String, String> _getGlobalTags() {
-    if (getReportingMode() != ReportingMode.API_PUT) {
-      return loadedGlobalTags;
-    }
-
-    String hostname = loadedGlobalTags.get(HOST_TAG_NAME);
-    if (hostname != null && !"".equals(hostname.trim())) {
-      return loadedGlobalTags;
-    }
-
-    try {
-      hostname = InetAddress.getLocalHost().getCanonicalHostName();
-    } catch (UnknownHostException e) {
-      hostname = "?";
-    }
+  private Map<String, String> createGlobalTagsMap() {
     Map<String, String> retVal = new HashMap<>(loadedGlobalTags);
-    retVal.put(HOST_TAG_NAME, hostname);
+
+    if (getReportingMode() == ReportingMode.API_PUT) {
+      String hostname = retVal.get(HOST_TAG_NAME);
+      if (hostname == null || "".equals(hostname.trim())) {
+        try {
+          hostname = InetAddress.getLocalHost().getCanonicalHostName();
+        } catch (UnknownHostException e) {
+          hostname = "?";
+        }
+        retVal.put(HOST_TAG_NAME, hostname);
+      }
+    }
     return retVal;
   }
 

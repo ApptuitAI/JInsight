@@ -29,6 +29,9 @@ public abstract class AbstractRuleSet {
 
   public static class RuleInfo {
 
+    public static final String AT_ENTRY = "AT ENTRY";
+    public static final String AT_EXIT = "AT EXIT";
+    public static final String AT_EXCEPTION_EXIT = "AT EXCEPTION EXIT";
     public static final String CONSTRUCTOR_METHOD = "<init>";
     public static final String CLASS_CONSTRUCTOR = "<clinit>";
     private static final String LINEBREAK = String.format("%n");
@@ -38,7 +41,7 @@ public abstract class AbstractRuleSet {
     private boolean isIncludeSubclases;
     private String methodName;
     private String helperName;
-    private String where = "AT ENTRY";
+    private String where = AT_ENTRY;
     private String bind;
     private String ifcondition = "true";
     private String action;
