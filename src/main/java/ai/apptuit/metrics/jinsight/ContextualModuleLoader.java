@@ -50,6 +50,7 @@ public class ContextualModuleLoader implements ModuleSystem<ModuleClassLoader> {
   }
 
   public void destroyLoader(ModuleClassLoader helperLoader) {
+    moduleLoaders.remove(helperLoader.getParent());
   }
 
   public Class<?> loadHelperAdapter(ModuleClassLoader helperLoader, String helperAdapterName,
