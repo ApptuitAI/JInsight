@@ -24,7 +24,6 @@ import com.codahale.metrics.ScheduledReporter;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 /**
  * Provides access to the MetricRegistry that is pre-configured to use {@link
@@ -34,8 +33,6 @@ import java.util.logging.Logger;
  * @author Rajiv Shivane
  */
 public class RegistryService {
-
-  private static final Logger LOGGER = Logger.getLogger(RegistryService.class.getName());
 
   private static final RegistryService singleton = new RegistryService();
   private MetricRegistry registry = null;
