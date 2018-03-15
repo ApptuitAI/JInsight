@@ -43,11 +43,11 @@ public class WhalinmemcachedRuleSet extends AbstractRuleSet {
   }
 
   private void addRulesForOperation(String methodName) {
-    addRule(MemCachedClient.class, methodName, "AT ENTRY",
+    addRule(MemCachedClient.class, methodName, RuleInfo.AT_ENTRY,
         "onOperationStart(\"" + methodName + "\", $0)");
-    addRule(MemCachedClient.class, methodName, "AT EXIT",
+    addRule(MemCachedClient.class, methodName, RuleInfo.AT_EXIT,
         "onOperationEnd(\"" + methodName + "\", $0)");
-    addRule(MemCachedClient.class, methodName, "AT EXCEPTION EXIT",
+    addRule(MemCachedClient.class, methodName, RuleInfo.AT_EXCEPTION_EXIT,
         "onOperationError(\"" + methodName + "\", $0)");
   }
 
