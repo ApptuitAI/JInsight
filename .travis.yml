@@ -44,7 +44,7 @@ cache:
 
 before_install:
   - sudo apt-get install jq
-  - wget -O ~/.codacy/reporter/codacy-reporter-latest.jar $(curl -v https://api.github.com/repos/codacy/codacy-coverage-reporter/releases/latest | jq -r .assets[0].browser_download_url)
+  - wget -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/2.0.2/codacy-coverage-reporter-2.0.2-assembly.jar
   - |
     wget -O ~/.rpmlint/rpmlint-1.9.tar.gz https://github.com/rpm-software-management/rpmlint/archive/rpmlint-1.9.tar.gz;
     tar xvfz ~/.rpmlint/rpmlint-1.9.tar.gz -C ~/.rpmlint;
