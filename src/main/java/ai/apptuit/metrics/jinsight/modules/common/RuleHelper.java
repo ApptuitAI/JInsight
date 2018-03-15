@@ -22,9 +22,11 @@ import com.codahale.metrics.Clock;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
-import java.util.Stack;
 import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -113,16 +115,16 @@ public class RuleHelper extends Helper {
 
   private static class OperationContexts {
 
-    private static final ThreadLocal<Stack<OperationContext>> CONTEXT_STACK = ThreadLocal
-        .withInitial(Stack::new);
+    private static final ThreadLocal<Deque<OperationContext>> CONTEXT_STACK = ThreadLocal
+        .withInitial(LinkedList::new);
     private static final Clock clock = Clock.defaultClock();
 
     private static final OperationContext RENTRANT = new OperationContext(new OperationId("NOOP"),
         clock);
 
     public static void start(OperationId id) {
-      Stack<OperationContext> contexts = CONTEXT_STACK.get();
-      if (contexts.size() > 0 && lastId() == id) {
+      Deque<OperationContext> contexts = CONTEXT_STACK.get();
+      if (!contexts.isEmpty() && lastId() == id) {
         contexts.push(RENTRANT);
         return;
       }
@@ -150,10 +152,11 @@ public class RuleHelper extends Helper {
     }
 
     private static OperationId lastId() {
-      Stack<OperationContext> contexts = CONTEXT_STACK.get();
+      Deque<OperationContext> contexts = CONTEXT_STACK.get();
       OperationContext prevContext = null;
-      for (int i = contexts.size() - 1; i >= 0; i--) {
-        prevContext = contexts.get(i);
+      Iterator<OperationContext> iterator = contexts.descendingIterator();
+      while (iterator.hasNext()){
+        prevContext = iterator.next();
         if (prevContext != RENTRANT) {
           break;
         }
