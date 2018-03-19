@@ -100,7 +100,7 @@ before_deploy:
 
 deploy:
   - provider: script
-    script: "mvn -s .maven.settings.xml deploy -DskipTests=true -DskipVerifications=true"
+    script: "mvn -s .maven.settings.xml deploy -DskipTests=true -DskipVerifications=true && make -C pkg/deb && make -C pkg/rpm"
     skip_cleanup: true
     on:
       tags: true
