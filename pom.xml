@@ -371,6 +371,7 @@ limitations under the License.
             <manifestEntries>
               <Premain-Class>ai.apptuit.metrics.jinsight.Agent</Premain-Class>
               <Agent-Class>ai.apptuit.metrics.jinsight.Agent</Agent-Class>
+              <Agent-Version>${project.version}</Agent-Version>
               <Can-Redefine-Classes>true</Can-Redefine-Classes>
               <Can-Retransform-Classes>true</Can-Retransform-Classes>
             </manifestEntries>
@@ -449,6 +450,7 @@ limitations under the License.
           <systemPropertyVariables>
             <memcached.addr>${env.memcached.addr}</memcached.addr>
             <redis.addr>${env.redis.addr}</redis.addr>
+            <project.version>${project.version}</project.version>
           </systemPropertyVariables>
         </configuration>
       </plugin>

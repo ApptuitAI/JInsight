@@ -167,6 +167,14 @@ public class ConfigServiceTest {
     assertEquals("testValue2", cs.getGlobalTags().get("testTag2"));
   }
 
+  @Test
+  public void testAgentVersion() throws Exception {
+    ConfigService cs = ConfigService.getInstance();
+    assertEquals(System.getProperty("project.version"), cs.getAgentVersion());
+  }
+
+
+
   private Properties getDefaultConfigProperties() {
     Properties p = new Properties();
     p.setProperty("apptuit.access_token", UUID.randomUUID().toString());

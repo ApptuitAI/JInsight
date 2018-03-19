@@ -28,9 +28,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,6 +65,7 @@ public class ConfigService {
   private final URL apiUrl;
   private final ReportingMode reportingMode;
   private final Map<String, String> loadedGlobalTags = new HashMap<>();
+  private final String agentVersion;
   private Map<String, String> globalTags = null;
 
   ConfigService(Properties config) throws ConfigurationException {
@@ -97,6 +101,7 @@ public class ConfigService {
       }
     }
     this.apiUrl = url;
+    this.agentVersion=loadAgentVersion();
 
     loadGlobalTags(config);
 
@@ -226,5 +231,40 @@ public class ConfigService {
 
   ReportingMode getReportingMode() {
     return reportingMode;
+  }
+
+  public String getAgentVersion() {
+    return agentVersion;
+  }
+
+  private String loadAgentVersion() {
+    Enumeration<URL> resources = null;
+    try {
+      resources = ConfigService.class.getClassLoader().getResources("META-INF/MANIFEST.MF");
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "Error locating manifests.", e);
+    }
+
+    while (resources != null && resources.hasMoreElements()) {
+      URL manifestURL = resources.nextElement();
+      try (InputStream resource = manifestURL.openStream()) {
+        Manifest manifest = new Manifest(resource);
+        Attributes mainAttributes = manifest.getMainAttributes();
+        if (mainAttributes != null) {
+          String agentClass = mainAttributes.getValue("Agent-Class");
+          if (Agent.class.getName().equals(agentClass)) {
+            String agentVersion = mainAttributes.getValue("Agent-Version");
+            if (agentVersion != null) {
+              return agentVersion;
+            }
+            break;
+          }
+        }
+      } catch (IOException e) {
+        LOGGER.log(Level.SEVERE, "Error loading manifest from [" + manifestURL + "]", e);
+      }
+
+    }
+    return "?";
   }
 }
