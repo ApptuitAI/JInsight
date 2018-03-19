@@ -105,14 +105,18 @@ deploy:
     on:
       tags: true
       condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
-  - provider: bintray
+  - edge:
+      branch: v1.8.47
+    provider: bintray
     file: "pkg/deb/bintray-descriptor.json"
     user: "$BINTRAY_USER"
     key: "$BINTRAY_API_KEY"
     on:
       tags: true
       condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
-  - provider: bintray
+  - edge:
+          branch: v1.8.47
+    provider: bintray
     file: "pkg/rpm/bintray-descriptor.json"
     user: "$BINTRAY_USER"
     key: "$BINTRAY_API_KEY"
