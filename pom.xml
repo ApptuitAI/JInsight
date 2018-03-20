@@ -98,7 +98,7 @@ limitations under the License.
     <jacoco.version>0.8.0</jacoco.version>
     <byteman.version>3.0.11</byteman.version>
     <metrics.version>3.2.6</metrics.version>
-    <apptuit.reporter.version>0.7.0</apptuit.reporter.version>
+    <apptuit.reporter.version>0.7.1</apptuit.reporter.version>
 
     <!-- Acceptance Criteria -->
     <enforce.code.style>false</enforce.code.style>
@@ -371,6 +371,7 @@ limitations under the License.
             <manifestEntries>
               <Premain-Class>ai.apptuit.metrics.jinsight.Agent</Premain-Class>
               <Agent-Class>ai.apptuit.metrics.jinsight.Agent</Agent-Class>
+              <Agent-Version>${project.version}</Agent-Version>
               <Can-Redefine-Classes>true</Can-Redefine-Classes>
               <Can-Retransform-Classes>true</Can-Retransform-Classes>
             </manifestEntries>
@@ -449,6 +450,7 @@ limitations under the License.
           <systemPropertyVariables>
             <memcached.addr>${env.memcached.addr}</memcached.addr>
             <redis.addr>${env.redis.addr}</redis.addr>
+            <project.version>${project.version}</project.version>
           </systemPropertyVariables>
         </configuration>
       </plugin>

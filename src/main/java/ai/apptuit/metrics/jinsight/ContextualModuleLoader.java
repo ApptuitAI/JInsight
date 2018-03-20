@@ -84,6 +84,9 @@ public class ContextualModuleLoader implements ModuleSystem<ModuleClassLoader> {
           resolveClass(clazz);
           return clazz;
         }
+      } else if (name.startsWith("ai.apptuit.metrics.jinsight.")) {
+        //If jinsight.jar is added to the war, by mistake, we should always go to sys classloader
+        return ClassLoader.getSystemClassLoader().loadClass(name);
       }
       return super.loadClass(name);
     }
