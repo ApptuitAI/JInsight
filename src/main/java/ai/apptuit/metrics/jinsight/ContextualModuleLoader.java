@@ -17,8 +17,10 @@
 package ai.apptuit.metrics.jinsight;
 
 import ai.apptuit.metrics.jinsight.ContextualModuleLoader.ModuleClassLoader;
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.net.URLClassLoader;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -30,7 +32,7 @@ import org.jboss.byteman.rule.helper.Helper;
  */
 public class ContextualModuleLoader implements ModuleSystem<ModuleClassLoader> {
 
-  private final Map<ClassLoader, WeakReference<ModuleClassLoader>> moduleLoaders = Collections
+  private final Map<ClassLoader, SoftReference<ModuleClassLoader>> moduleLoaders = Collections
       .synchronizedMap(new WeakHashMap<>());
 
   public void initialize(String args) {
@@ -44,9 +46,35 @@ public class ContextualModuleLoader implements ModuleSystem<ModuleClassLoader> {
       throw new IllegalArgumentException("IMPORTs are not supported");
     }
 
-    WeakReference<ModuleClassLoader> reference = moduleLoaders
-        .computeIfAbsent(triggerClassLoader, cl -> new WeakReference<>(new ModuleClassLoader(cl)));
-    return reference.get();
+    ModuleClassLoader moduleClassLoader = getModuleClassLoader(triggerClassLoader);
+    if (moduleClassLoader != null) {
+      return moduleClassLoader;
+    }
+    synchronized (moduleLoaders) {
+      //Double check idiom
+      moduleClassLoader = getModuleClassLoader(triggerClassLoader);
+      if (moduleClassLoader != null) {
+        return moduleClassLoader;
+      }
+      moduleClassLoader = AccessController.doPrivileged(
+          (PrivilegedAction<ModuleClassLoader>) () -> new ModuleClassLoader(triggerClassLoader));
+      //Since there are no strong references to moduleClassloader, it might be collected
+      //We should probably hold a PhantomReference to moduleClassloader
+      //that is collected only after the triggerClassloader is collected
+      moduleLoaders.put(triggerClassLoader, new SoftReference<>(moduleClassLoader));
+      return moduleClassLoader;
+    }
+  }
+
+  private ModuleClassLoader getModuleClassLoader(ClassLoader triggerClassLoader) {
+    SoftReference<ModuleClassLoader> reference = moduleLoaders.get(triggerClassLoader);
+    if (reference != null) {
+      ModuleClassLoader moduleClassLoader = reference.get();
+      if (moduleClassLoader != null) {
+        return moduleClassLoader;
+      }
+    }
+    return null;
   }
 
   public void destroyLoader(ModuleClassLoader helperLoader) {
