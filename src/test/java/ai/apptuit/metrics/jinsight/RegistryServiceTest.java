@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,11 +45,13 @@ public class RegistryServiceTest {
 
   private ApptuitReporterFactory mockFactory;
   private ConfigService mockConfigService;
+  private ScheduledReporter mockReporter;
 
   @Before
   public void setUp() throws Exception {
     mockFactory = mock(ApptuitReporterFactory.class);
-    when(mockFactory.build(any(MetricRegistry.class))).thenReturn(mock(ScheduledReporter.class));
+    mockReporter = mock(ScheduledReporter.class);
+    when(mockFactory.build(any(MetricRegistry.class))).thenReturn(mockReporter);
     mockConfigService = mock(ConfigService.class);
     when(mockConfigService.getGlobalTags()).thenReturn(ConfigService.getInstance().getGlobalTags());
   }
@@ -126,5 +129,13 @@ public class RegistryServiceTest {
     new RegistryService(mockConfigService, mockFactory);
 
     verify(mockFactory).setReportingMode(ReportingMode.NO_OP);
+  }
+
+  @Test
+  public void testReportingFrequency() throws Exception {
+    long freq = 99999L;
+    when(mockConfigService.getReportingFrequency()).thenReturn(freq);
+    new RegistryService(mockConfigService, mockFactory);
+    verify(mockReporter).start(freq, TimeUnit.MILLISECONDS);
   }
 }
