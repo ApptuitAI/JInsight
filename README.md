@@ -57,7 +57,7 @@ of your choice: apptuit.ai, Prometheus, Graphite etc.
 
 Instrumenting a JVM with JInsight Java Agent is refreshingly simple:
 1. Update your java command line to include the jinsight options:  
-`java -javaagent:/var/lib/jinsight/jinsight-latest.jar -Djinsight.config=/etc/jinsight/jinsight-config.properties -cp helloworld.jar HelloWorld`  
+`java -javaagent:/usr/share/java/jinsight.jar -Djinsight.config=/etc/jinsight/jinsight-config.properties -cp helloworld.jar HelloWorld`  
 2. Save API-TOKEN, global tags, frequency of reporting data etc  in the `jinsight-config.properties` file
 3. (Re)start your JVM
 
