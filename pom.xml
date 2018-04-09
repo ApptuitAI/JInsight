@@ -58,6 +58,15 @@ limitations under the License.
       <id>jinsight-bintray</id>
       <url>https://dl.bintray.com/apptuitai/maven</url>
     </repository>
+    <!--
+    <repository>
+      <id>sonatype-snapshots-repository</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    -->
   </repositories>
 
   <properties>
@@ -95,7 +104,7 @@ limitations under the License.
     <netty.version>4.1.15.Final</netty.version>
     <surefire.version>2.20.1</surefire.version>
     <junit.version>4.12</junit.version>
-    <jacoco.version>0.8.0</jacoco.version>
+    <jacoco.version>0.8.1</jacoco.version>
     <byteman.version>3.0.11</byteman.version>
     <metrics.version>3.2.6</metrics.version>
     <apptuit.reporter.version>0.7.2</apptuit.reporter.version>
@@ -142,7 +151,7 @@ limitations under the License.
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
-      <version>1.4.196</version>
+      <version>1.4.197</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -154,19 +163,19 @@ limitations under the License.
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-servlet</artifactId>
-      <version>9.4.8.v20171121</version>
+      <version>9.4.9.v20180320</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat.embed</groupId>
       <artifactId>tomcat-embed-core</artifactId>
-      <version>8.5.27</version>
+      <version>8.5.28</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat.embed</groupId>
       <artifactId>tomcat-embed-jasper</artifactId>
-      <version>8.5.27</version>
+      <version>8.5.28</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
