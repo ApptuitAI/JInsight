@@ -98,9 +98,9 @@ public class Agent {
     instrumentation.appendToBootstrapClassLoaderSearch(bytemanJar);
     delegate.accept(agentArgs, instrumentation);
     ConfigService configService = ConfigService.getInstance();
-    LOGGER.info("JInsight v["+ configService.getAgentVersion() + "] initialized. "
-        + "Reporting via: ["+ configService.getReportingMode() +"] "
-        + "every ["+ (configService.getReportingFrequency()/1000) + "] seconds");
+    LOGGER.info("JInsight v[" + configService.getAgentVersion() + "] initialized. "
+        + "Reporting via: [" + configService.getReportingMode() + "] "
+        + "every [" + (configService.getReportingFrequency() / 1000) + "] seconds");
   }
 
   private static JarFile createBytemanJar() {
