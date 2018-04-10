@@ -16,6 +16,8 @@
 
 package ai.apptuit.metrics.jinsight;
 
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_FREQ_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_MODE_PROPERTY_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -58,7 +60,7 @@ public class ConfigServiceTest {
   @Test
   public void testGetReportingModeJunk() throws Exception {
     Properties p = getDefaultConfigProperties();
-    p.setProperty("apptuit.reporting_mode", "junk");
+    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "junk");
     ConfigService configService = new ConfigService(p);
     assertEquals(ReportingMode.API_PUT, configService.getReportingMode());
   }
@@ -66,7 +68,7 @@ public class ConfigServiceTest {
   @Test
   public void testGetReportingModeNoOp() throws Exception {
     Properties p = new Properties();
-    p.setProperty("apptuit.reporting_mode", "NO_OP");
+    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "NO_OP");
     ConfigService configService = new ConfigService(p);
     assertEquals(ReportingMode.NO_OP, configService.getReportingMode());
   }
@@ -74,9 +76,80 @@ public class ConfigServiceTest {
   @Test
   public void testGetReportingModeNoOpCaseInsensitive() throws Exception {
     Properties p = new Properties();
-    p.setProperty("apptuit.reporting_mode", "No_Op");
+    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "No_Op");
     ConfigService configService = new ConfigService(p);
     assertEquals(ReportingMode.NO_OP, configService.getReportingMode());
+  }
+
+  @Test
+  public void testDefaultReportingFreq() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    ConfigService configService = new ConfigService(p);
+    assertEquals(15000L, configService.getReportingFrequency());
+  }
+
+  @Test
+  public void testDefaultReportingFreqOnError() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty(REPORTING_FREQ_PROPERTY_NAME, "BLEEP");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(15000L, configService.getReportingFrequency());
+  }
+
+  @Test
+  public void testDefaultReportingFreqSeconds() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty(REPORTING_FREQ_PROPERTY_NAME, "13S");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(13000L, configService.getReportingFrequency());
+  }
+
+  @Test
+  public void testReportingFreqSecondsLowercase() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty(REPORTING_FREQ_PROPERTY_NAME, "13s");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(13000L, configService.getReportingFrequency());
+  }
+
+  @Test
+  public void testReportingFreqPartialSeconds() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty(REPORTING_FREQ_PROPERTY_NAME, "13.7s");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(13700L, configService.getReportingFrequency());
+  }
+
+  @Test
+  public void testDefaultReportingFreqNegativeSeconds() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty(REPORTING_FREQ_PROPERTY_NAME, "-13.7s");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(15000L, configService.getReportingFrequency());
+  }
+
+  @Test
+  public void testReportingFreqMins() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty(REPORTING_FREQ_PROPERTY_NAME, "1M");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(60000L, configService.getReportingFrequency());
+  }
+
+  @Test
+  public void testReportingFreqPartialMins() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty(REPORTING_FREQ_PROPERTY_NAME, "1.5M");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(15000L, configService.getReportingFrequency());
+  }
+
+  @Test
+  public void testReportingFreqMinsAndSeconds() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty(REPORTING_FREQ_PROPERTY_NAME, "17M-13.7s");
+    ConfigService configService = new ConfigService(p);
+    assertEquals((17*60*1000-13700), configService.getReportingFrequency());
   }
 
   @Test
@@ -100,7 +173,7 @@ public class ConfigServiceTest {
   @Test
   public void testGetTagsMissing() throws Exception {
     Properties p = new Properties();
-    p.setProperty("apptuit.reporting_mode", "xcollector");
+    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "xcollector");
     ConfigService configService = new ConfigService(p);
     Map<String, String> globalTags = configService.getGlobalTags();
     assertEquals(globalTags, Collections.emptyMap());

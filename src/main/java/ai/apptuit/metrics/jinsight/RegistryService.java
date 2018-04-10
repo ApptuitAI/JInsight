@@ -48,7 +48,7 @@ public class RegistryService {
 
     ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
         configService.getApiToken(), configService.getApiUrl(), mode);
-    reporter.start(5, TimeUnit.SECONDS);
+    reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
 
     registry.registerAll(new JvmMetricSet());
   }

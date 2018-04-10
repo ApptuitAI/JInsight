@@ -27,6 +27,8 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -44,26 +46,27 @@ import java.util.logging.Logger;
  */
 public class ConfigService {
 
+  static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
+  static final String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
   private static final Logger LOGGER = Logger.getLogger(ConfigService.class.getName());
-
   private static final String CONFIG_SYSTEM_PROPERTY = "jinsight.config";
   private static final String DEFAULT_CONFIG_FILE_NAME = "jinsight-config.properties";
-
   private static final String ACCESS_TOKEN_PROPERTY_NAME = "apptuit.access_token";
   private static final String API_ENDPOINT_PROPERTY_NAME = "apptuit.api_url";
-  private static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
   private static final String GLOBAL_TAGS_PROPERTY_NAME = "global_tags";
   private static final String HOST_TAG_NAME = "host";
 
   private static final File JINSIGHT_HOME = new File(System.getProperty("user.home"), ".jinsight");
   private static final File UNIX_JINSIGHT_CONF_DIR = new File("/etc/jinsight/");
   private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
+  private static final String DEFAULT_REPORTING_FREQUENCY = "15s";
 
 
   private static volatile ConfigService singleton = null;
   private final String apiToken;
   private final URL apiUrl;
   private final ReportingMode reportingMode;
+  private final long reportingFrequencyMillis;
   private final Map<String, String> loadedGlobalTags = new HashMap<>();
   private final String agentVersion;
   private Map<String, String> globalTags = null;
@@ -71,18 +74,8 @@ public class ConfigService {
   ConfigService(Properties config) throws ConfigurationException {
     this.apiToken = config.getProperty(ACCESS_TOKEN_PROPERTY_NAME);
 
-    String configMode = config.getProperty(REPORTING_MODE_PROPERTY_NAME);
-    ReportingMode mode = null;
-    if (configMode != null) {
-      try {
-        mode = ReportingMode.valueOf(configMode.trim().toUpperCase());
-      } catch (IllegalArgumentException e) {
-        LOGGER.severe("Un-supported reporting mode [" + configMode + "]. "
-            + "Using default reporting mode: [" + DEFAULT_REPORTING_MODE + "]");
-        LOGGER.log(Level.FINE, e.toString(), e);
-      }
-    }
-    reportingMode = (mode == null) ? DEFAULT_REPORTING_MODE : mode;
+    this.reportingMode = readReportingMode(config);
+    this.reportingFrequencyMillis = readReportingFrequency(config);
 
     if (apiToken == null && reportingMode == ReportingMode.API_PUT) {
       throw new ConfigurationException(
@@ -101,7 +94,7 @@ public class ConfigService {
       }
     }
     this.apiUrl = url;
-    this.agentVersion=loadAgentVersion();
+    this.agentVersion = loadAgentVersion();
 
     loadGlobalTags(config);
 
@@ -173,6 +166,42 @@ public class ConfigService {
     return config;
   }
 
+  private ReportingMode readReportingMode(Properties config) {
+    String configMode = config.getProperty(REPORTING_MODE_PROPERTY_NAME);
+    if (configMode != null) {
+      try {
+        return ReportingMode.valueOf(configMode.trim().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        LOGGER.severe("Un-supported reporting mode [" + configMode + "]. "
+            + "Using default reporting mode: [" + DEFAULT_REPORTING_MODE + "]");
+        LOGGER.log(Level.FINE, e.toString(), e);
+      }
+    }
+    return DEFAULT_REPORTING_MODE;
+  }
+
+  private long readReportingFrequency(Properties config) {
+    String configFreq = config.getProperty(REPORTING_FREQ_PROPERTY_NAME);
+    if (configFreq != null) {
+      try {
+        return parseDuration(configFreq);
+      } catch (DateTimeParseException | IllegalArgumentException e) {
+        LOGGER.severe("Invalid reporting frequency [" + configFreq + "]. "
+            + "Using default reporting frequency: [" + DEFAULT_REPORTING_FREQUENCY + "]");
+        LOGGER.log(Level.FINE, e.toString(), e);
+      }
+    }
+    return parseDuration(DEFAULT_REPORTING_FREQUENCY);
+  }
+
+  private long parseDuration(String durationString) {
+    long millis = Duration.parse("PT" + durationString.trim()).toMillis();
+    if (millis < 0) {
+      throw new IllegalArgumentException("Frequency cannot be negative");
+    }
+    return millis;
+  }
+
   private void loadGlobalTags(Properties config) throws ConfigurationException {
     String tagsString = config.getProperty(GLOBAL_TAGS_PROPERTY_NAME);
     if (tagsString != null) {
@@ -231,6 +260,10 @@ public class ConfigService {
 
   ReportingMode getReportingMode() {
     return reportingMode;
+  }
+
+  long getReportingFrequency() {
+    return reportingFrequencyMillis;
   }
 
   public String getAgentVersion() {
