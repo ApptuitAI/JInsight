@@ -106,7 +106,6 @@ limitations under the License.
     <junit.version>4.12</junit.version>
     <jacoco.version>0.8.1</jacoco.version>
     <byteman.version>4.0.2</byteman.version>
-    <byteman.version>3.0.11</byteman.version>
     <metrics.version>3.2.6</metrics.version>
     <apptuit.reporter.version>0.7.2</apptuit.reporter.version>
 
