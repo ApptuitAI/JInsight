@@ -17,7 +17,7 @@
 package ai.apptuit.metrics.jinsight.modules.jvm;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import com.codahale.metrics.JmxAttributeGauge;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
 import java.util.Collections;
@@ -57,7 +57,16 @@ class BufferPoolMetrics implements MetricSet {
           mbeanServer.getMBeanInfo(on);
           gauges.put(
               TagEncodedMetricName.decode(name).withTags("type", pool).toString(),
-              new JmxAttributeGauge(mbeanServer, on, attribute));
+              new Gauge<Object>() {
+                @Override
+                public Object getValue() {
+                  try {
+                    return mbeanServer.getAttribute(on, attribute);
+                  } catch (JMException ignored) {
+                    return null;
+                  }
+                }
+              });
         } catch (JMException ignored) {
           LOGGER.fine("Unable to load buffer pool MBeans, needs JDK7 or higher");
         }
