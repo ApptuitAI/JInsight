@@ -21,11 +21,8 @@ import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
-import com.codahale.metrics.jvm.BufferPoolMetricSet;
 import com.codahale.metrics.jvm.CachedThreadStatesGaugeSet;
 import com.codahale.metrics.jvm.ClassLoadingGaugeSet;
-import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
-import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,19 +41,19 @@ public class JvmMetricSet implements MetricSet {
   private final Map<String, Metric> metrics = new HashMap<>();
 
   public JvmMetricSet() {
-    registerSet("jvm.buffers", new BufferPoolMetricSet(getPlatformMBeanServer()));
+    registerSet("jvm.buffers", new BufferPoolMetrics(getPlatformMBeanServer()));
     registerSet("jvm.classloading", new ClassLoadingGaugeSet());
     registerSet("jvm.fd", new FileDescriptorMetrics());
-    registerSet("jvm.gc", new GarbageCollectorMetricSet());
-    registerSet("jvm.memory", new MemoryUsageGaugeSet());
+    registerSet("jvm.gc", new GarbageCollectorMetrics());
+    registerSet("jvm.memory", new MemoryUsageMetrics());
     registerSet("jvm.thread", new CachedThreadStatesGaugeSet(60, TimeUnit.SECONDS));
 
-    metrics.put("jvm.uptime", new UptimeGauge());
+    metrics.put("jvm.uptime.millis", new UptimeGauge());
 
     try {
-      metrics.put("jvm.processCPU", new ProcessCpuTicksGauge());
+      metrics.put("jvm.process.cpu.nanos", new ProcessCpuTicksGauge());
     } catch (ClassNotFoundException | IOException e) {
-      LOGGER.log(Level.SEVERE,"Error fetching process CPU usage metrics.", e);
+      LOGGER.log(Level.SEVERE, "Error fetching process CPU usage metrics.", e);
     }
   }
 
