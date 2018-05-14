@@ -39,8 +39,6 @@ import java.util.regex.Pattern;
  */
 class MemoryUsageMetrics implements MetricSet {
 
-  private static final Logger LOGGER = Logger.getLogger(MemoryUsageMetrics.class.getName());
-
   private static final Pattern WHITESPACE = Pattern.compile("[\\s]+");
 
   private final MemoryMXBean mxBean;

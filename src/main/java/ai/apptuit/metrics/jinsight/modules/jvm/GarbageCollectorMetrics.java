@@ -36,8 +36,6 @@ import java.util.regex.Pattern;
  */
 class GarbageCollectorMetrics implements MetricSet {
 
-  private static final Logger LOGGER = Logger.getLogger(GarbageCollectorMetrics.class.getName());
-
   private static final String YOUNG_GEN = "young";
   private static final String OLD_GEN = "old";
   private static final Pattern WHITESPACE = Pattern.compile("[\\s]+");
