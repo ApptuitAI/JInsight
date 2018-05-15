@@ -55,7 +55,7 @@ class GarbageCollectorMetrics implements MetricSet {
     final Map<String, Metric> gauges = new HashMap<>();
     garbageCollectors.forEach(gc -> {
       gauges.put(getMetricName(gc, "count"), (Gauge<Long>) gc::getCollectionCount);
-      gauges.put(getMetricName(gc, "time"), (Gauge<Long>) gc::getCollectionTime);
+      gauges.put(getMetricName(gc, "time.millis"), (Gauge<Long>) gc::getCollectionTime);
     });
     gauges.put("total.count", (Gauge<Long>) () -> {
       long count = 0;
@@ -65,7 +65,7 @@ class GarbageCollectorMetrics implements MetricSet {
       return count;
     });
 
-    gauges.put("total.time", (Gauge<Long>) () -> {
+    gauges.put("total.time.millis", (Gauge<Long>) () -> {
       long time = 0;
       for (GarbageCollector gc : garbageCollectors) {
         time += gc.getCollectionTime();
