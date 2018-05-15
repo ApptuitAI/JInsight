@@ -56,32 +56,32 @@ class MemoryUsageMetrics implements MetricSet {
   public Map<String, Metric> getMetrics() {
     final Map<String, Metric> gauges = new HashMap<>();
 
-    gauges.put("total.init", (Gauge<Long>) () ->
+    gauges.put("total.init.bytes", (Gauge<Long>) () ->
         mxBean.getHeapMemoryUsage().getInit() + mxBean.getNonHeapMemoryUsage().getInit()
     );
 
-    gauges.put("total.used", (Gauge<Long>) () ->
+    gauges.put("total.used.bytes", (Gauge<Long>) () ->
         mxBean.getHeapMemoryUsage().getUsed() + mxBean.getNonHeapMemoryUsage().getUsed()
     );
 
-    gauges.put("total.max", (Gauge<Long>) () ->
+    gauges.put("total.max.bytes", (Gauge<Long>) () ->
         mxBean.getHeapMemoryUsage().getMax() + mxBean.getNonHeapMemoryUsage().getMax()
     );
 
-    gauges.put("total.committed", (Gauge<Long>) () ->
+    gauges.put("total.committed.bytes", (Gauge<Long>) () ->
         mxBean.getHeapMemoryUsage().getCommitted() + mxBean.getNonHeapMemoryUsage().getCommitted()
     );
 
-    gauges.put(getMetricName("init", "type", "heap"),
+    gauges.put(getMetricName("init.bytes", "type", "heap"),
         (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getInit());
 
-    gauges.put(getMetricName("used", "type", "heap"),
+    gauges.put(getMetricName("used.bytes", "type", "heap"),
         (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getUsed());
 
-    gauges.put(getMetricName("max", "type", "heap"),
+    gauges.put(getMetricName("max.bytes", "type", "heap"),
         (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getMax());
 
-    gauges.put(getMetricName("committed", "type", "heap"),
+    gauges.put(getMetricName("committed.bytes", "type", "heap"),
         (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getCommitted());
 
     gauges.put(getMetricName("usage", "type", "heap"), new RatioGauge() {
@@ -92,16 +92,16 @@ class MemoryUsageMetrics implements MetricSet {
       }
     });
 
-    gauges.put(getMetricName("init", "type", "non-heap"),
+    gauges.put(getMetricName("init.bytes", "type", "non-heap"),
         (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getInit());
 
-    gauges.put(getMetricName("used", "type", "non-heap"),
+    gauges.put(getMetricName("used.bytes", "type", "non-heap"),
         (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getUsed());
 
-    gauges.put(getMetricName("max", "type", "non-heap"),
+    gauges.put(getMetricName("max.bytes", "type", "non-heap"),
         (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getMax());
 
-    gauges.put(getMetricName("committed", "type", "non-heap"),
+    gauges.put(getMetricName("committed.bytes", "type", "non-heap"),
         (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getCommitted());
 
     gauges.put(getMetricName("usage", "type", "non-heap"), new RatioGauge() {
@@ -125,22 +125,22 @@ class MemoryUsageMetrics implements MetricSet {
             }
           });
 
-      gauges.put(getMetricName("pools.max", "type", poolName),
+      gauges.put(getMetricName("pools.max.bytes", "type", poolName),
           (Gauge<Long>) () -> pool.getUsage().getMax());
 
-      gauges.put(getMetricName("pools.used", "type", poolName),
+      gauges.put(getMetricName("pools.used.bytes", "type", poolName),
           (Gauge<Long>) () -> pool.getUsage().getUsed());
 
-      gauges.put(getMetricName("pools.committed", "type", poolName),
+      gauges.put(getMetricName("pools.committed.bytes", "type", poolName),
           (Gauge<Long>) () -> pool.getUsage().getCommitted());
 
       // Only register GC usage metrics if the memory pool supports usage statistics.
       if (pool.getCollectionUsage() != null) {
-        gauges.put(getMetricName("pools.used-after-gc", "type", poolName),
+        gauges.put(getMetricName("pools.used-after-gc.bytes", "type", poolName),
             (Gauge<Long>) () -> pool.getCollectionUsage().getUsed());
       }
 
-      gauges.put(getMetricName("pools.init", "type", poolName),
+      gauges.put(getMetricName("pools.init.bytes", "type", poolName),
           (Gauge<Long>) () -> pool.getUsage().getInit());
     }
 

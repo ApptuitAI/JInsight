@@ -16,8 +16,6 @@
 
 package ai.apptuit.metrics.jinsight.modules.jvm;
 
-import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
-
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
@@ -41,7 +39,7 @@ public class JvmMetricSet implements MetricSet {
   private final Map<String, Metric> metrics = new HashMap<>();
 
   public JvmMetricSet() {
-    registerSet("jvm.buffers", new BufferPoolMetrics(getPlatformMBeanServer()));
+    registerSet("jvm.buffers", new BufferPoolMetrics());
     registerSet("jvm.classloading", new ClassLoadingGaugeSet());
     registerSet("jvm.fd", new FileDescriptorMetrics());
     registerSet("jvm.gc", new GarbageCollectorMetrics());

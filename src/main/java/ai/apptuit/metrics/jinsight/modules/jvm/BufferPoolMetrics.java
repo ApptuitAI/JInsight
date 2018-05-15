@@ -20,58 +20,42 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
+import java.lang.management.BufferPoolMXBean;
+import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
-import javax.management.JMException;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 
 /**
  * @author Rajiv Shivane
  */
 class BufferPoolMetrics implements MetricSet {
 
-  private static final Logger LOGGER = Logger.getLogger(BufferPoolMetrics.class.getName());
+  private final List<BufferPoolMXBean> pools;
 
-  private static final String[] ATTRIBUTES = {"Count", "MemoryUsed", "TotalCapacity"};
-  private static final String[] NAMES = {"count", "used", "capacity"};
-  private static final String[] POOLS = {"direct", "mapped"};
-
-  private final MBeanServer mbeanServer;
-
-  public BufferPoolMetrics(MBeanServer mbeanServer) {
-    this.mbeanServer = mbeanServer;
+  public BufferPoolMetrics() {
+    pools = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
   }
 
   @Override
   public Map<String, Metric> getMetrics() {
     final Map<String, Metric> gauges = new HashMap<String, Metric>();
-    for (String pool : POOLS) {
-      for (int i = 0; i < ATTRIBUTES.length; i++) {
-        final String attribute = ATTRIBUTES[i];
-        final String name = NAMES[i];
-        try {
-          final ObjectName on = new ObjectName("java.nio:type=BufferPool,name=" + pool);
-          mbeanServer.getMBeanInfo(on);
-          gauges.put(
-              TagEncodedMetricName.decode(name).withTags("type", pool).toString(),
-              new Gauge<Object>() {
-                @Override
-                public Object getValue() {
-                  try {
-                    return mbeanServer.getAttribute(on, attribute);
-                  } catch (JMException ignored) {
-                    return null;
-                  }
-                }
-              });
-        } catch (JMException ignored) {
-          LOGGER.fine("Unable to load buffer pool MBeans, needs JDK7 or higher");
-        }
-      }
+
+    for (BufferPoolMXBean pool : pools) {
+      final String poolName = pool.getName();
+      gauges.put(getMetricName("capacity.bytes", "type", poolName),
+          (Gauge<Long>) pool::getTotalCapacity);
+      gauges.put(getMetricName("count", "type", poolName),
+          (Gauge<Long>) pool::getCount);
+      gauges.put(getMetricName("used.bytes", "type", poolName),
+          (Gauge<Long>) pool::getMemoryUsed);
     }
+
     return Collections.unmodifiableMap(gauges);
+  }
+
+  private String getMetricName(String base, String... tags) {
+    return TagEncodedMetricName.decode(base).withTags(tags).toString();
   }
 }
