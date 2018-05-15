@@ -104,16 +104,16 @@ public class JvmMetricSetTest {
         "jvm.memory.total.max.bytes",
         "jvm.memory.total.used.bytes",
         "jvm.process.cpu.nanos",
-        "jvm.thread.blocked.count",
-        "jvm.thread.count",
+        "jvm.thread.count[state:blocked]",
+        "jvm.thread.count[state:new]",
+        "jvm.thread.count[state:runnable]",
+        "jvm.thread.count[state:terminated]",
+        "jvm.thread.count[state:timed_waiting]",
+        "jvm.thread.count[state:waiting]",
+        "jvm.thread.total.count",
         "jvm.thread.daemon.count",
         "jvm.thread.deadlock.count",
         "jvm.thread.deadlocks",
-        "jvm.thread.new.count",
-        "jvm.thread.runnable.count",
-        "jvm.thread.terminated.count",
-        "jvm.thread.timed_waiting.count",
-        "jvm.thread.waiting.count",
         "jvm.uptime.millis"
     );
     TreeSet<String> expectedMetrics = new TreeSet<>(expected);

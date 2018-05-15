@@ -52,7 +52,7 @@ public class JvmMetricSet implements MetricSet {
     registerSet("jvm.fd", new FileDescriptorMetrics());
     registerSet("jvm.gc", new GarbageCollectorMetrics());
     registerSet("jvm.memory", new MemoryUsageMetrics());
-    registerSet("jvm.thread", new CachedThreadStatesGaugeSet(60, TimeUnit.SECONDS));
+    registerSet("jvm.thread", new ThreadStateMetrics());
 
     metrics.put("jvm.uptime.millis", new UptimeGauge());
 
