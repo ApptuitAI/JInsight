@@ -16,23 +16,26 @@
 
 package ai.apptuit.metrics.jinsight.modules.jvm;
 
+import static java.lang.management.ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME;
 import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
+import static java.lang.management.ManagementFactory.getRuntimeMXBean;
+import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
-import com.codahale.metrics.jvm.BufferPoolMetricSet;
 import com.codahale.metrics.jvm.CachedThreadStatesGaugeSet;
 import com.codahale.metrics.jvm.ClassLoadingGaugeSet;
-import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
-import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import java.io.IOException;
+import java.lang.management.RuntimeMXBean;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.management.MBeanServerConnection;
 
 /**
  * @author Rajiv Shivane
@@ -44,19 +47,19 @@ public class JvmMetricSet implements MetricSet {
   private final Map<String, Metric> metrics = new HashMap<>();
 
   public JvmMetricSet() {
-    registerSet("jvm.buffers", new BufferPoolMetricSet(getPlatformMBeanServer()));
+    registerSet("jvm.buffers", new BufferPoolMetrics());
     registerSet("jvm.classloading", new ClassLoadingGaugeSet());
     registerSet("jvm.fd", new FileDescriptorMetrics());
-    registerSet("jvm.gc", new GarbageCollectorMetricSet());
-    registerSet("jvm.memory", new MemoryUsageGaugeSet());
-    registerSet("jvm.thread", new CachedThreadStatesGaugeSet(60, TimeUnit.SECONDS));
+    registerSet("jvm.gc", new GarbageCollectorMetrics());
+    registerSet("jvm.memory", new MemoryUsageMetrics());
+    registerSet("jvm.thread", new ThreadStateMetrics());
 
-    metrics.put("jvm.uptime", new UptimeGauge());
+    metrics.put("jvm.uptime.millis", new UptimeGauge());
 
     try {
-      metrics.put("jvm.processCPU", new ProcessCpuTicksGauge());
+      metrics.put("jvm.process.cpu.nanos", new ProcessCpuTicksGauge());
     } catch (ClassNotFoundException | IOException e) {
-      LOGGER.log(Level.SEVERE,"Error fetching process CPU usage metrics.", e);
+      LOGGER.log(Level.SEVERE, "Error fetching process CPU usage metrics.", e);
     }
   }
 
@@ -74,5 +77,35 @@ public class JvmMetricSet implements MetricSet {
 
   private String getMetricName(String prefix, String key) {
     return MetricRegistry.name(prefix, key).toLowerCase().replace('-', '_');
+  }
+
+  private static class UptimeGauge implements Gauge<Long> {
+
+    private final RuntimeMXBean rtMxBean = getRuntimeMXBean();
+
+    @Override
+    public Long getValue() {
+      return rtMxBean.getUptime();
+    }
+  }
+
+  private static class ProcessCpuTicksGauge implements Gauge<Long> {
+
+    private final com.sun.management.OperatingSystemMXBean osMxBean;
+
+    public ProcessCpuTicksGauge() throws ClassNotFoundException, IOException {
+
+      MBeanServerConnection mbsc = getPlatformMBeanServer();
+      Class.forName("com.sun.management.OperatingSystemMXBean");
+
+      osMxBean = newPlatformMXBeanProxy(mbsc, OPERATING_SYSTEM_MXBEAN_NAME,
+          com.sun.management.OperatingSystemMXBean.class);
+
+    }
+
+    @Override
+    public Long getValue() {
+      return osMxBean.getProcessCpuTime();
+    }
   }
 }
