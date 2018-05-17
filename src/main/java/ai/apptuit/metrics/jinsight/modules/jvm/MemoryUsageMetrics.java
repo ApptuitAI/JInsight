@@ -40,6 +40,10 @@ class MemoryUsageMetrics implements MetricSet {
 
   private static final Pattern WHITESPACE = Pattern.compile("[\\s]+");
 
+  private static final String EDEN_GEN = "eden";
+  private static final String SURVIVOR_GEN = "survivor";
+  private static final String OLD_GEN = "old";
+
   private final MemoryMXBean mxBean;
   private final List<MemoryPoolMXBean> memoryPools;
 
@@ -115,7 +119,14 @@ class MemoryUsageMetrics implements MetricSet {
     for (final MemoryPoolMXBean pool : memoryPools) {
       final String poolName = WHITESPACE.matcher(pool.getName()).replaceAll("_").toLowerCase();
 
-      gauges.put(getMetricName("pools.usage", "type", poolName),
+      String generation = getPoolGeneration(pool.getName());
+      String[] poolNameTags;
+      if (generation != null) {
+        poolNameTags = new String[]{"type", poolName, "generation", generation};
+      } else {
+        poolNameTags = new String[]{"type", poolName};
+      }
+      gauges.put(getMetricName("pools.usage", poolNameTags),
           new RatioGauge() {
             @Override
             protected Ratio getRatio() {
@@ -125,22 +136,22 @@ class MemoryUsageMetrics implements MetricSet {
             }
           });
 
-      gauges.put(getMetricName("pools.max.bytes", "type", poolName),
+      gauges.put(getMetricName("pools.max.bytes", poolNameTags),
           (Gauge<Long>) () -> pool.getUsage().getMax());
 
-      gauges.put(getMetricName("pools.used.bytes", "type", poolName),
+      gauges.put(getMetricName("pools.used.bytes", poolNameTags),
           (Gauge<Long>) () -> pool.getUsage().getUsed());
 
-      gauges.put(getMetricName("pools.committed.bytes", "type", poolName),
+      gauges.put(getMetricName("pools.committed.bytes", poolNameTags),
           (Gauge<Long>) () -> pool.getUsage().getCommitted());
 
       // Only register GC usage metrics if the memory pool supports usage statistics.
       if (pool.getCollectionUsage() != null) {
-        gauges.put(getMetricName("pools.used-after-gc.bytes", "type", poolName),
+        gauges.put(getMetricName("pools.used-after-gc.bytes", poolNameTags),
             (Gauge<Long>) () -> pool.getCollectionUsage().getUsed());
       }
 
-      gauges.put(getMetricName("pools.init.bytes", "type", poolName),
+      gauges.put(getMetricName("pools.init.bytes", poolNameTags),
           (Gauge<Long>) () -> pool.getUsage().getInit());
     }
 
@@ -150,4 +161,27 @@ class MemoryUsageMetrics implements MetricSet {
   private String getMetricName(String base, String... tags) {
     return TagEncodedMetricName.decode(base).withTags(tags).toString();
   }
+
+  private String getPoolGeneration(String name) {
+    switch (name) {
+      case "Eden Space":
+      case "PS Eden Space":
+      case "Par Eden Space":
+      case "G1 Eden Space":
+        return EDEN_GEN;
+      case "Survivor Space":
+      case "PS Survivor Space":
+      case "Par Survivor Space":
+      case "G1 Survivor Space":
+        return SURVIVOR_GEN;
+      case "Tenured Gen":
+      case "PS Old Gen":
+      case "CMS Old Gen":
+      case "G1 Old Gen":
+        return OLD_GEN;
+      default:
+        return null;
+    }
+  }
+
 }
