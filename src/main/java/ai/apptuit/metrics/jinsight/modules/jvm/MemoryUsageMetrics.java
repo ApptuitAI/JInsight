@@ -122,7 +122,7 @@ class MemoryUsageMetrics implements MetricSet {
       String generation = getPoolGeneration(pool.getName());
       String[] poolNameTags;
       if (generation != null) {
-        poolNameTags = new String[]{"type", poolName, "generation", generation};
+        poolNameTags = new String[]{"type", generation, "name", poolName};
       } else {
         poolNameTags = new String[]{"type", poolName};
       }
