@@ -58,6 +58,7 @@ limitations under the License.
       <id>jinsight-bintray</id>
       <url>https://dl.bintray.com/apptuitai/maven</url>
     </repository>
+    <!--
     <repository>
       <id>sonatype-snapshots-repository</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -65,6 +66,7 @@ limitations under the License.
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    -->
   </repositories>
 
   <properties>
@@ -103,7 +105,7 @@ limitations under the License.
     <surefire.version>2.20.1</surefire.version>
     <junit.version>4.12</junit.version>
     <jacoco.version>0.8.1</jacoco.version>
-    <byteman.version>4.0.3-SNAPSHOT</byteman.version>
+    <byteman.version>4.0.3</byteman.version>
     <metrics.version>3.2.6</metrics.version>
     <apptuit.reporter.version>0.7.2</apptuit.reporter.version>
 
@@ -350,7 +352,7 @@ limitations under the License.
       <plugin>
         <groupId>org.jboss.byteman</groupId>
         <artifactId>byteman-rulecheck-maven-plugin</artifactId>
-        <version>4.0.2</version>
+        <version>${byteman.version}</version>
         <executions>
           <execution>
             <id>check-byteman-rules</id>
