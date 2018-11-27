@@ -80,7 +80,12 @@ public class ErrorFingerprintTests {
       e2 = e;
     }
 
-    assertEquals(fromThrowable(e1), fromThrowable(e2));
+    ErrorFingerprint fp1 = fromThrowable(e1);
+    ErrorFingerprint fp2 = fromThrowable(e2);
+
+    assertEquals(MalformedURLException.class.getName(), fp1.getErrorFullName());
+    assertEquals(fp1, fp2);
+    assertEquals(fp1.hashCode(), fp2.hashCode());
   }
 
   @Test
@@ -97,6 +102,7 @@ public class ErrorFingerprintTests {
     ErrorFingerprint f2 = fromThrowable(new RuntimeException(exception));
     ErrorFingerprint f3 = fromThrowable(new RuntimeException());
 
+    assertEquals(RuntimeException.class.getName(), f1.getErrorFullName());
     assertEquals(f1, f2);
     assertNotEquals(f1, f3);
   }
@@ -105,6 +111,8 @@ public class ErrorFingerprintTests {
   public void testCircularReferenceException() {
     final ErrorFingerprint f1 = fromThrowable(new CircularReferenceException());
     final ErrorFingerprint f2 = fromThrowable(new CircularReferenceException());
+    assertNotNull(f1);
+    assertEquals(CircularReferenceException.class.getName(), f1.getErrorFullName());
     assertEquals(f1, f2);
   }
 
@@ -112,6 +120,7 @@ public class ErrorFingerprintTests {
   public void testExceptionsInADynamicProxy() {
     ErrorFingerprint f1 = fromThrowable(_createExceptionInDynamicProxy());
     ErrorFingerprint f2 = fromThrowable(_createExceptionInDynamicProxy());
+    assertEquals(NullPointerException.class.getName(), f1.getErrorFullName());
     assertEquals(f1, f2);
   }
 
@@ -146,7 +155,10 @@ public class ErrorFingerprintTests {
     Exception afterInflation = _createReflectedException(false);
     assertTrue(_checkStackTrace(afterInflation, "sun.reflect.GeneratedMethodAccessor"));
 
-    assertEquals(fromThrowable(beforeInflation), fromThrowable(afterInflation));
+    ErrorFingerprint fpBefore = fromThrowable(beforeInflation);
+    ErrorFingerprint fbAfter = fromThrowable(afterInflation);
+    assertEquals(InvocationTargetException.class.getName(), fpBefore.getErrorFullName());
+    assertEquals(fpBefore, fbAfter);
   }
 
   private static Exception _createReflectedException(boolean silent) {
