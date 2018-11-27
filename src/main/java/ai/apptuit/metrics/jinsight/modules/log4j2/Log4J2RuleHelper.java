@@ -17,6 +17,7 @@
 package ai.apptuit.metrics.jinsight.modules.log4j2;
 
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
+import ai.apptuit.metrics.jinsight.modules.logback.ErrorFingerprint;
 import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.impl.ThrowableProxy;
@@ -37,7 +38,7 @@ public class Log4J2RuleHelper extends RuleHelper {
     ThrowableProxy throwableProxy = event.getThrownProxy();
     String throwable = (throwableProxy != null) ? throwableProxy.getName() : null;
     LogEventTracker.LogLevel level = LogEventTracker.LogLevel.valueOf(event.getLevel().toString());
-    tracker.track(level, (throwableProxy != null), throwable);
+    tracker.track(level, (throwableProxy != null), throwable, ErrorFingerprint.fromThrowable(event.getThrown()));
 
   }
 

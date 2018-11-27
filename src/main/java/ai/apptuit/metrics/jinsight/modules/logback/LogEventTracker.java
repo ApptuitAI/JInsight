@@ -30,10 +30,12 @@ public class LogEventTracker {
       .decode("logger.appends");
   public static final TagEncodedMetricName THROWABLES_BASE_NAME = TagEncodedMetricName
       .decode("logger.throwables");
+  public static final TagEncodedMetricName FINGERPRINTS_BASE_NAME = THROWABLES_BASE_NAME.submetric("by_fingerprint");
 
   private static final MetricRegistry registry = RegistryService.getMetricRegistry();
 
   private final TagEncodedMetricName throwablesBaseName;
+  private final TagEncodedMetricName fingerprintBaseName;
   private final Meter total;
   private final Meter trace;
   private final Meter debug;
@@ -44,11 +46,13 @@ public class LogEventTracker {
   private final Meter totalThrowables;
 
   public LogEventTracker() {
-    this(APPENDS_BASE_NAME, THROWABLES_BASE_NAME);
+    this(APPENDS_BASE_NAME, THROWABLES_BASE_NAME, FINGERPRINTS_BASE_NAME);
   }
 
-  private LogEventTracker(TagEncodedMetricName appendsBase, TagEncodedMetricName throwablesBase) {
+  private LogEventTracker(TagEncodedMetricName appendsBase, TagEncodedMetricName throwablesBase,
+      TagEncodedMetricName fingerprintBaseName) {
     this.throwablesBaseName = throwablesBase;
+    this.fingerprintBaseName = fingerprintBaseName;
 
     total = registry.meter(appendsBase.submetric("total").toString());
     trace = registry.meter(appendsBase.withTags("level", "trace").toString());
@@ -60,7 +64,7 @@ public class LogEventTracker {
     totalThrowables = registry.meter(this.throwablesBaseName.submetric("total").toString());
   }
 
-  public void track(LogLevel level, boolean hasThrowableInfo, String throwableClassName) {
+  public void track(LogLevel level, boolean hasThrowableInfo, String throwableClassName, ErrorFingerprint fingerprint) {
     total.mark();
     switch (level) {
       case TRACE:
@@ -91,6 +95,11 @@ public class LogEventTracker {
 
     if (throwableClassName != null) {
       registry.meter(throwablesBaseName.withTags("class", throwableClassName).toString()).mark();
+    }
+    if (fingerprint != null) {
+      registry.meter(fingerprintBaseName
+          .withTags("fingerprint", fingerprint.getChecksum())
+          .withTags("class", throwableClassName).toString()).mark();
     }
   }
 
