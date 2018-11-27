@@ -29,6 +29,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
@@ -264,6 +265,9 @@ public class ErrorFingerprint {
 
         @Override
         public StackTraceElement next() {
+          if (!hasNext()) {
+            throw new NoSuchElementException();
+          }
           return elements[pos++];
         }
       };
@@ -315,6 +319,9 @@ public class ErrorFingerprint {
 
         @Override
         public StackTraceElement next() {
+          if (!hasNext()) {
+            throw new NoSuchElementException();
+          }
           return proxyArray[pos++].getStackTraceElement();
         }
       };
