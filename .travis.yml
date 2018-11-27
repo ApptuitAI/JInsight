@@ -44,7 +44,7 @@ cache:
 
 before_install:
   - sudo apt-get install jq
-  - wget -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.1/codacy-coverage-reporter-4.0.1-assembly.jar
+  - wget -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.5/codacy-coverage-reporter-4.0.5-assembly.jar
   - |
     wget -O ~/.rpmlint/rpmlint-1.9.tar.gz https://github.com/rpm-software-management/rpmlint/archive/rpmlint-1.9.tar.gz;
     tar xvfz ~/.rpmlint/rpmlint-1.9.tar.gz -C ~/.rpmlint;
@@ -85,7 +85,7 @@ after_success:
   - |
     if [[ "$IS_PRIMARY_MATRIX_JOB" = "true" ]]; then
       bash <(curl -s https://codecov.io/bash);
-      java -cp ~/.codacy/reporter/codacy-reporter-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml;
+      java -cp ~/.codacy/reporter/codacy-reporter-latest.jar com.codacy.CodacyCoverageReporter report -l Java -r target/site/jacoco/jacoco.xml;
     fi
   - make lint -C pkg/deb
   - make lint -C pkg/rpm

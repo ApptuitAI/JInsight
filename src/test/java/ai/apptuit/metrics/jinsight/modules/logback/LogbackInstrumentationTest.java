@@ -17,6 +17,7 @@
 package ai.apptuit.metrics.jinsight.modules.logback;
 
 import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.APPENDS_BASE_NAME;
+import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.FINGERPRINTS_BASE_NAME;
 import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.THROWABLES_BASE_NAME;
 import static org.junit.Assert.assertEquals;
 
@@ -50,6 +51,7 @@ public class LogbackInstrumentationTest {
 
     TagEncodedMetricName rootName = APPENDS_BASE_NAME;
     TagEncodedMetricName throwablesBaseName = THROWABLES_BASE_NAME;
+    TagEncodedMetricName fingerprintsBaseName = FINGERPRINTS_BASE_NAME;
 
     meters = new HashMap<>();
     meters.put("total", getMeter(rootName.submetric("total")));
@@ -61,6 +63,10 @@ public class LogbackInstrumentationTest {
     meters.put("throwCount", getMeter(throwablesBaseName.submetric("total")));
     meters.put("throw[RuntimeException]",
         getMeter(throwablesBaseName.withTags("class", RuntimeException.class.getName())
+        ));
+    meters.put("fingerprint[RuntimeException]",
+        getMeter(fingerprintsBaseName.withTags("class", RuntimeException.class.getName())
+            .withTags("fingerprint", "cca21d077597f3b5eb0fea65bc57a55b")
         ));
 
     LoggerContext context = new LoggerContext();
@@ -83,6 +89,7 @@ public class LogbackInstrumentationTest {
     expectedCounts.compute("error", (s, aLong) -> aLong + 1);
     expectedCounts.compute("throwCount", (s, aLong) -> aLong + 1);
     expectedCounts.compute("throw[RuntimeException]", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("fingerprint[RuntimeException]", (s, aLong) -> aLong + 1);
 
     RuntimeException exception = new RuntimeException();
     exception.setStackTrace(new StackTraceElement[0]);

@@ -37,7 +37,7 @@ public class LogbackRuleHelper extends RuleHelper {
     IThrowableProxy throwableProxy = event.getThrowableProxy();
     String throwable = (throwableProxy != null) ? throwableProxy.getClassName() : null;
     LogLevel level = LogLevel.valueOf(event.getLevel().toString());
-    tracker.track(level, (throwableProxy != null), throwable);
+    tracker.track(level, (throwableProxy != null), throwable, ErrorFingerprint.fromIThrowableProxy(throwableProxy));
   }
 
 }

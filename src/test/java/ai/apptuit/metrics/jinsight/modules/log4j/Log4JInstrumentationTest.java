@@ -17,6 +17,7 @@
 package ai.apptuit.metrics.jinsight.modules.log4j;
 
 import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.APPENDS_BASE_NAME;
+import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.FINGERPRINTS_BASE_NAME;
 import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.THROWABLES_BASE_NAME;
 import static org.junit.Assert.assertEquals;
 
@@ -59,9 +60,12 @@ public class Log4JInstrumentationTest {
     meters.put("fatal", getMeter(APPENDS_BASE_NAME.withTags("level", "fatal")));
     meters.put("throwCount", getMeter(THROWABLES_BASE_NAME.submetric("total")));
     meters.put("throw[RuntimeException]", getMeter(
-        THROWABLES_BASE_NAME
-            .withTags("class", RuntimeException.class.getName())
+        THROWABLES_BASE_NAME.withTags("class", RuntimeException.class.getName())
     ));
+    meters.put("fingerprint[RuntimeException]",
+        getMeter(FINGERPRINTS_BASE_NAME.withTags("class", RuntimeException.class.getName())
+            .withTags("fingerprint", "cca21d077597f3b5eb0fea65bc57a55b")
+        ));
 
     logger = Logger.getLogger(Log4JInstrumentationTest.class.getName());
     origLevel = logger.getLevel();
@@ -80,6 +84,7 @@ public class Log4JInstrumentationTest {
     expectedCounts.compute("error", (s, aLong) -> aLong + 1);
     expectedCounts.compute("throwCount", (s, aLong) -> aLong + 1);
     expectedCounts.compute("throw[RuntimeException]", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("fingerprint[RuntimeException]", (s, aLong) -> aLong + 1);
 
     RuntimeException exception = new RuntimeException();
     exception.setStackTrace(new StackTraceElement[0]);

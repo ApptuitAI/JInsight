@@ -17,6 +17,7 @@
 package ai.apptuit.metrics.jinsight.modules.log4j;
 
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
+import ai.apptuit.metrics.jinsight.modules.logback.ErrorFingerprint;
 import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.ThrowableInformation;
@@ -37,12 +38,14 @@ public class Log4JRuleHelper extends RuleHelper {
   public void appendersCalled(LoggingEvent event) {
     ThrowableInformation throwableInfo = event.getThrowableInformation();
     String throwableName = null;
+    ErrorFingerprint fingerprint = null;
     if (throwableInfo != null) {
       Throwable throwable = throwableInfo.getThrowable();
       throwableName = (throwable != null) ? throwable.getClass().getName() : null;
+      fingerprint = ErrorFingerprint.fromThrowable(throwableInfo.getThrowable());
     }
     LogEventTracker.LogLevel level = LogEventTracker.LogLevel.valueOf(event.getLevel().toString());
-    tracker.track(level, (throwableInfo != null), throwableName);
+    tracker.track(level, (throwableInfo != null), throwableName, fingerprint);
 
   }
 
