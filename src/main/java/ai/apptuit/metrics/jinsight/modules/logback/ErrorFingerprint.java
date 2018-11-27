@@ -142,18 +142,6 @@ public class ErrorFingerprint {
   }
 
   private static void printStackTrace(IThrowable t, Writer writer) throws IOException {
-    printStackTrace(t, writer, Collections.newSetFromMap(new IdentityHashMap<>()));
-  }
-
-  private static void printStackTrace(IThrowable t, Writer writer, Set<IThrowable> causes) throws IOException {
-    if (causes.contains(t)) {
-      writer.write("\t[CIRCULAR REFERENCE:" + t + "]\n");
-      return;
-    }
-
-    if (causes.size() > 0) {
-      writer.write("Caused by: ");
-    }
     writer.write(t.getClassName());
     writer.write('\n');
 
@@ -165,8 +153,8 @@ public class ErrorFingerprint {
 
     IThrowable cause = t.getCause();
     if (cause != null) {
-      causes.add(t);
-      printStackTrace(cause, writer, causes);
+      writer.write("Caused by: ");
+      printStackTrace(cause, writer);
     }
 
   }
@@ -193,7 +181,7 @@ public class ErrorFingerprint {
                 at java.lang.reflect.Method.invoke(Method.java:497)
             */
 
-      if (className.equals("sun.reflect.NativeMethodAccessorImpl")) {
+      if ("sun.reflect.NativeMethodAccessorImpl".equals(className)) {
         if (traceElement.getMethodName().equals("invoke0")) {
           return;
         }
@@ -208,14 +196,17 @@ public class ErrorFingerprint {
   private static final OutputStream NULL_OUTPUT_STREAM = new OutputStream() {
     @Override
     public void write(byte[] b) {
+      // do nothing
     }
 
     @Override
     public void write(byte[] b, int off, int len) {
+      // do nothing
     }
 
     @Override
     public void write(int b) {
+      // do nothing
     }
   };
 
@@ -234,12 +225,18 @@ public class ErrorFingerprint {
   private static class ThrowableWrapper implements IThrowable {
 
     private final Throwable actual;
+    private final Set<Throwable> causes;
 
     public ThrowableWrapper(Throwable t) {
+      this(t, Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    public ThrowableWrapper(Throwable t, Set<Throwable> causes) {
       if (t == null) {
-        throw new NullPointerException();
+        throw new IllegalArgumentException("Throwable can not be null");
       }
       this.actual = t;
+      this.causes = causes;
     }
 
     @Override
@@ -279,7 +276,11 @@ public class ErrorFingerprint {
       if (cause == null) {
         return null;
       }
-      return new ThrowableWrapper(cause);
+      if (causes.contains(cause)) {
+        return null;
+      }
+      causes.add(cause);
+      return new ThrowableWrapper(cause, causes);
     }
   }
 
@@ -289,7 +290,7 @@ public class ErrorFingerprint {
 
     public ThrowableProxyWrapper(IThrowableProxy proxy) {
       if (proxy == null) {
-        throw new NullPointerException();
+        throw new IllegalArgumentException("IThrowableProxy can not be null");
       }
       this.proxy = proxy;
     }
