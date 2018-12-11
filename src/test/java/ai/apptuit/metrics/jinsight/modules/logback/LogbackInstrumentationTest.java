@@ -26,11 +26,17 @@ import ai.apptuit.metrics.jinsight.RegistryService;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.OutputStreamAppender;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,8 +48,11 @@ public class LogbackInstrumentationTest {
 
   private MetricRegistry registry;
   private Map<String, Meter> meters;
+  private TestAppender testAppender;
   private Logger logger;
   private Level origLevel;
+  private Throwable testException;
+  private ErrorFingerprint expectedFingerprint;
 
   @Before
   public void setUp() throws Exception {
@@ -51,7 +60,10 @@ public class LogbackInstrumentationTest {
 
     TagEncodedMetricName rootName = APPENDS_BASE_NAME;
     TagEncodedMetricName throwablesBaseName = THROWABLES_BASE_NAME;
-    TagEncodedMetricName fingerprintsBaseName = FINGERPRINTS_BASE_NAME;
+
+    testException = new RuntimeException();
+    testException.setStackTrace(new StackTraceElement[0]);
+    expectedFingerprint = ErrorFingerprint.fromThrowable(testException);
 
     meters = new HashMap<>();
     meters.put("total", getMeter(rootName.submetric("total")));
@@ -62,16 +74,14 @@ public class LogbackInstrumentationTest {
     meters.put("error", getMeter(rootName.withTags("level", "error")));
     meters.put("throwCount", getMeter(throwablesBaseName.submetric("total")));
     meters.put("throw[RuntimeException]",
-        getMeter(throwablesBaseName.withTags("class", RuntimeException.class.getName())
+        getMeter(throwablesBaseName.withTags("class", testException.getClass().getName())
         ));
     meters.put("fingerprint[RuntimeException]",
-        getMeter(fingerprintsBaseName.withTags("class", RuntimeException.class.getName())
-            .withTags("fingerprint", "cca21d077597f3b5eb0fea65bc57a55b")
+        getMeter(FINGERPRINTS_BASE_NAME.withTags("class", testException.getClass().getName())
+            .withTags("fingerprint", expectedFingerprint.getChecksum())
         ));
 
-    LoggerContext context = new LoggerContext();
-
-    logger = context.getLogger(LogbackInstrumentationTest.class);
+    logger = getLogger(LogbackInstrumentationTest.class.getName());
     origLevel = logger.getLevel();
     logger.setLevel(Level.ALL);
   }
@@ -82,6 +92,25 @@ public class LogbackInstrumentationTest {
   }
 
 
+  private Logger getLogger(String loggerName) {
+
+    LoggerContext logCtx = new LoggerContext();
+    PatternLayoutEncoder logEncoder = new PatternLayoutEncoder();
+    logEncoder.setContext(logCtx);
+    logEncoder.setPattern("%-12date{YYYY-MM-dd HH:mm:ss.SSS} %-5level - %msg%n");
+    logEncoder.start();
+
+    testAppender = new TestAppender(logCtx);
+    testAppender.setEncoder(logEncoder);
+    testAppender.start();
+
+    Logger log = logCtx.getLogger(loggerName);
+    log.setAdditive(false);
+    log.setLevel(Level.INFO);
+    log.addAppender(testAppender);
+    return log;
+  }
+
   @Test
   public void testThrowable() throws Exception {
     Map<String, Long> expectedCounts = getCurrentCounts();
@@ -91,11 +120,12 @@ public class LogbackInstrumentationTest {
     expectedCounts.compute("throw[RuntimeException]", (s, aLong) -> aLong + 1);
     expectedCounts.compute("fingerprint[RuntimeException]", (s, aLong) -> aLong + 1);
 
-    RuntimeException exception = new RuntimeException();
-    exception.setStackTrace(new StackTraceElement[0]);
-    logger.error("Error with throwable", exception);
+    logger.error("Error with throwable", testException);
 
     assertEquals(expectedCounts, getCurrentCounts());
+    assertEquals(expectedFingerprint.getChecksum(), testAppender.getFingerprint());
+    Assert.assertThat(testAppender.getLogContent(),
+        CoreMatchers.containsString("[error:" + expectedFingerprint.getChecksum() + "]"));
   }
 
   @Test
@@ -184,5 +214,33 @@ public class LogbackInstrumentationTest {
       currentValues.put(k, meter.getCount());
     });
     return currentValues;
+  }
+
+  private static class TestAppender extends OutputStreamAppender<ILoggingEvent> {
+
+    private ByteArrayOutputStream logBuffer = new ByteArrayOutputStream();
+    private String fingerprint;
+
+    public TestAppender(LoggerContext logCtx) {
+      super();
+      setContext(logCtx);
+      setName("test");
+      setOutputStream(logBuffer);
+    }
+
+    @Override
+    protected void append(ILoggingEvent eventObject) {
+      super.append(eventObject);
+      fingerprint = eventObject.getMDCPropertyMap().get(LogEventTracker.FINGERPRINT_PROPERTY_NAME);
+    }
+
+    public String getFingerprint() {
+      return fingerprint;
+    }
+
+    public String getLogContent() {
+      return logBuffer.toString();
+    }
+
   }
 }

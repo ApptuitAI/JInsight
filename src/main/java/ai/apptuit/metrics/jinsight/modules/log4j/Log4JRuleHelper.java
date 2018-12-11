@@ -46,7 +46,17 @@ public class Log4JRuleHelper extends RuleHelper {
     }
     LogEventTracker.LogLevel level = LogEventTracker.LogLevel.valueOf(event.getLevel().toString());
     tracker.track(level, (throwableInfo != null), throwableName, fingerprint);
+    if (fingerprint != null && event.getProperty(LogEventTracker.FINGERPRINT_PROPERTY_NAME) == null) {
+      event.setProperty(LogEventTracker.FINGERPRINT_PROPERTY_NAME, fingerprint.getChecksum());
+    }
+  }
 
+  public String convertMessage(LoggingEvent event, String origMessage) {
+    String fingerprint = event.getProperty(LogEventTracker.FINGERPRINT_PROPERTY_NAME);
+    if (fingerprint == null) {
+      return origMessage;
+    }
+    return "[error:" + fingerprint + "] " + origMessage;
   }
 
 }

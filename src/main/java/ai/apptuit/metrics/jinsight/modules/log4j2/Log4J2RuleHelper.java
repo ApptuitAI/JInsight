@@ -19,6 +19,7 @@ package ai.apptuit.metrics.jinsight.modules.log4j2;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
 import ai.apptuit.metrics.jinsight.modules.logback.ErrorFingerprint;
 import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.impl.ThrowableProxy;
 import org.jboss.byteman.rule.Rule;
@@ -29,6 +30,7 @@ import org.jboss.byteman.rule.Rule;
 public class Log4J2RuleHelper extends RuleHelper {
 
   private static final LogEventTracker tracker = new LogEventTracker();
+  private static final ThreadLocal<ErrorFingerprint> CURRENT_FINGERPRINT = new ThreadLocal<>();
 
   public Log4J2RuleHelper(Rule rule) {
     super(rule);
@@ -38,8 +40,36 @@ public class Log4J2RuleHelper extends RuleHelper {
     ThrowableProxy throwableProxy = event.getThrownProxy();
     String throwable = (throwableProxy != null) ? throwableProxy.getName() : null;
     LogEventTracker.LogLevel level = LogEventTracker.LogLevel.valueOf(event.getLevel().toString());
-    tracker.track(level, (throwableProxy != null), throwable, ErrorFingerprint.fromThrowable(event.getThrown()));
+    ErrorFingerprint fingerprint = CURRENT_FINGERPRINT.get();
+    tracker.track(level, (throwableProxy != null), throwable, fingerprint);
+  }
 
+  public void beforeLogMessage(Object[] params) {
+    if (params == null || params.length < 6 || !(params[5] instanceof Throwable)) {
+      return;
+    }
+    if (ThreadContext.containsKey(LogEventTracker.FINGERPRINT_PROPERTY_NAME)) {
+      return;
+    }
+    Throwable throwable = (Throwable) params[5];
+    ErrorFingerprint fingerprint = ErrorFingerprint.fromThrowable(throwable);
+    if (fingerprint != null) {
+      CURRENT_FINGERPRINT.set(fingerprint);
+      ThreadContext.put(LogEventTracker.FINGERPRINT_PROPERTY_NAME, fingerprint.getChecksum());
+    }
+  }
+
+  public void afterLogMessage(Object[] params) {
+    CURRENT_FINGERPRINT.remove();
+    ThreadContext.remove(LogEventTracker.FINGERPRINT_PROPERTY_NAME);
+  }
+
+  public void beforeMessageFormat(final LogEvent event, final StringBuilder buf) {
+    String fingerprint = event.getContextData().getValue(LogEventTracker.FINGERPRINT_PROPERTY_NAME);
+    if (fingerprint == null) {
+      return;
+    }
+    buf.append("[error:").append(fingerprint).append("] ");
   }
 
 }

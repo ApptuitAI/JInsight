@@ -14,11 +14,20 @@
 #  limitations under the License.
 #
 
-RULE Log4J Category callAppenders exit
+RULE Log4J Category callAppenders entry
 CLASS org.apache.log4j.Category
 METHOD callAppenders
 HELPER ai.apptuit.metrics.jinsight.modules.log4j.Log4JRuleHelper
-AT EXIT
+AT ENTRY
 IF TRUE
 DO appendersCalled($1)
+ENDRULE
+
+RULE Log4J BasicPatternConverter convert exit
+CLASS org.apache.log4j.helpers.PatternParser$BasicPatternConverter
+METHOD convert
+HELPER ai.apptuit.metrics.jinsight.modules.log4j.Log4JRuleHelper
+AT EXIT
+IF $0.type == org.apache.log4j.helpers.PatternParser.MESSAGE_CONVERTER
+DO return convertMessage($1, $!)
 ENDRULE
