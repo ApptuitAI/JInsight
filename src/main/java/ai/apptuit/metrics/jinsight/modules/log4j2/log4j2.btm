@@ -28,7 +28,7 @@ CLASS org.apache.logging.log4j.spi.AbstractLogger
 METHOD logMessage
 HELPER ai.apptuit.metrics.jinsight.modules.log4j2.Log4J2RuleHelper
 AT ENTRY
-IF TRUE
+IF $# GE 5
 DO beforeLogMessage($*)
 ENDRULE
 
@@ -37,7 +37,7 @@ CLASS org.apache.logging.log4j.spi.AbstractLogger
 METHOD logMessage
 HELPER ai.apptuit.metrics.jinsight.modules.log4j2.Log4J2RuleHelper
 AT EXIT
-IF TRUE
+IF $# GE 5
 DO afterLogMessage($*)
 ENDRULE
 
@@ -46,7 +46,7 @@ CLASS org.apache.logging.log4j.spi.AbstractLogger
 METHOD logMessage
 HELPER ai.apptuit.metrics.jinsight.modules.log4j2.Log4J2RuleHelper
 AT EXCEPTION EXIT
-IF TRUE
+IF $# GE 5
 DO afterLogMessage($*)
 ENDRULE
 

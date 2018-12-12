@@ -45,10 +45,10 @@ public class Log4J2RuleHelper extends RuleHelper {
   }
 
   public void beforeLogMessage(Object[] params) {
-    if (params == null || params.length < 6 || !(params[5] instanceof Throwable)) {
+    if (ThreadContext.containsKey(LogEventTracker.FINGERPRINT_PROPERTY_NAME)) {
       return;
     }
-    if (ThreadContext.containsKey(LogEventTracker.FINGERPRINT_PROPERTY_NAME)) {
+    if (!(params[5] instanceof Throwable)) {
       return;
     }
     Throwable throwable = (Throwable) params[5];
