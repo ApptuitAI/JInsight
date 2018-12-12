@@ -100,8 +100,7 @@ public class LogbackInstrumentationTest {
     logEncoder.setPattern("%-12date{YYYY-MM-dd HH:mm:ss.SSS} %-5level - %msg%n");
     logEncoder.start();
 
-    testAppender = new TestAppender(logCtx);
-    testAppender.setEncoder(logEncoder);
+    testAppender = new TestAppender(logCtx, logEncoder);
     testAppender.start();
 
     Logger log = logCtx.getLogger(loggerName);
@@ -221,10 +220,11 @@ public class LogbackInstrumentationTest {
     private ByteArrayOutputStream logBuffer = new ByteArrayOutputStream();
     private String fingerprint;
 
-    public TestAppender(LoggerContext logCtx) {
+    public TestAppender(LoggerContext logCtx, PatternLayoutEncoder logEncoder) {
       super();
       setContext(logCtx);
       setName("test");
+      setEncoder(logEncoder);
       setOutputStream(logBuffer);
     }
 
