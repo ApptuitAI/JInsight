@@ -20,7 +20,6 @@ import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
 import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.LogLevel;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
-import java.lang.reflect.Method;
 import org.jboss.byteman.rule.Rule;
 
 /**
@@ -43,23 +42,17 @@ public class LogbackRuleHelper extends RuleHelper {
     tracker.track(level, (throwableProxy != null), throwable, fingerprint);
   }
 
-  public void beforeBuildEvent(Throwable throwable) {
-    if (throwable == null) {
-      return;
-    }
+  public String beforeBuildEvent(Throwable throwable) {
     ErrorFingerprint fingerprint = ErrorFingerprint.fromThrowable(throwable);
     if (fingerprint != null) {
       CURRENT_FINGERPRINT.set(fingerprint);
-      MdcProxy.setMDC(LogEventTracker.FINGERPRINT_PROPERTY_NAME, fingerprint.getChecksum());
+      return fingerprint.getChecksum();
     }
+    return null;
   }
 
   public void afterBuildEvent(Throwable throwable) {
-    if (throwable == null) {
-      return;
-    }
     CURRENT_FINGERPRINT.remove();
-    MdcProxy.removeMDC(LogEventTracker.FINGERPRINT_PROPERTY_NAME);
   }
 
   public String convertMessage(ILoggingEvent event, String origMessage) {
@@ -68,36 +61,5 @@ public class LogbackRuleHelper extends RuleHelper {
       return origMessage;
     }
     return "[error:" + fingerprint + "] " + origMessage;
-  }
-
-  /**
-   * Wrapper to access slf4f.MDC
-   * We use reflection to access MDC as the slf4j package is being relocated and we want these properties to be set
-   * on the MDC loaded by the application and not on the relocated MDC packaged with JInsight
-   */
-  static class MdcProxy {
-
-    private static final String CLASS_NAME = new StringBuilder().append("org.").append("slf4j.").append("MDC")
-        .toString();
-
-    public static void setMDC(String propertyName, String propertyValue) {
-      try {
-        Class<?> mdcClass = Class.forName(CLASS_NAME);
-        Method putMethod = mdcClass.getMethod("put", String.class, String.class);
-        putMethod.invoke(null, propertyName, propertyValue);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
-
-    public static void removeMDC(String propertyName) {
-      try {
-        Class<?> mdcClass = Class.forName(CLASS_NAME);
-        Method removeMethod = mdcClass.getMethod("remove", String.class);
-        removeMethod.invoke(null, propertyName);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
   }
 }
