@@ -23,6 +23,8 @@ import static org.junit.Assert.assertEquals;
 
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
+import ai.apptuit.metrics.jinsight.modules.logback.ErrorFingerprint;
+import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import java.io.ByteArrayInputStream;
@@ -33,13 +35,18 @@ import java.util.Properties;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.OutputStreamAppender;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.config.properties.PropertiesConfiguration;
 import org.apache.logging.log4j.core.config.properties.PropertiesConfigurationFactory;
+import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,12 +58,19 @@ public class Log4J2InstrumentationTest {
 
   private MetricRegistry registry;
   private Logger logger;
+  private ByteArrayOutputStream logBuffer;
   private Map<String, Meter> meters;
   private Level origLevel;
+  private Throwable testException;
+  private ErrorFingerprint expectedFingerprint;
 
   @Before
   public void setUp() throws Exception {
     registry = RegistryService.getMetricRegistry();
+
+    testException = new RuntimeException();
+    testException.setStackTrace(new StackTraceElement[0]);
+    expectedFingerprint = ErrorFingerprint.fromThrowable(testException);
 
     meters = new HashMap<>();
     meters.put("total", getMeter(APPENDS_BASE_NAME.submetric("total")));
@@ -67,18 +81,41 @@ public class Log4J2InstrumentationTest {
     meters.put("error", getMeter(APPENDS_BASE_NAME.withTags("level", "error")));
     meters.put("fatal", getMeter(APPENDS_BASE_NAME.withTags("level", "fatal")));
     meters.put("throwCount", getMeter(THROWABLES_BASE_NAME.submetric("total")));
-    meters.put("throw[RuntimeException]", getMeter(THROWABLES_BASE_NAME
-            .withTags("class", RuntimeException.class.getName())
-    ));
+    meters.put("throw[RuntimeException]",
+        getMeter(THROWABLES_BASE_NAME.withTags("class", testException.getClass().getName())
+        ));
     meters.put("fingerprint[RuntimeException]",
-        getMeter(FINGERPRINTS_BASE_NAME.withTags("class", RuntimeException.class.getName())
-            .withTags("fingerprint", "cca21d077597f3b5eb0fea65bc57a55b")
+        getMeter(FINGERPRINTS_BASE_NAME.withTags("class", testException.getClass().getName())
+            .withTags("fingerprint", expectedFingerprint.getChecksum())
         ));
 
-    logger = LogManager.getLogger(Log4J2InstrumentationTest.class.getName());
+    logger = getLogger(Log4J2InstrumentationTest.class.getName());
     origLevel = logger.getLevel();
     setLogLevel(logger, Level.ALL);
 
+  }
+
+  private org.apache.logging.log4j.core.Logger getLogger(String name) {
+    final LoggerContext context = LoggerContext.getContext(false);
+    final Configuration config = context.getConfiguration();
+//    final PatternLayout layout = PatternLayout.createDefaultLayout(config);
+    final PatternLayout layout = PatternLayout.newBuilder().withPattern("%d [%t] %p %c "
+        + "[MDC-FINGERPRINT:%X{" + LogEventTracker.FINGERPRINT_PROPERTY_NAME + "}] "
+        + "- %m%n").build();
+    logBuffer = new ByteArrayOutputStream();
+    final Appender appender = OutputStreamAppender
+        .createAppender(layout, null, logBuffer, "baos", false, true);
+    appender.start();
+    config.getAppenders().clear();
+    config.addAppender(appender);
+    context.updateLoggers();
+    Map<String, Appender> appenders = config.getRootLogger().getAppenders();
+    for (final String rAppender : appenders.keySet()) {
+      config.getRootLogger().removeAppender(rAppender);
+    }
+    config.getRootLogger().addAppender(appender, null, null);
+
+    return context.getLogger(name);
   }
 
   @After
@@ -95,11 +132,14 @@ public class Log4J2InstrumentationTest {
     expectedCounts.compute("throw[RuntimeException]", (s, aLong) -> aLong + 1);
     expectedCounts.compute("fingerprint[RuntimeException]", (s, aLong) -> aLong + 1);
 
-    RuntimeException exception = new RuntimeException();
-    exception.setStackTrace(new StackTraceElement[0]);
-    logger.error("Error with throwable", exception);
+    logger.error("Error with throwable", testException);
 
     assertEquals(expectedCounts, getCurrentCounts());
+    String logContent = logBuffer.toString();
+    Assert.assertThat(logContent,
+        CoreMatchers.containsString("[error:" + expectedFingerprint.getChecksum() + "]"));
+    Assert.assertThat(logContent,
+        CoreMatchers.containsString("[MDC-FINGERPRINT:" + expectedFingerprint.getChecksum() + "]"));
   }
 
   @Test
@@ -221,7 +261,7 @@ public class Log4J2InstrumentationTest {
     configuration.start();
     context.updateLoggers(configuration);
 
-    logger.error("error!");
+    logger.error("Testing Logger reconfiguration using an error!");
     assertEquals(expectedCounts, getCurrentCounts());
 
   }

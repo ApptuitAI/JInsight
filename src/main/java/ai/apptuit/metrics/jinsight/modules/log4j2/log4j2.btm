@@ -22,3 +22,39 @@ AT EXIT
 IF "".equals($0.name)
 DO appendersCalled($1)
 ENDRULE
+
+RULE Log4J2 LogEvent constructor entry
+CLASS org.apache.logging.log4j.spi.AbstractLogger
+METHOD logMessage
+HELPER ai.apptuit.metrics.jinsight.modules.log4j2.Log4J2RuleHelper
+AT ENTRY
+IF TRUE
+DO beforeLogMessage($*)
+ENDRULE
+
+RULE Log4J2 LogEvent constructor on exit
+CLASS org.apache.logging.log4j.spi.AbstractLogger
+METHOD logMessage
+HELPER ai.apptuit.metrics.jinsight.modules.log4j2.Log4J2RuleHelper
+AT EXIT
+IF TRUE
+DO afterLogMessage($*)
+ENDRULE
+
+RULE Log4J2 LogEvent constructor on exception
+CLASS org.apache.logging.log4j.spi.AbstractLogger
+METHOD logMessage
+HELPER ai.apptuit.metrics.jinsight.modules.log4j2.Log4J2RuleHelper
+AT EXCEPTION EXIT
+IF TRUE
+DO afterLogMessage($*)
+ENDRULE
+
+RULE Log4J2 MessagePatternConverter format on entry
+CLASS org.apache.logging.log4j.core.pattern.MessagePatternConverter
+METHOD format
+HELPER ai.apptuit.metrics.jinsight.modules.log4j2.Log4J2RuleHelper
+AT ENTRY
+IF TRUE
+DO beforeMessageFormat($1, $2)
+ENDRULE

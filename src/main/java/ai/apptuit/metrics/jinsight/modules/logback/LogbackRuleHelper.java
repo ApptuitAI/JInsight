@@ -21,6 +21,7 @@ import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.LogLevel;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import org.jboss.byteman.rule.Rule;
+import org.slf4j.MDC;
 
 /**
  * @author Rajiv Shivane
@@ -28,6 +29,7 @@ import org.jboss.byteman.rule.Rule;
 public class LogbackRuleHelper extends RuleHelper {
 
   private static final LogEventTracker tracker = new LogEventTracker();
+  private static final ThreadLocal<ErrorFingerprint> CURRENT_FINGERPRINT = new ThreadLocal<>();
 
   public LogbackRuleHelper(Rule rule) {
     super(rule);
@@ -37,7 +39,35 @@ public class LogbackRuleHelper extends RuleHelper {
     IThrowableProxy throwableProxy = event.getThrowableProxy();
     String throwable = (throwableProxy != null) ? throwableProxy.getClassName() : null;
     LogLevel level = LogLevel.valueOf(event.getLevel().toString());
-    tracker.track(level, (throwableProxy != null), throwable, ErrorFingerprint.fromIThrowableProxy(throwableProxy));
+    ErrorFingerprint fingerprint = CURRENT_FINGERPRINT.get();
+    tracker.track(level, (throwableProxy != null), throwable, fingerprint);
+  }
+
+  public void beforeBuildEvent(Throwable throwable) {
+    if (throwable == null) {
+      return;
+    }
+    ErrorFingerprint fingerprint = ErrorFingerprint.fromThrowable(throwable);
+    if (fingerprint != null) {
+      CURRENT_FINGERPRINT.set(fingerprint);
+      MDC.put(LogEventTracker.FINGERPRINT_PROPERTY_NAME, fingerprint.getChecksum());
+    }
+  }
+
+  public void afterBuildEvent(Throwable throwable) {
+    if (throwable == null) {
+      return;
+    }
+    CURRENT_FINGERPRINT.remove();
+    MDC.remove(LogEventTracker.FINGERPRINT_PROPERTY_NAME);
+  }
+
+  public String convertMessage(ILoggingEvent event, String origMessage) {
+    String fingerprint = event.getMDCPropertyMap().get(LogEventTracker.FINGERPRINT_PROPERTY_NAME);
+    if (fingerprint == null) {
+      return origMessage;
+    }
+    return "[error:" + fingerprint + "] " + origMessage;
   }
 
 }

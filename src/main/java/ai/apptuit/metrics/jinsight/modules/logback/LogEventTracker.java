@@ -26,6 +26,8 @@ import com.codahale.metrics.MetricRegistry;
  */
 public class LogEventTracker {
 
+  public static final String FINGERPRINT_PROPERTY_NAME = "errorFingerprint";
+
   public static final TagEncodedMetricName APPENDS_BASE_NAME = TagEncodedMetricName
       .decode("logger.appends");
   public static final TagEncodedMetricName THROWABLES_BASE_NAME = TagEncodedMetricName

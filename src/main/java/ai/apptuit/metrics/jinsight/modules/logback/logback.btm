@@ -22,3 +22,40 @@ AT EXIT
 IF TRUE
 DO appendersCalled($1)
 ENDRULE
+
+RULE Logback Logger buildLoggingEventAndAppend entry
+CLASS ch.qos.logback.classic.Logger
+METHOD buildLoggingEventAndAppend
+HELPER ai.apptuit.metrics.jinsight.modules.logback.LogbackRuleHelper
+AT ENTRY
+IF TRUE
+DO beforeBuildEvent($6)
+ENDRULE
+
+RULE Logback Logger buildLoggingEventAndAppend exit
+CLASS ch.qos.logback.classic.Logger
+METHOD buildLoggingEventAndAppend
+HELPER ai.apptuit.metrics.jinsight.modules.logback.LogbackRuleHelper
+AT EXIT
+IF TRUE
+DO afterBuildEvent($6)
+ENDRULE
+
+RULE Logback Logger buildLoggingEventAndAppend exception exit
+CLASS ch.qos.logback.classic.Logger
+METHOD buildLoggingEventAndAppend
+HELPER ai.apptuit.metrics.jinsight.modules.logback.LogbackRuleHelper
+AT EXCEPTION EXIT
+IF TRUE
+DO afterBuildEvent($6)
+ENDRULE
+
+RULE Logback MessageConverter convert exit
+CLASS ch.qos.logback.classic.pattern.MessageConverter
+METHOD convert
+HELPER ai.apptuit.metrics.jinsight.modules.logback.LogbackRuleHelper
+AT EXIT
+IF TRUE
+DO return convertMessage($1, $!)
+ENDRULE
+
