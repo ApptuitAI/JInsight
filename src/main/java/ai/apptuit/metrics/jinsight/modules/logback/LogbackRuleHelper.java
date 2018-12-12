@@ -21,7 +21,6 @@ import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.LogLevel;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import org.jboss.byteman.rule.Rule;
-import org.slf4j.MDC;
 
 /**
  * @author Rajiv Shivane
@@ -43,23 +42,17 @@ public class LogbackRuleHelper extends RuleHelper {
     tracker.track(level, (throwableProxy != null), throwable, fingerprint);
   }
 
-  public void beforeBuildEvent(Throwable throwable) {
-    if (throwable == null) {
-      return;
-    }
+  public String beforeBuildEvent(Throwable throwable) {
     ErrorFingerprint fingerprint = ErrorFingerprint.fromThrowable(throwable);
     if (fingerprint != null) {
       CURRENT_FINGERPRINT.set(fingerprint);
-      MDC.put(LogEventTracker.FINGERPRINT_PROPERTY_NAME, fingerprint.getChecksum());
+      return fingerprint.getChecksum();
     }
+    return null;
   }
 
   public void afterBuildEvent(Throwable throwable) {
-    if (throwable == null) {
-      return;
-    }
     CURRENT_FINGERPRINT.remove();
-    MDC.remove(LogEventTracker.FINGERPRINT_PROPERTY_NAME);
   }
 
   public String convertMessage(ILoggingEvent event, String origMessage) {
@@ -69,5 +62,4 @@ public class LogbackRuleHelper extends RuleHelper {
     }
     return "[error:" + fingerprint + "] " + origMessage;
   }
-
 }
