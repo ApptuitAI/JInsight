@@ -44,8 +44,11 @@ import java.util.logging.Logger;
  *
  * @author Rajiv Shivane
  */
-public class ConfigService {
 
+
+public class ConfigService {
+  static final String PROMETHEUS_EXPORTER_PORT = "prometheus_exporter_port";
+  static final String PROMETHEUS_EXPORTER_ENDPOINT = "prometheus_exporter_endpoints";
   static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
   static final String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
   private static final Logger LOGGER = Logger.getLogger(ConfigService.class.getName());
@@ -58,15 +61,18 @@ public class ConfigService {
 
   private static final File JINSIGHT_HOME = new File(System.getProperty("user.home"), ".jinsight");
   private static final File UNIX_JINSIGHT_CONF_DIR = new File("/etc/jinsight/");
-  private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
+  private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.SYS_OUT;
   private static final String DEFAULT_REPORTING_FREQUENCY = "15s";
-
+  private static final String DEFAULT_PROMETHEUS_EXPORTER_PORT = "9404";
+  private static final String DEFAULT_PROMETHEUS_EXPORTER_ENDPOINT = "/metrics";
 
   private static volatile ConfigService singleton = null;
   private final String apiToken;
   private final URL apiUrl;
   private final ReportingMode reportingMode;
   private final long reportingFrequencyMillis;
+  private final int reportingPort;
+  private final String prometheusEndpoint;
   private final Map<String, String> loadedGlobalTags = new HashMap<>();
   private final String agentVersion;
   private Map<String, String> globalTags = null;
@@ -76,10 +82,11 @@ public class ConfigService {
 
     this.reportingMode = readReportingMode(config);
     this.reportingFrequencyMillis = readReportingFrequency(config);
-
+    this.prometheusEndpoint  = readPrometheusEndPoint(config);
+    this.reportingPort = readReportingPort(config);
     if (apiToken == null && reportingMode == ReportingMode.API_PUT) {
       throw new ConfigurationException(
-          "Could not find the property [" + ACCESS_TOKEN_PROPERTY_NAME + "]");
+              "Could not find the property [" + ACCESS_TOKEN_PROPERTY_NAME + "]");
     }
 
     String configUrl = config.getProperty(API_ENDPOINT_PROPERTY_NAME);
@@ -119,7 +126,7 @@ public class ConfigService {
 
     if (singleton != null) {
       throw new IllegalStateException(
-          ConfigService.class.getSimpleName() + " already initialized.");
+              ConfigService.class.getSimpleName() + " already initialized.");
     }
 
     File configFile = getConfigFile();
@@ -128,7 +135,7 @@ public class ConfigService {
       singleton = new ConfigService(config);
     } catch (ConfigurationException e) {
       throw new ConfigurationException("Error loading configuration from the file ["
-          + configFile + "]: " + e.getMessage(), e);
+              + configFile + "]: " + e.getMessage(), e);
     }
   }
 
@@ -139,7 +146,7 @@ public class ConfigService {
       configFile = new File(configFilePath);
       if (!configFile.exists() || !configFile.canRead()) {
         throw new FileNotFoundException("Could not find or read config file: ["
-            + configFile.getAbsolutePath() + "]");
+                + configFile.getAbsolutePath() + "]");
       }
     } else if (canLoadDefaultProperties(UNIX_JINSIGHT_CONF_DIR)) {
       configFile = new File(UNIX_JINSIGHT_CONF_DIR, DEFAULT_CONFIG_FILE_NAME);
@@ -147,8 +154,8 @@ public class ConfigService {
       configFile = new File(JINSIGHT_HOME, DEFAULT_CONFIG_FILE_NAME);
     } else {
       throw new ConfigurationException("Could not find configuration file. "
-          + "Set the path to configuration file using the system property \""
-          + CONFIG_SYSTEM_PROPERTY + "\"");
+              + "Set the path to configuration file using the system property \""
+              + CONFIG_SYSTEM_PROPERTY + "\"");
     }
     return configFile;
   }
@@ -168,16 +175,28 @@ public class ConfigService {
 
   private ReportingMode readReportingMode(Properties config) {
     String configMode = config.getProperty(REPORTING_MODE_PROPERTY_NAME);
-    if (configMode != null) {
+    //As at present cant edit the AgentReporter
+    if (configMode.trim().toUpperCase().equals("PROMETHEUS")){
+      return null;
+    }
+    else if (configMode != null) {
       try {
         return ReportingMode.valueOf(configMode.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
         LOGGER.severe("Un-supported reporting mode [" + configMode + "]. "
-            + "Using default reporting mode: [" + DEFAULT_REPORTING_MODE + "]");
+                + "Using default reporting mode: [" + DEFAULT_REPORTING_MODE + "]");
         LOGGER.log(Level.FINE, e.toString(), e);
       }
     }
     return DEFAULT_REPORTING_MODE;
+  }
+
+  private String readPrometheusEndPoint(Properties config) {
+    String configFreq = config.getProperty(PROMETHEUS_EXPORTER_ENDPOINT);
+    if (configFreq != null) {
+      return configFreq;
+    }
+    return DEFAULT_PROMETHEUS_EXPORTER_ENDPOINT;
   }
 
   private long readReportingFrequency(Properties config) {
@@ -187,11 +206,25 @@ public class ConfigService {
         return parseDuration(configFreq);
       } catch (DateTimeParseException | IllegalArgumentException e) {
         LOGGER.severe("Invalid reporting frequency [" + configFreq + "]. "
-            + "Using default reporting frequency: [" + DEFAULT_REPORTING_FREQUENCY + "]");
+                + "Using default reporting frequency: [" + DEFAULT_REPORTING_FREQUENCY + "]");
         LOGGER.log(Level.FINE, e.toString(), e);
       }
     }
     return parseDuration(DEFAULT_REPORTING_FREQUENCY);
+  }
+
+  private int readReportingPort(Properties config) {
+    String configPort = config.getProperty(PROMETHEUS_EXPORTER_PORT, DEFAULT_PROMETHEUS_EXPORTER_PORT);
+    if (configPort != null) {
+      try {
+        return Integer.parseInt(configPort);
+      } catch (NumberFormatException e) {
+        LOGGER.severe("Invalid port [" + configPort + "]. "
+                + "Using default port: [" + DEFAULT_PROMETHEUS_EXPORTER_PORT + "]");
+        LOGGER.log(Level.FINE, e.toString(), e);
+      }
+    }
+    return Integer.parseInt(DEFAULT_PROMETHEUS_EXPORTER_PORT);
   }
 
   private long parseDuration(String durationString) {
@@ -217,15 +250,16 @@ public class ConfigService {
           }
         }
         throw new ConfigurationException("Error parsing " + GLOBAL_TAGS_PROPERTY_NAME
-            + " property: [" + tvPair + "].\n"
-            + "Expected format: " + GLOBAL_TAGS_PROPERTY_NAME
-            + "=key1:value1,key2:value2,key3:value3");
+                + " property: [" + tvPair + "].\n"
+                + "Expected format: " + GLOBAL_TAGS_PROPERTY_NAME
+                + "=key1:value1,key2:value2,key3:value3");
       }
     }
   }
 
   String getApiToken() {
     return apiToken;
+//      return "";
   }
 
   Map<String, String> getGlobalTags() {
@@ -264,6 +298,14 @@ public class ConfigService {
 
   long getReportingFrequency() {
     return reportingFrequencyMillis;
+  }
+
+  int getReportingPort() {
+    return reportingPort;
+  }
+
+  String getPrometheusExporterEndPoint(){
+    return prometheusEndpoint;
   }
 
   public String getAgentVersion() {
