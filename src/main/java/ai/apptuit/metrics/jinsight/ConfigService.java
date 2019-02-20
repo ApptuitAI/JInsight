@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 public class ConfigService {
 
   static final String PROMETHEUS_EXPORTER_PORT = "prometheus_exporter_port";
-  static final String PROMETHEUS_METRICS_PATH = "prometheus_exporter_endpoints";
+  static final String PROMETHEUS_METRICS_PATH = "prometheus_exporter_endpoint";
   static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
   static final String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
   private static final Logger LOGGER = Logger.getLogger(ConfigService.class.getName());
