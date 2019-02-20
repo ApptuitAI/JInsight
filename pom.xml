@@ -82,7 +82,7 @@ limitations under the License.
     <jacoco.dest.path>${project.build.directory}/jacoco.exec</jacoco.dest.path>
     <jacoco.agent.opts>destfile=${jacoco.dest.path},includes=${jacoco.includes}</jacoco.agent.opts>
 
-    <env.server.ip>jinsight-services</env.server.ip>
+    <env.server.ip>localhost</env.server.ip>
     <env.memcached.addr>${env.server.ip}:11211</env.memcached.addr>
     <env.redis.addr>${env.server.ip}:6379</env.redis.addr>
 

@@ -43,10 +43,11 @@ import java.util.logging.Logger;
  * Provides access to Configuration options
  *
  * @author Rajiv Shivane
- */
+**/
 
 
 public class ConfigService {
+
   static final String PROMETHEUS_EXPORTER_PORT = "prometheus_exporter_port";
   static final String PROMETHEUS_EXPORTER_ENDPOINT = "prometheus_exporter_endpoints";
   static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
@@ -61,7 +62,7 @@ public class ConfigService {
 
   private static final File JINSIGHT_HOME = new File(System.getProperty("user.home"), ".jinsight");
   private static final File UNIX_JINSIGHT_CONF_DIR = new File("/etc/jinsight/");
-  private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.SYS_OUT;
+  private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
   private static final String DEFAULT_REPORTING_FREQUENCY = "15s";
   private static final String DEFAULT_PROMETHEUS_EXPORTER_PORT = "9404";
   private static final String DEFAULT_PROMETHEUS_EXPORTER_ENDPOINT = "/metrics";
@@ -76,10 +77,10 @@ public class ConfigService {
   private final Map<String, String> loadedGlobalTags = new HashMap<>();
   private final String agentVersion;
   private Map<String, String> globalTags = null;
+  private boolean isReportingModePrometheus;
 
   ConfigService(Properties config) throws ConfigurationException {
     this.apiToken = config.getProperty(ACCESS_TOKEN_PROPERTY_NAME);
-
     this.reportingMode = readReportingMode(config);
     this.reportingFrequencyMillis = readReportingFrequency(config);
     this.prometheusEndpoint  = readPrometheusEndPoint(config);
@@ -176,10 +177,11 @@ public class ConfigService {
   private ReportingMode readReportingMode(Properties config) {
     String configMode = config.getProperty(REPORTING_MODE_PROPERTY_NAME);
     //As at present cant edit the AgentReporter
-    if (configMode.trim().toUpperCase().equals("PROMETHEUS")){
+    //AFTER UPDATE comment out this if block and make else block as if block
+    if (configMode != null && configMode.trim().toUpperCase().equals("PROMETHEUS")) {
+      this.isReportingModePrometheus = true;
       return null;
-    }
-    else if (configMode != null) {
+    } else if (configMode != null && !configMode.equals("")) {
       try {
         return ReportingMode.valueOf(configMode.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
@@ -193,7 +195,7 @@ public class ConfigService {
 
   private String readPrometheusEndPoint(Properties config) {
     String configFreq = config.getProperty(PROMETHEUS_EXPORTER_ENDPOINT);
-    if (configFreq != null) {
+    if (configFreq != null && !config.equals("")) {
       return configFreq;
     }
     return DEFAULT_PROMETHEUS_EXPORTER_ENDPOINT;
@@ -201,7 +203,7 @@ public class ConfigService {
 
   private long readReportingFrequency(Properties config) {
     String configFreq = config.getProperty(REPORTING_FREQ_PROPERTY_NAME);
-    if (configFreq != null) {
+    if (configFreq != null && !config.equals("")) {
       try {
         return parseDuration(configFreq);
       } catch (DateTimeParseException | IllegalArgumentException e) {
@@ -214,7 +216,8 @@ public class ConfigService {
   }
 
   private int readReportingPort(Properties config) {
-    String configPort = config.getProperty(PROMETHEUS_EXPORTER_PORT, DEFAULT_PROMETHEUS_EXPORTER_PORT);
+    String configPort = config.getProperty(PROMETHEUS_EXPORTER_PORT,
+            DEFAULT_PROMETHEUS_EXPORTER_PORT);
     if (configPort != null) {
       try {
         return Integer.parseInt(configPort);
@@ -259,16 +262,19 @@ public class ConfigService {
 
   String getApiToken() {
     return apiToken;
-//      return "";
+    //      return "";
   }
 
   Map<String, String> getGlobalTags() {
     if (globalTags != null) {
       return globalTags;
     }
-
     globalTags = Collections.unmodifiableMap(createGlobalTagsMap());
     return globalTags;
+  }
+
+  boolean getisReportingModePrometheus() {
+    return this.isReportingModePrometheus;
   }
 
   private Map<String, String> createGlobalTagsMap() {
@@ -304,7 +310,7 @@ public class ConfigService {
     return reportingPort;
   }
 
-  String getPrometheusExporterEndPoint(){
+  String getPrometheusExporterEndPoint() {
     return prometheusEndpoint;
   }
 
