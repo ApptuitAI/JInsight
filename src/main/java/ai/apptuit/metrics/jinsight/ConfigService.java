@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 public class ConfigService {
 
   static final String PROMETHEUS_EXPORTER_PORT = "prometheus_exporter_port";
-  static final String PROMETHEUS_EXPORTER_ENDPOINT = "prometheus_exporter_endpoints";
+  static final String PROMETHEUS_METRICS_PATH = "prometheus_exporter_endpoints";
   static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
   static final String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
   private static final Logger LOGGER = Logger.getLogger(ConfigService.class.getName());
@@ -65,15 +65,15 @@ public class ConfigService {
   private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
   private static final String DEFAULT_REPORTING_FREQUENCY = "15s";
   private static final String DEFAULT_PROMETHEUS_EXPORTER_PORT = "9404";
-  private static final String DEFAULT_PROMETHEUS_EXPORTER_ENDPOINT = "/metrics";
+  private static final String DEFAULT_PROMETHEUS_METRICS_PATH = "/metrics";
 
   private static volatile ConfigService singleton = null;
   private final String apiToken;
   private final URL apiUrl;
   private final ReportingMode reportingMode;
   private final long reportingFrequencyMillis;
-  private final int reportingPort;
-  private final String prometheusEndpoint;
+  private final int prometheusPort;
+  private final String prometheusMetricsPath;
   private final Map<String, String> loadedGlobalTags = new HashMap<>();
   private final String agentVersion;
   private Map<String, String> globalTags = null;
@@ -83,8 +83,8 @@ public class ConfigService {
     this.apiToken = config.getProperty(ACCESS_TOKEN_PROPERTY_NAME);
     this.reportingMode = readReportingMode(config);
     this.reportingFrequencyMillis = readReportingFrequency(config);
-    this.prometheusEndpoint  = readPrometheusEndPoint(config);
-    this.reportingPort = readReportingPort(config);
+    this.prometheusMetricsPath  = readPrometheusEndPoint(config);
+    this.prometheusPort = readReportingPort(config);
     if (apiToken == null && reportingMode == ReportingMode.API_PUT) {
       throw new ConfigurationException(
               "Could not find the property [" + ACCESS_TOKEN_PROPERTY_NAME + "]");
@@ -180,7 +180,7 @@ public class ConfigService {
   private ReportingMode readReportingMode(Properties config) {
     String configMode = config.getProperty(REPORTING_MODE_PROPERTY_NAME);
     //As at present cant edit the AgentReporter
-    //AFTER UPDATE comment out this if block and make else block as if block
+    //AFTER UPDATE comment out this "if" block and make "else" block as if block
     if (configMode != null && configMode.trim().toUpperCase().equals("PROMETHEUS")) {
       this.isReportingModePrometheus = true;
       return null;
@@ -197,11 +197,11 @@ public class ConfigService {
   }
 
   private String readPrometheusEndPoint(Properties config) {
-    String configFreq = config.getProperty(PROMETHEUS_EXPORTER_ENDPOINT);
+    String configFreq = config.getProperty(PROMETHEUS_METRICS_PATH);
     if (configFreq != null) {
       return configFreq;
     }
-    return DEFAULT_PROMETHEUS_EXPORTER_ENDPOINT;
+    return DEFAULT_PROMETHEUS_METRICS_PATH;
   }
 
   private long readReportingFrequency(Properties config) {
@@ -265,7 +265,6 @@ public class ConfigService {
 
   String getApiToken() {
     return apiToken;
-    //      return "";
   }
 
   Map<String, String> getGlobalTags() {
@@ -276,7 +275,7 @@ public class ConfigService {
     return globalTags;
   }
 
-  boolean getisReportingModePrometheus() {
+  boolean isReportingModePrometheus() {
     return this.isReportingModePrometheus;
   }
 
@@ -310,11 +309,11 @@ public class ConfigService {
   }
 
   int getReportingPort() {
-    return reportingPort;
+    return prometheusPort;
   }
 
   String getPrometheusExporterEndPoint() {
-    return prometheusEndpoint;
+    return prometheusMetricsPath;
   }
 
   public String getAgentVersion() {

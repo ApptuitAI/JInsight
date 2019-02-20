@@ -25,17 +25,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Provides a sample bulder to handle the metric name, labelvalues
- * along with the labelnames in dropwizardName
+ * Extracts Metric names, label values and label names from
+ * dropwizardName and additionalLabels & additionalLabelValues.
+ * dropwizard has format MetricName[labelName1:labelValue1,labelName2:labelValue2.....]
  */
-
-/**
- * Default implementation of {@link SampleBuilder}.
- * Sanitises the metric name if necessary.
- *
- * @see io.prometheus.client.Collector#sanitizeMetricName(String)
- */
-public class TomCatSampleBuilder implements SampleBuilder {
+public class CustomMetricBuilderFromDropWizardName implements SampleBuilder {
   @Override
   public Collector.MetricFamilySamples.Sample createSample(final String dropwizardName,
                                                            final String nameSuffix,
@@ -48,38 +42,18 @@ public class TomCatSampleBuilder implements SampleBuilder {
     final String metric = mn.getMetricName() + suffix;
     List<String> labelNames = new ArrayList<String>();
     List<String> labelValues = new ArrayList<String>();
+    List<String> listForSanitizedNames = new ArrayList<String>();
     labelNames.addAll(mn.getTags().keySet());
     labelNames.addAll(additionalLabelNames);
     labelValues.addAll(mn.getTags().values());
     labelValues.addAll(additionalLabelValues);
+    for (String i: labelNames) {
+      listForSanitizedNames.add(Collector.sanitizeMetricName(i));
+    }
 
-
-    //
-    //        String metricName;
-
-    //        String[] strings = dropwizardName.split("[\\[\\]]");
-    //        final String suffix = nameSuffix == null ? "" : nameSuffix;
-    //        metricName = strings[0] + suffix;
-    //        if(strings.length > 1)
-    //        {
-    //            String[] labelAndValues = strings[1].split("[,]");
-    //            for(String labelAndValue : labelAndValues)
-    //            {
-    //                try{
-    //                    String[] temp = labelAndValue.split("[:]");
-    //                    labelNames.add(temp[0]);
-    //                    labelValues.add(temp[1]);
-    //                }
-    //                catch (ArrayIndexOutOfBoundsException aie)
-    //                {
-    //                    System.out.println(" Labels and label values are not equal");
-    //                    aie.printStackTrace();
-    //                }
-    //            }
-    //        }
     return new Collector.MetricFamilySamples.Sample(
             Collector.sanitizeMetricName(metric),
-            new ArrayList<String>(labelNames),
+            new ArrayList<String>(listForSanitizedNames),
             new ArrayList<String>(labelValues),
             value);
   }

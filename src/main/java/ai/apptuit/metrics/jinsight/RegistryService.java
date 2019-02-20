@@ -52,13 +52,14 @@ public class RegistryService {
     ReportingMode mode = configService.getReportingMode();
     //after update to the AgentReporter use
     //if(mode != ReportingMode.PROMETHEUS)
-    if (!configService.getisReportingModePrometheus()) {
+    if (!configService.isReportingModePrometheus()) {
       ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
               configService.getApiToken(), configService.getApiUrl(), mode);
       reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
       reporter.report();
     } else {
-      DropwizardExports collector = new DropwizardExports(registry, new TomCatSampleBuilder());
+      DropwizardExports collector = new DropwizardExports(
+              registry, new CustomMetricBuilderFromDropWizardName());
       CollectorRegistry.defaultRegistry.register(collector);
       try {
         int port = configService.getReportingPort();
