@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package ai.apptuit.metrics.jinsight;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -26,11 +27,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPOutputStream;
 
-/*
- * helps to create server and remove the unnecessary end points of a port
- */
+
 public class PromHttpServer  extends HTTPServer {
   private CollectorRegistry registry;
 
@@ -40,7 +40,7 @@ public class PromHttpServer  extends HTTPServer {
     }
   }
 
-  class HttpMetricHandler implements HttpHandler {
+  static class HttpMetricHandler implements HttpHandler {
 
     private CollectorRegistry registry;
     private final LocalByteArray response = new LocalByteArray();
@@ -55,7 +55,8 @@ public class PromHttpServer  extends HTTPServer {
 
       ByteArrayOutputStream response = this.response.get();
       response.reset();
-      OutputStreamWriter osw = new OutputStreamWriter(response);
+      OutputStreamWriter osw = new OutputStreamWriter(response, StandardCharsets.UTF_8);
+
       TextFormat.write004(osw,
               registry.filteredMetricFamilySamples(parseQuery(query)));
       osw.flush();
@@ -81,6 +82,10 @@ public class PromHttpServer  extends HTTPServer {
     }
   }
 
+  /**
+   * constructor for the PromHttpServer.
+   */
+
   public PromHttpServer(InetSocketAddress socket,
                         CollectorRegistry registry,
                         boolean deamon) throws IOException {
@@ -90,12 +95,16 @@ public class PromHttpServer  extends HTTPServer {
     this.server.removeContext("/metrics");
   }
 
+  /**
+   * to set the context(endpoint).
+   * @param endPoint it should be a string
+   */
   public void setContext(String endPoint) {
-    HttpHandler mHandler = new HttpMetricHandler(this.registry);
+    HttpHandler mhandler = new HttpMetricHandler(this.registry);
     if (endPoint == null) {
       endPoint = "/metrics"; //default end point
     }
-    this.server.createContext(endPoint, mHandler);
+    this.server.createContext(endPoint, mhandler);
   }
 }
 

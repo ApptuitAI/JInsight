@@ -40,7 +40,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Provides access to Configuration options
+ * Provides access to Configuration options.
  *
  * @author Rajiv Shivane
 **/
@@ -108,6 +108,9 @@ public class ConfigService {
 
   }
 
+  /**
+   *Returns the instance of the configService.
+   */
   public static ConfigService getInstance() {
     if (singleton == null) {
       synchronized (ConfigService.class) {
@@ -195,7 +198,7 @@ public class ConfigService {
 
   private String readPrometheusEndPoint(Properties config) {
     String configFreq = config.getProperty(PROMETHEUS_EXPORTER_ENDPOINT);
-    if (configFreq != null && !config.equals("")) {
+    if (configFreq != null) {
       return configFreq;
     }
     return DEFAULT_PROMETHEUS_EXPORTER_ENDPOINT;
@@ -203,7 +206,7 @@ public class ConfigService {
 
   private long readReportingFrequency(Properties config) {
     String configFreq = config.getProperty(REPORTING_FREQ_PROPERTY_NAME);
-    if (configFreq != null && !config.equals("")) {
+    if (configFreq != null) {
       try {
         return parseDuration(configFreq);
       } catch (DateTimeParseException | IllegalArgumentException e) {
@@ -327,8 +330,8 @@ public class ConfigService {
     }
 
     while (resources != null && resources.hasMoreElements()) {
-      URL manifestURL = resources.nextElement();
-      try (InputStream resource = manifestURL.openStream()) {
+      URL manifestUrl = resources.nextElement();
+      try (InputStream resource = manifestUrl.openStream()) {
         Manifest manifest = new Manifest(resource);
         Attributes mainAttributes = manifest.getMainAttributes();
         if (mainAttributes != null) {
@@ -342,7 +345,7 @@ public class ConfigService {
           }
         }
       } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Error loading manifest from [" + manifestURL + "]", e);
+        LOGGER.log(Level.SEVERE, "Error loading manifest from [" + manifestUrl + "]", e);
       }
 
     }
