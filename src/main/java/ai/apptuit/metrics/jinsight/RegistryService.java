@@ -56,18 +56,17 @@ public class RegistryService {
       ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
               configService.getApiToken(), configService.getApiUrl(), mode);
       reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
-      reporter.report();
     } else {
       DropwizardExports collector = new DropwizardExports(
               registry, new CustomMetricBuilderFromDropWizardName());
       CollectorRegistry.defaultRegistry.register(collector);
       try {
-        int port = configService.getReportingPort();
+        int port = configService.getPrometheusPort();
         InetSocketAddress socket = new InetSocketAddress(port);
 
-        // Review running as deamon
+        // To run server as daemon thread use bool true
         PromHttpServer server = new PromHttpServer(socket, CollectorRegistry.defaultRegistry, true);
-        server.setContext(configService.getPrometheusExporterEndPoint());
+        server.setContext(configService.getprometheusMetricsPath());
       } catch (Exception e) {
         e.printStackTrace();
       }

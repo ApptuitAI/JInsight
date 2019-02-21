@@ -43,9 +43,7 @@ import java.util.logging.Logger;
  * Provides access to Configuration options.
  *
  * @author Rajiv Shivane
-**/
-
-
+ */
 public class ConfigService {
 
   static final String PROMETHEUS_EXPORTER_PORT = "prometheus_exporter_port";
@@ -83,8 +81,8 @@ public class ConfigService {
     this.apiToken = config.getProperty(ACCESS_TOKEN_PROPERTY_NAME);
     this.reportingMode = readReportingMode(config);
     this.reportingFrequencyMillis = readReportingFrequency(config);
-    this.prometheusMetricsPath  = readPrometheusEndPoint(config);
-    this.prometheusPort = readReportingPort(config);
+    this.prometheusMetricsPath  = readPrometheusMetricsPath(config);
+    this.prometheusPort = readPrometheusPort(config);
     if (apiToken == null && reportingMode == ReportingMode.API_PUT) {
       throw new ConfigurationException(
               "Could not find the property [" + ACCESS_TOKEN_PROPERTY_NAME + "]");
@@ -108,9 +106,6 @@ public class ConfigService {
 
   }
 
-  /**
-   *Returns the instance of the configService.
-   */
   public static ConfigService getInstance() {
     if (singleton == null) {
       synchronized (ConfigService.class) {
@@ -196,7 +191,7 @@ public class ConfigService {
     return DEFAULT_REPORTING_MODE;
   }
 
-  private String readPrometheusEndPoint(Properties config) {
+  private String readPrometheusMetricsPath(Properties config) {
     String configFreq = config.getProperty(PROMETHEUS_METRICS_PATH);
     if (configFreq != null) {
       return configFreq;
@@ -218,7 +213,7 @@ public class ConfigService {
     return parseDuration(DEFAULT_REPORTING_FREQUENCY);
   }
 
-  private int readReportingPort(Properties config) {
+  private int readPrometheusPort(Properties config) {
     String configPort = config.getProperty(PROMETHEUS_EXPORTER_PORT,
             DEFAULT_PROMETHEUS_EXPORTER_PORT);
     if (configPort != null) {
@@ -308,11 +303,11 @@ public class ConfigService {
     return reportingFrequencyMillis;
   }
 
-  int getReportingPort() {
+  int getPrometheusPort() {
     return prometheusPort;
   }
 
-  String getPrometheusExporterEndPoint() {
+  String getprometheusMetricsPath() {
     return prometheusMetricsPath;
   }
 
