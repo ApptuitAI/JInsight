@@ -98,13 +98,17 @@ public class PromHttpServer  extends HTTPServer {
   /**
    * to set the context(endpoint).
    * @param endPoint it should be a string
+   * returns the endPoint which is set
    */
-  public void setContext(String endPoint) {
+  public String setContext(String endPoint) {
     HttpHandler mhandler = new HttpMetricHandler(this.registry);
-    if (endPoint == null) {
-      endPoint = "/metrics"; //default end point
+    String tempEndPoint = endPoint;
+
+    if (endPoint == null || endPoint.equals("")) {
+      tempEndPoint = "/metrics"; //default end point
     }
-    this.server.createContext(endPoint, mhandler);
+    this.server.createContext(tempEndPoint, mhandler);
+    return tempEndPoint;
   }
 }
 

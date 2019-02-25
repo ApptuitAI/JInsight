@@ -65,7 +65,7 @@ public class RegistryService {
         InetSocketAddress socket = new InetSocketAddress(port);
 
         // To run server as daemon thread use bool true
-        PromHttpServer server = new PromHttpServer(socket, CollectorRegistry.defaultRegistry, true);
+          PromHttpServer server = new PromHttpServer(socket, CollectorRegistry.defaultRegistry, true);
         server.setContext(configService.getprometheusMetricsPath());
       } catch (Exception e) {
         e.printStackTrace();

@@ -46,10 +46,10 @@ import java.util.logging.Logger;
  */
 public class ConfigService {
 
-  static final String PROMETHEUS_EXPORTER_PORT = "prometheus_exporter_port";
-  static final String PROMETHEUS_METRICS_PATH = "prometheus_exporter_endpoint";
-  static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
-  static final String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
+  static final public String PROMETHEUS_EXPORTER_PORT = "prometheus_exporter_port";
+  static final public String PROMETHEUS_METRICS_PATH = "prometheus_exporter_endpoint";
+  static final public String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
+  static final public String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
   private static final Logger LOGGER = Logger.getLogger(ConfigService.class.getName());
   private static final String CONFIG_SYSTEM_PROPERTY = "jinsight.config";
   private static final String DEFAULT_CONFIG_FILE_NAME = "jinsight-config.properties";
@@ -176,7 +176,7 @@ public class ConfigService {
     String configMode = config.getProperty(REPORTING_MODE_PROPERTY_NAME);
     //As at present cant edit the AgentReporter
     //AFTER UPDATE comment out this "if" block and make "else" block as if block
-    if (configMode != null && configMode.trim().toUpperCase().equals("PROMETHEUS")) {
+    if (configMode != null && configMode.trim().equalsIgnoreCase("PROMETHEUS")) {
       this.isReportingModePrometheus = true;
       return null;
     } else if (configMode != null && !configMode.equals("")) {
@@ -193,7 +193,7 @@ public class ConfigService {
 
   private String readPrometheusMetricsPath(Properties config) {
     String configFreq = config.getProperty(PROMETHEUS_METRICS_PATH);
-    if (configFreq != null) {
+    if (configFreq != null && configFreq.equals("")) {
       return configFreq;
     }
     return DEFAULT_PROMETHEUS_METRICS_PATH;
@@ -216,7 +216,7 @@ public class ConfigService {
   private int readPrometheusPort(Properties config) {
     String configPort = config.getProperty(PROMETHEUS_EXPORTER_PORT,
             DEFAULT_PROMETHEUS_EXPORTER_PORT);
-    if (configPort != null) {
+    if (configPort != null && !configPort.equals("")) {
       try {
         return Integer.parseInt(configPort);
       } catch (NumberFormatException e) {
@@ -295,7 +295,7 @@ public class ConfigService {
     return apiUrl;
   }
 
-  ReportingMode getReportingMode() {
+  public ReportingMode getReportingMode() {
     return reportingMode;
   }
 
@@ -303,11 +303,11 @@ public class ConfigService {
     return reportingFrequencyMillis;
   }
 
-  int getPrometheusPort() {
+  public int getPrometheusPort() {
     return prometheusPort;
   }
 
-  String getprometheusMetricsPath() {
+  public String getprometheusMetricsPath() {
     return prometheusMetricsPath;
   }
 
@@ -322,6 +322,7 @@ public class ConfigService {
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Error locating manifests.", e);
     }
+
 
     while (resources != null && resources.hasMoreElements()) {
       URL manifestUrl = resources.nextElement();
