@@ -16,8 +16,7 @@
 
 package ai.apptuit.metrics.jinsight;
 
-import static ai.apptuit.metrics.jinsight.ConfigService.PROMETHEUS_EXPORTER_PORT;
-import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_MODE_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.*;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -91,6 +90,16 @@ public class PrometheusTest {
     ConfigService configService = new ConfigService(p);
     //default port 9404
     assertEquals("/metrics", configService.getprometheusMetricsPath());
+  }
+
+  @Test
+  public void testGetPrometheusMetricsPath() throws Exception {
+    Properties p = new Properties();
+    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(PROMETHEUS_METRICS_PATH,"/temp");
+    ConfigService configService = new ConfigService(p);
+    //default port 9404
+    assertEquals("/temp", configService.getprometheusMetricsPath());
   }
 
   @Test
