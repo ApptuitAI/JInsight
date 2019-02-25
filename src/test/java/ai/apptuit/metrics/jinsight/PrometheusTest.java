@@ -25,8 +25,11 @@ import static org.mockito.Mockito.*;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import com.codahale.metrics.*;
 
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
+
+import io.prometheus.client.Collector;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,6 +73,16 @@ public class PrometheusTest {
   }
 
   @Test
+  public void testGetPrometheusPortIlligalValue() throws Exception {
+    Properties p = new Properties();
+    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(PROMETHEUS_EXPORTER_PORT, "12aab"); //random string
+    ConfigService configService = new ConfigService(p);
+    //default port 9404
+    assertEquals(9404, configService.getPrometheusPort());
+  }
+
+  @Test
   public void testGetPrometheusMetricsPathDefault() throws Exception {
     Properties p = new Properties();
     p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
@@ -88,4 +101,22 @@ public class PrometheusTest {
     verify(mockFactory,never()).build(any(MetricRegistry.class));
   }
 
+  @Test
+  public void testCustomSampleBuilder() throws Exception {
+    ArrayList<String> e = new ArrayList<>();
+    ArrayList<String> labels = new ArrayList<>();
+    ArrayList<String> values = new ArrayList<>();
+    double b = 2.0;
+    String dropwizardName1 = "sample.metric[label.1:value.1,label.2:value.2]";
+    labels.add("label_1");
+    labels.add("label_2");
+    values.add("value.1");
+    values.add("value.2");
+    e.clear();
+    CustomMetricBuilderFromDropWizardName customSampleBuilder=new CustomMetricBuilderFromDropWizardName();
+    Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1,"",e,e,b);
+    assert sample.name.equals("sample_metric");
+    assert sample.labelNames.equals(labels);
+    assert sample.labelValues.equals(values);
+  }
 }
