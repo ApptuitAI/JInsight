@@ -28,6 +28,8 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 
@@ -40,6 +42,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class RegistryService {
 
+  private static final Logger LOGGER = Logger.getLogger(RegistryService.class.getName());
   private static final RegistryService singleton = new RegistryService();
   private MetricRegistry registry = null;
 
@@ -50,6 +53,7 @@ public class RegistryService {
   RegistryService(ConfigService configService, ApptuitReporterFactory factory) {
     this.registry = new MetricRegistry();
     ReportingMode mode = configService.getReportingMode();
+
     //after update to the AgentReporter use
     //if(mode != ReportingMode.PROMETHEUS)
     if (!configService.isReportingModePrometheus()) {
@@ -57,9 +61,11 @@ public class RegistryService {
               configService.getApiToken(), configService.getApiUrl(), mode);
       reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
     } else {
+
       DropwizardExports collector = new DropwizardExports(
               registry, new CustomMetricBuilderFromDropWizardName());
       CollectorRegistry.defaultRegistry.register(collector);
+
       try {
         int port = configService.getPrometheusPort();
         InetSocketAddress socket = new InetSocketAddress(port);
@@ -68,7 +74,7 @@ public class RegistryService {
           PromHttpServer server = new PromHttpServer(socket, CollectorRegistry.defaultRegistry, true);
         server.setContext(configService.getprometheusMetricsPath());
       } catch (Exception e) {
-        e.printStackTrace();
+        LOGGER.log(Level.SEVERE, "Error while creating http port.", e);
       }
     }
     registry.registerAll(new JvmMetricSet());
