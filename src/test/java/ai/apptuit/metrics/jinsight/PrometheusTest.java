@@ -25,6 +25,8 @@ import static org.mockito.Mockito.*;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import com.codahale.metrics.*;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
@@ -87,7 +89,7 @@ public class PrometheusTest {
     Properties p = new Properties();
     p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
-    //default port 94040
+    //default port 9404
     assertEquals("/metrics", configService.getprometheusMetricsPath());
   }
 
@@ -99,7 +101,31 @@ public class PrometheusTest {
     new RegistryService(configService,mockFactory);
     // if no build is called then it is in else block of the RegistryService i.e, promServer
     verify(mockFactory,never()).build(any(MetricRegistry.class));
+
   }
+
+  @Test
+  public void testPrometheusServer() throws Exception {
+    Properties p = new Properties();
+    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    ConfigService configService = new ConfigService(p);
+    new RegistryService(configService,mockFactory);
+    try {
+      URL url = new URL("http://localhost:9404/metrics");
+      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+      connection.setRequestMethod("GET");
+      connection.connect();
+
+      int code = connection.getResponseCode();
+      assertEquals(code,200);
+    }catch (Exception e)
+    {
+      assert false;
+    }
+    // if server is successfully created then there will not be any exception
+    assert true;
+  }
+
 
   @Test
   public void testCustomSampleBuilder() throws Exception {
