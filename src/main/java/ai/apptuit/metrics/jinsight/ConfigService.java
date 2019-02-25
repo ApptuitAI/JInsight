@@ -270,7 +270,7 @@ public class ConfigService {
     return globalTags;
   }
 
-  boolean isReportingModePrometheus() {
+  public boolean isReportingModePrometheus() {
     return this.isReportingModePrometheus;
   }
 
