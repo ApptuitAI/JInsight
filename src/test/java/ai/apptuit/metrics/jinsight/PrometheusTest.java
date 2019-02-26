@@ -26,7 +26,6 @@ import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import com.codahale.metrics.*;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -210,8 +209,8 @@ public class PrometheusTest {
   public void testCustomSampleBuilderGlobalTag() throws Exception {
     //global_tags=host:junit, testTag1:testValue1, testTag2:testValue2
     ArrayList<String> e = new ArrayList<>();
-    ArrayList<String> labels = new ArrayList<>(Arrays.asList("host", "testTag1", "testTag2", "label_1", "label_2"));
-    ArrayList<String> values = new ArrayList<>(Arrays.asList("junit", "testValue1", "testValue2", "value.1", "value.2"));
+    ArrayList<String> labels = new ArrayList<>(Arrays.asList("label_1", "label_2", "host", "testTag1", "testTag2"));
+    ArrayList<String> values = new ArrayList<>(Arrays.asList("value.1", "value.2", "junit", "testValue1", "testValue2"));
     String dropwizardName1 = "sample.metric[label.1:value.1,label.2:value.2]";
     double b = 2.0;
     e.clear();
@@ -221,4 +220,25 @@ public class PrometheusTest {
     assert sample.labelNames.equals(labels);
     assert sample.labelValues.equals(values);
   }
+
+  @Test
+  public void testCustomSampleBuilderGlobalTagOverlapping() throws Exception {
+    //global_tags=host:junit, testTag1:testValue1, testTag2:testValue2
+    ArrayList<String> e = new ArrayList<>();
+    ArrayList<String> labels = new ArrayList<>(Arrays.asList("host_1", "label_2", "testTag1", "testTag2"));
+    ArrayList<String> values = new ArrayList<>(Arrays.asList("local", "value.2", "testValue1", "testValue2"));
+    String dropwizardName1 = "sample.metric[host.1:local,label.2:value.2]";
+    Map<String, String> globalTags = new HashMap<>();
+    globalTags.put("host_1","JIhost");
+    globalTags.put("testTag1","testValue1");
+    globalTags.put("testTag2","testValue2");
+    double b = 2.0;
+    e.clear();
+    TagDecodingSampleBuilder customSampleBuilder=new TagDecodingSampleBuilder(globalTags);
+    Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1,"",e,e,b);
+    assert sample.name.equals("sample_metric");
+    assert sample.labelNames.equals(labels);
+    assert sample.labelValues.equals(values);
+  }
+
 }

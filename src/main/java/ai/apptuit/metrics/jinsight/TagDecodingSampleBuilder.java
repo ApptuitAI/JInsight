@@ -20,9 +20,8 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import io.prometheus.client.Collector;
 import io.prometheus.client.dropwizard.samplebuilder.SampleBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Array;
+import java.util.*;
 
 /**
  * Extracts Metric names, label values and label names from
@@ -32,9 +31,10 @@ import java.util.Map;
 public class TagDecodingSampleBuilder implements SampleBuilder {
   private final Map<String, String> globalTags;
 
-  public TagDecodingSampleBuilder(Map<String,String> globalTags){
+  public TagDecodingSampleBuilder(Map<String, String> globalTags) {
     this.globalTags = globalTags;
   }
+
   @Override
   public Collector.MetricFamilySamples.Sample createSample(final String dropwizardName,
                                                            final String nameSuffix,
@@ -49,21 +49,14 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
     Map<String, String> tags = mn.getTags();
     int labelCount = tags.size();
 
-    if(globalTags != null)
-            labelCount += globalTags.size();
+    if (globalTags != null)
+      labelCount += globalTags.size();
 
-    if(additionalLabelNames!=null)
-      labelCount+=additionalLabelNames.size();
+    if (additionalLabelNames != null)
+      labelCount += additionalLabelNames.size();
 
-    List<String> labelNames = new ArrayList<>(labelCount);
+    Set<String> labelNames = new LinkedHashSet<>();
     List<String> labelValues = new ArrayList<>(labelCount);
-
-    if (globalTags != null) {
-      for (String tag : globalTags.keySet()) {
-        labelNames.add(Collector.sanitizeMetricName(tag));
-      }
-      labelValues.addAll(globalTags.values());
-    }
 
     for (String tag : tags.keySet()) {
       labelNames.add(Collector.sanitizeMetricName(tag));
@@ -76,11 +69,56 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
       labelNames.addAll(additionalLabelNames);
     }
 
+    if(globalTags != null) {
+      for (Map.Entry<String, String> tag : globalTags.entrySet()) {
+        if (!labelNames.contains(Collector.sanitizeMetricName(tag.getKey()))) {
+          labelNames.add(Collector.sanitizeMetricName(tag.getKey()));
+          labelValues.add(tag.getValue());
+        }
+      }
+    }
+
+
+//    int startIndex = 0;
+//
+//    sanitizeAndAdd(labelNames, tags.keySet().toArray(new String[tags.size()]),
+//            labelValues, tags.values().toArray(new String[tags.size()]), startIndex, false);
+//
+//    startIndex += tags.size();
+//
+//    if (additionalLabelNames != null) {
+//      sanitizeAndAdd(labelNames, additionalLabelNames.toArray(new String[additionalLabelNames.size()]),
+//              labelValues, additionalLabelValues.toArray(new String[additionalLabelNames.size()]), startIndex, false);
+//
+//      startIndex += additionalLabelNames.size();
+//    }
+//
+//    //always add the global tags at the end so that they do not shadow labels in the tags and additional labels
+//    if (globalTags != null) {
+//      sanitizeAndAdd(labelNames, globalTags.keySet().toArray(new String[globalTags.size()]),
+//              labelValues, globalTags.values().toArray(new String[globalTags.size()]), startIndex, true);
+//    }
+
     return new Collector.MetricFamilySamples.Sample(
             Collector.sanitizeMetricName(metric),
-            labelNames,
-            labelValues,
+            new ArrayList<>(labelNames),
+            new ArrayList<>(labelValues),
             value);
   }
+
+  public void sanitizeAndAdd(List<String> labelNames, String[] sourceNames,
+                             List<String> labelValues, String[] sourceValues, int startIndex, boolean isGlobalTag) {
+    int index = 0;
+    int labelsCount = sourceNames.length;
+    for (int labelIndex = index; index < labelsCount; index += 1) {
+      if (!isGlobalTag || !labelNames.contains(sourceNames[index])) {
+        labelNames.add(labelIndex + startIndex, Collector.sanitizeMetricName(sourceNames[index]));
+        labelValues.add(labelIndex + startIndex, sourceValues[index]);
+        labelIndex += 1;
+      }
+    }
+  }
+
 }
+
 
