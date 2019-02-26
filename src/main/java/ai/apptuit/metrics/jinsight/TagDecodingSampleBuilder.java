@@ -21,7 +21,6 @@ import io.prometheus.client.Collector;
 import io.prometheus.client.dropwizard.samplebuilder.SampleBuilder;
 
 import java.util.ArrayList;
-
 import java.util.List;
 
 /**
@@ -29,7 +28,7 @@ import java.util.List;
  * dropwizardName and additionalLabels & additionalLabelValues.
  * dropwizard has format MetricName[labelName1:labelValue1,labelName2:labelValue2.....]
  */
-public class CustomMetricBuilderFromDropWizardName implements SampleBuilder {
+public class TagDecodingSampleBuilder implements SampleBuilder {
   @Override
   public Collector.MetricFamilySamples.Sample createSample(final String dropwizardName,
                                                            final String nameSuffix,
@@ -40,21 +39,21 @@ public class CustomMetricBuilderFromDropWizardName implements SampleBuilder {
     final String suffix = nameSuffix == null ? "" : nameSuffix;
     TagEncodedMetricName mn = TagEncodedMetricName.decode(dropwizardName);
     final String metric = mn.getMetricName() + suffix;
-    List<String> labelNames = new ArrayList<String>();
-    List<String> labelValues = new ArrayList<String>();
-    List<String> listForSanitizedNames = new ArrayList<String>();
+    List<String> labelNames = new ArrayList<>();
+    List<String> labelValues = new ArrayList<>();
+    List<String> listForSanitizedNames = new ArrayList<>();
     labelNames.addAll(mn.getTags().keySet());
     labelNames.addAll(additionalLabelNames);
     labelValues.addAll(mn.getTags().values());
     labelValues.addAll(additionalLabelValues);
-    for (String i: labelNames) {
+    for (String i : labelNames) {
       listForSanitizedNames.add(Collector.sanitizeMetricName(i));
     }
 
     return new Collector.MetricFamilySamples.Sample(
             Collector.sanitizeMetricName(metric),
-            new ArrayList<String>(listForSanitizedNames),
-            new ArrayList<String>(labelValues),
+            new ArrayList<>(listForSanitizedNames),
+            new ArrayList<>(labelValues),
             value);
   }
 }

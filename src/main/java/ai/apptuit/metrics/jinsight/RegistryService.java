@@ -63,7 +63,7 @@ public class RegistryService {
     } else {
 
       DropwizardExports collector = new DropwizardExports(
-              registry, new CustomMetricBuilderFromDropWizardName());
+              registry, new TagDecodingSampleBuilder());
       CollectorRegistry.defaultRegistry.register(collector);
 
       try {

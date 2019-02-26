@@ -18,17 +18,20 @@ package ai.apptuit.metrics.jinsight;
 
 import static ai.apptuit.metrics.jinsight.ConfigService.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import com.codahale.metrics.*;
 
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
+import java.util.zip.GZIPInputStream;
 
 import io.prometheus.client.Collector;
 import org.junit.Before;
@@ -38,6 +41,28 @@ public class PrometheusTest {
   private ApptuitReporterFactory mockFactory;
   private ConfigService mockConfigService;
   private PromHttpServer mockServer;
+
+  public String readInputStream(InputStream inputStream)
+          throws IOException {
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    byte[] buffer = new byte[2048];
+    int length;
+    while ((length = inputStream.read(buffer)) != -1) {
+      byteArrayOutputStream.write(buffer, 0, length);
+    }
+    return byteArrayOutputStream.toString("UTF-8");
+  }
+
+  public String readGzipInputStream(InputStream inputStream) throws IOException{
+    GZIPInputStream gis = new GZIPInputStream(inputStream);
+    byte[] buffer = new byte[2048];
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    int length;
+    while ((length = gis.read(buffer)) != -1) {
+      byteArrayOutputStream.write(buffer, 0, length);
+    }
+    return byteArrayOutputStream.toString("UTF-8");
+  }
   @Before
   public void setUp() throws Exception {
     mockFactory = mock(ApptuitReporterFactory.class);
@@ -126,7 +151,38 @@ public class PrometheusTest {
       connection.connect();
 
       int code = connection.getResponseCode();
+      String upTimeMetricString = "jvm_uptime_millis";
+      String responseString = readInputStream(connection.getInputStream());
       assertEquals(code,200);
+      assertNotEquals(-1, responseString.indexOf(upTimeMetricString));
+    }catch (Exception e)
+    {
+      assert false;
+    }
+    // if server is successfully created then there will not be any exception
+    assert true;
+  }
+
+
+  @Test
+  public void testPrometheusServerGZipRequest() throws Exception {
+    Properties p = new Properties();
+    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    ConfigService configService = new ConfigService(p);
+    new RegistryService(configService,mockFactory);
+    try {
+      URL url = new URL("http://localhost:9404/metrics");
+      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+      connection.setRequestProperty("Accept-Encoding", "gzip");
+      connection.setRequestMethod("GET");
+      connection.connect();
+
+      int code = connection.getResponseCode();
+      String upTimeMetricString = "jvm_uptime_millis";
+      String responseString = readGzipInputStream(connection.getInputStream());
+      //System.out.println(responseString);
+      assertEquals(code,200);
+      assertNotEquals(-1, responseString.indexOf(upTimeMetricString));
     }catch (Exception e)
     {
       assert false;
@@ -148,7 +204,7 @@ public class PrometheusTest {
     values.add("value.1");
     values.add("value.2");
     e.clear();
-    CustomMetricBuilderFromDropWizardName customSampleBuilder=new CustomMetricBuilderFromDropWizardName();
+    TagDecodingSampleBuilder customSampleBuilder=new TagDecodingSampleBuilder();
     Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1,"",e,e,b);
     assert sample.name.equals("sample_metric");
     assert sample.labelNames.equals(labels);
