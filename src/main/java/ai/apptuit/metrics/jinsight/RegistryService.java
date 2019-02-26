@@ -63,7 +63,7 @@ public class RegistryService {
     } else {
 
       DropwizardExports collector = new DropwizardExports(
-              registry, new TagDecodingSampleBuilder());
+              registry, new TagDecodingSampleBuilder(configService.getGlobalTags()));
       CollectorRegistry.defaultRegistry.register(collector);
 
       try {

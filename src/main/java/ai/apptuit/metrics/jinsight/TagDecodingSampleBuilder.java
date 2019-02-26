@@ -30,6 +30,11 @@ import java.util.Map;
  * dropwizard has format MetricName[labelName1:labelValue1,labelName2:labelValue2.....]
  */
 public class TagDecodingSampleBuilder implements SampleBuilder {
+  private final Map<String, String> globalTags;
+
+  public TagDecodingSampleBuilder(Map<String,String> globalTags){
+    this.globalTags = globalTags;
+  }
   @Override
   public Collector.MetricFamilySamples.Sample createSample(final String dropwizardName,
                                                            final String nameSuffix,
@@ -43,18 +48,33 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
 
     Map<String, String> tags = mn.getTags();
     int labelCount = tags.size();
+
+    if(globalTags != null)
+            labelCount += globalTags.size();
+
     if(additionalLabelNames!=null)
       labelCount+=additionalLabelNames.size();
 
     List<String> labelNames = new ArrayList<>(labelCount);
+    List<String> labelValues = new ArrayList<>(labelCount);
+
+    if (globalTags != null) {
+      for (String tag : globalTags.keySet()) {
+        labelNames.add(Collector.sanitizeMetricName(tag));
+      }
+      labelValues.addAll(globalTags.values());
+    }
+
     for (String tag : tags.keySet()) {
       labelNames.add(Collector.sanitizeMetricName(tag));
     }
-    labelNames.addAll(additionalLabelNames);
 
-    List<String> labelValues = new ArrayList<>(labelCount);
     labelValues.addAll(tags.values());
-    labelValues.addAll(additionalLabelValues);
+
+    if(additionalLabelNames != null) {
+      labelValues.addAll(additionalLabelValues);
+      labelNames.addAll(additionalLabelNames);
+    }
 
     return new Collector.MetricFamilySamples.Sample(
             Collector.sanitizeMetricName(metric),

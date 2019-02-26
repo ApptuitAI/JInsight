@@ -26,11 +26,10 @@ import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import com.codahale.metrics.*;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 import io.prometheus.client.Collector;
@@ -193,18 +192,30 @@ public class PrometheusTest {
 
 
   @Test
-  public void testCustomSampleBuilder() throws Exception {
+  public void testCustomSampleBuilderNullGlobalTag() throws Exception {
     ArrayList<String> e = new ArrayList<>();
-    ArrayList<String> labels = new ArrayList<>();
-    ArrayList<String> values = new ArrayList<>();
-    double b = 2.0;
+    ArrayList<String> labels = new ArrayList<>(Arrays.asList("label_1", "label_2"));
+    ArrayList<String> values = new ArrayList<>(Arrays.asList("value.1", "value.2"));
     String dropwizardName1 = "sample.metric[label.1:value.1,label.2:value.2]";
-    labels.add("label_1");
-    labels.add("label_2");
-    values.add("value.1");
-    values.add("value.2");
+    double b = 2.0;
     e.clear();
-    TagDecodingSampleBuilder customSampleBuilder=new TagDecodingSampleBuilder();
+    TagDecodingSampleBuilder customSampleBuilder=new TagDecodingSampleBuilder(null);
+    Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1,"",e,e,b);
+    assert sample.name.equals("sample_metric");
+    assert sample.labelNames.equals(labels);
+    assert sample.labelValues.equals(values);
+  }
+
+  @Test
+  public void testCustomSampleBuilderGlobalTag() throws Exception {
+    //global_tags=host:junit, testTag1:testValue1, testTag2:testValue2
+    ArrayList<String> e = new ArrayList<>();
+    ArrayList<String> labels = new ArrayList<>(Arrays.asList("host", "testTag1", "testTag2", "label_1", "label_2"));
+    ArrayList<String> values = new ArrayList<>(Arrays.asList("junit", "testValue1", "testValue2", "value.1", "value.2"));
+    String dropwizardName1 = "sample.metric[label.1:value.1,label.2:value.2]";
+    double b = 2.0;
+    e.clear();
+    TagDecodingSampleBuilder customSampleBuilder=new TagDecodingSampleBuilder(mockConfigService.getGlobalTags());
     Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1,"",e,e,b);
     assert sample.name.equals("sample_metric");
     assert sample.labelNames.equals(labels);
