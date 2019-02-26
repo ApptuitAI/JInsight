@@ -57,15 +57,13 @@ public class PromHttpServer  extends HTTPServer {
       response.reset();
       OutputStreamWriter osw = new OutputStreamWriter(response, StandardCharsets.UTF_8);
 
-      TextFormat.write004(osw,
-              registry.filteredMetricFamilySamples(parseQuery(query)));
+      TextFormat.write004(osw, registry.filteredMetricFamilySamples(parseQuery(query)));
       osw.flush();
       osw.close();
       response.flush();
       response.close();
 
-      t.getResponseHeaders().set("Content-Type",
-              TextFormat.CONTENT_TYPE_004);
+      t.getResponseHeaders().set("Content-Type", TextFormat.CONTENT_TYPE_004);
       if (shouldUseCompression(t)) {
         t.getResponseHeaders().set("Content-Encoding", "gzip");
         t.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
@@ -73,8 +71,7 @@ public class PromHttpServer  extends HTTPServer {
         response.writeTo(os);
         os.close();
       } else {
-        t.getResponseHeaders().set("Content-Length",
-                String.valueOf(response.size()));
+        t.getResponseHeaders().set("Content-Length", String.valueOf(response.size()));
         t.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.size());
         response.writeTo(t.getResponseBody());
       }

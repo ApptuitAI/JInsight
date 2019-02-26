@@ -192,9 +192,9 @@ public class ConfigService {
   }
 
   private String readPrometheusMetricsPath(Properties config) {
-    String configFreq = config.getProperty(PROMETHEUS_METRICS_PATH);
-    if (configFreq != null && !configFreq.equals("")) {
-      return configFreq;
+    String configPath = config.getProperty(PROMETHEUS_METRICS_PATH);
+    if (configPath != null && !configPath.equals("")) {
+      return configPath;
     }
     return DEFAULT_PROMETHEUS_METRICS_PATH;
   }

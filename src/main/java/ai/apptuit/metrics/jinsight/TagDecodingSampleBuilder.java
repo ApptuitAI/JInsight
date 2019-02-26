@@ -22,6 +22,7 @@ import io.prometheus.client.dropwizard.samplebuilder.SampleBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Extracts Metric names, label values and label names from
@@ -39,21 +40,26 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
     final String suffix = nameSuffix == null ? "" : nameSuffix;
     TagEncodedMetricName mn = TagEncodedMetricName.decode(dropwizardName);
     final String metric = mn.getMetricName() + suffix;
-    List<String> labelNames = new ArrayList<>();
-    List<String> labelValues = new ArrayList<>();
-    List<String> listForSanitizedNames = new ArrayList<>();
-    labelNames.addAll(mn.getTags().keySet());
-    labelNames.addAll(additionalLabelNames);
-    labelValues.addAll(mn.getTags().values());
-    labelValues.addAll(additionalLabelValues);
-    for (String i : labelNames) {
-      listForSanitizedNames.add(Collector.sanitizeMetricName(i));
+
+    Map<String, String> tags = mn.getTags();
+    int labelCount = tags.size();
+    if(additionalLabelNames!=null)
+      labelCount+=additionalLabelNames.size();
+
+    List<String> labelNames = new ArrayList<>(labelCount);
+    for (String tag : tags.keySet()) {
+      labelNames.add(Collector.sanitizeMetricName(tag));
     }
+    labelNames.addAll(additionalLabelNames);
+
+    List<String> labelValues = new ArrayList<>(labelCount);
+    labelValues.addAll(tags.values());
+    labelValues.addAll(additionalLabelValues);
 
     return new Collector.MetricFamilySamples.Sample(
             Collector.sanitizeMetricName(metric),
-            new ArrayList<>(listForSanitizedNames),
-            new ArrayList<>(labelValues),
+            labelNames,
+            labelValues,
             value);
   }
 }
