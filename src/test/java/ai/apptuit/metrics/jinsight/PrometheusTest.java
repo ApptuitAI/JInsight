@@ -68,6 +68,7 @@ public class PrometheusTest {
     mockConfigService = mock(ConfigService.class);
     mockServer = mock(PromHttpServer.class);
     when(mockConfigService.getGlobalTags()).thenReturn(ConfigService.getInstance().getGlobalTags());
+    when(mockConfigService.getReporterType()).thenReturn(ReporterType.PROMETHEUS);
   }
 
   @Test

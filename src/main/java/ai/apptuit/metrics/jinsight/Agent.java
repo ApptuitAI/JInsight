@@ -98,9 +98,16 @@ public class Agent {
     instrumentation.appendToBootstrapClassLoaderSearch(bytemanJar);
     delegate.accept(agentArgs, instrumentation);
     ConfigService configService = ConfigService.getInstance();
-    LOGGER.info("JInsight v[" + configService.getAgentVersion() + "] initialized. "
-        + "Reporting via: [" + configService.getReportingMode() + "] "
-        + "every [" + (configService.getReportingFrequency() / 1000) + "] seconds");
+    String infoMessage = "JInsight v[" + configService.getAgentVersion() + "] initialized with reporter ["
+            + configService.getReporterType() + "]. ";
+    if (configService.getReporterType() == ConfigService.ReporterType.APPTUIT) {
+      infoMessage = infoMessage + "Reporting via: [" + configService.getReportingMode() + "] "
+              + "every [" + (configService.getReportingFrequency() / 1000) + "] seconds";
+    } else if (configService.getReporterType() == ConfigService.ReporterType.PROMETHEUS) {
+      infoMessage = infoMessage + "Using port[ " + configService.getPrometheusPort()
+              + " ] on metrics path [ " + configService.getprometheusMetricsPath() + " ].";
+    }
+    LOGGER.info(infoMessage);
   }
 
   private static JarFile createBytemanJar() {
