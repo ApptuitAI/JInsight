@@ -45,14 +45,12 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
     final String suffix = nameSuffix == null ? "" : nameSuffix;
     TagEncodedMetricName mn = TagEncodedMetricName.decode(dropwizardName);
     final String metric = mn.getMetricName() + suffix;
-
     Map<String, String> tags = mn.getTags();
-    int labelCount = tags.size();
 
+    int labelCount = tags.size();
     if (globalTags != null) {
       labelCount += globalTags.size();
     }
-
     if (additionalLabelNames != null) {
       labelCount += additionalLabelNames.size();
     }
@@ -60,17 +58,17 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
     Set<String> labelNames = new LinkedHashSet<>();
     List<String> labelValues = new ArrayList<>(labelCount);
 
-    for (String tag : tags.keySet()) {
-      labelNames.add(Collector.sanitizeMetricName(tag));
-    }
+    addLabelsIfNotNull(labelNames,tags.keySet(),labelValues,tags.values());
+    addLabelsIfNotNull(labelNames,additionalLabelNames,labelValues,additionalLabelValues);
+    addGlobalTags(labelNames,labelValues);
 
-    labelValues.addAll(tags.values());
-
-    if (additionalLabelNames != null) {
-      labelValues.addAll(additionalLabelValues);
-      labelNames.addAll(additionalLabelNames);
-    }
-
+    return new Collector.MetricFamilySamples.Sample(
+            Collector.sanitizeMetricName(metric),
+            new ArrayList<>(labelNames),
+            labelValues,
+            value);
+  }
+  private void addGlobalTags(Set<String> labelNames, List<String> labelValues) {
     if (globalTags != null) {
       for (Map.Entry<String, String> tag : globalTags.entrySet()) {
         if (!labelNames.contains(Collector.sanitizeMetricName(tag.getKey()))) {
@@ -79,14 +77,17 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
         }
       }
     }
-
-    return new Collector.MetricFamilySamples.Sample(
-            Collector.sanitizeMetricName(metric),
-            new ArrayList<>(labelNames),
-            new ArrayList<>(labelValues),
-            value);
   }
 
+  private void addLabelsIfNotNull(Set<String> labelNames, Collection<String> sourceNames,
+                                  List<String> labelValues, Collection<String> sourceValues) {
+    if (sourceNames != null) {
+      for (String tag : sourceNames) {
+        labelNames.add(Collector.sanitizeMetricName(tag));
+      }
+      labelValues.addAll(sourceValues);
+    }
+  }
 }
 
 
