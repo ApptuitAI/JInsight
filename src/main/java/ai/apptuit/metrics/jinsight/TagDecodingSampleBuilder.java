@@ -20,8 +20,8 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import io.prometheus.client.Collector;
 import io.prometheus.client.dropwizard.samplebuilder.SampleBuilder;
 
-import java.lang.reflect.Array;
 import java.util.*;
+
 
 /**
  * Extracts Metric names, label values and label names from
@@ -49,11 +49,13 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
     Map<String, String> tags = mn.getTags();
     int labelCount = tags.size();
 
-    if (globalTags != null)
+    if (globalTags != null) {
       labelCount += globalTags.size();
+    }
 
-    if (additionalLabelNames != null)
+    if (additionalLabelNames != null) {
       labelCount += additionalLabelNames.size();
+    }
 
     Set<String> labelNames = new LinkedHashSet<>();
     List<String> labelValues = new ArrayList<>(labelCount);
@@ -64,12 +66,12 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
 
     labelValues.addAll(tags.values());
 
-    if(additionalLabelNames != null) {
+    if (additionalLabelNames != null) {
       labelValues.addAll(additionalLabelValues);
       labelNames.addAll(additionalLabelNames);
     }
 
-    if(globalTags != null) {
+    if (globalTags != null) {
       for (Map.Entry<String, String> tag : globalTags.entrySet()) {
         if (!labelNames.contains(Collector.sanitizeMetricName(tag.getKey()))) {
           labelNames.add(Collector.sanitizeMetricName(tag.getKey()));
@@ -105,19 +107,19 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
             new ArrayList<>(labelValues),
             value);
   }
-
-  public void sanitizeAndAdd(List<String> labelNames, String[] sourceNames,
-                             List<String> labelValues, String[] sourceValues, int startIndex, boolean isGlobalTag) {
-    int index = 0;
-    int labelsCount = sourceNames.length;
-    for (int labelIndex = index; index < labelsCount; index += 1) {
-      if (!isGlobalTag || !labelNames.contains(sourceNames[index])) {
-        labelNames.add(labelIndex + startIndex, Collector.sanitizeMetricName(sourceNames[index]));
-        labelValues.add(labelIndex + startIndex, sourceValues[index]);
-        labelIndex += 1;
-      }
-    }
-  }
+//
+//  public void sanitizeAndAdd(List<String> labelNames, String[] sourceNames,
+//                             List<String> labelValues, String[] sourceValues, int startIndex, boolean isGlobalTag) {
+//    int index = 0;
+//    int labelsCount = sourceNames.length;
+//    for (int labelIndex = index; index < labelsCount; index += 1) {
+//      if (!isGlobalTag || !labelNames.contains(sourceNames[index])) {
+//        labelNames.add(labelIndex + startIndex, Collector.sanitizeMetricName(sourceNames[index]));
+//        labelValues.add(labelIndex + startIndex, sourceValues[index]);
+//        labelIndex += 1;
+//      }
+//    }
+//  }
 
 }
 
