@@ -80,46 +80,12 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
       }
     }
 
-
-//    int startIndex = 0;
-//
-//    sanitizeAndAdd(labelNames, tags.keySet().toArray(new String[tags.size()]),
-//            labelValues, tags.values().toArray(new String[tags.size()]), startIndex, false);
-//
-//    startIndex += tags.size();
-//
-//    if (additionalLabelNames != null) {
-//      sanitizeAndAdd(labelNames, additionalLabelNames.toArray(new String[additionalLabelNames.size()]),
-//              labelValues, additionalLabelValues.toArray(new String[additionalLabelNames.size()]), startIndex, false);
-//
-//      startIndex += additionalLabelNames.size();
-//    }
-//
-//    //always add the global tags at the end so that they do not shadow labels in the tags and additional labels
-//    if (globalTags != null) {
-//      sanitizeAndAdd(labelNames, globalTags.keySet().toArray(new String[globalTags.size()]),
-//              labelValues, globalTags.values().toArray(new String[globalTags.size()]), startIndex, true);
-//    }
-
     return new Collector.MetricFamilySamples.Sample(
             Collector.sanitizeMetricName(metric),
             new ArrayList<>(labelNames),
             new ArrayList<>(labelValues),
             value);
   }
-//
-//  public void sanitizeAndAdd(List<String> labelNames, String[] sourceNames,
-//                             List<String> labelValues, String[] sourceValues, int startIndex, boolean isGlobalTag) {
-//    int index = 0;
-//    int labelsCount = sourceNames.length;
-//    for (int labelIndex = index; index < labelsCount; index += 1) {
-//      if (!isGlobalTag || !labelNames.contains(sourceNames[index])) {
-//        labelNames.add(labelIndex + startIndex, Collector.sanitizeMetricName(sourceNames[index]));
-//        labelValues.add(labelIndex + startIndex, sourceValues[index]);
-//        labelIndex += 1;
-//      }
-//    }
-//  }
 
 }
 
