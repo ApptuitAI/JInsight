@@ -26,6 +26,7 @@ import java.util.function.BiConsumer;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.jboss.byteman.agent.Main;
 
 /**
@@ -41,10 +42,10 @@ public class Agent {
   private static final String BYTEMAN_JAR_RESOURCE_NAME = "META-INF/boot/byteman.jar";
   private static final String BTM_SCRIPTS_RESOURCE_PATH = "META-INF/btm-scripts/jinsight.btm";
   private static final String MODULE_LOADER_CLASSNAME =
-      "ai.apptuit.metrics.jinsight.ContextualModuleLoader";
+          "ai.apptuit.metrics.jinsight.ContextualModuleLoader";
 
   private static final String AGENT_PARAMS = "resourcescript:" + BTM_SCRIPTS_RESOURCE_PATH
-      + ",modules:" + MODULE_LOADER_CLASSNAME;
+          + ",modules:" + MODULE_LOADER_CLASSNAME;
 
   public static void premain(String agentArgs, Instrumentation instrumentation) throws Exception {
     main0(agentArgs, instrumentation, (a, i) -> {
@@ -67,10 +68,10 @@ public class Agent {
   }
 
   private static void main0(String agentArgs, Instrumentation instrumentation,
-      BiConsumer<String, Instrumentation> delegate) {
+                            BiConsumer<String, Instrumentation> delegate) {
     if (ClassLoader.getSystemResource(BTM_SCRIPTS_RESOURCE_PATH) == null) {
       LOGGER.severe("Could not load " + BTM_SCRIPTS_RESOURCE_PATH + "."
-          + "Agent will not be started.");
+              + "Agent will not be started.");
       return;
     }
 
@@ -105,7 +106,7 @@ public class Agent {
               + "every [" + (configService.getReportingFrequency() / 1000) + "] seconds";
     } else if (configService.getReporterType() == ConfigService.ReporterType.PROMETHEUS) {
       infoMessage = infoMessage + "Using port[" + configService.getPrometheusPort()
-              + "] on metrics path [" + configService.getprometheusMetricsPath() + "].";
+              + "] on metrics path [" + configService.getPrometheusMetricsPath() + "].";
     }
     LOGGER.info(infoMessage);
   }

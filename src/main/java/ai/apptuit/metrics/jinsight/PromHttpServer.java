@@ -85,8 +85,8 @@ public class PromHttpServer extends HTTPServer {
 
   public PromHttpServer(InetSocketAddress socket,
                         CollectorRegistry registry,
-                        boolean deamon) throws IOException {
-    super(socket, registry, deamon);
+                        boolean daemon) throws IOException {
+    super(socket, registry, daemon);
     this.registry = registry;
     this.server.removeContext("/");
     this.server.removeContext("/metrics");
@@ -99,13 +99,13 @@ public class PromHttpServer extends HTTPServer {
    *                 returns the endPoint which is set
    */
   public String setContext(String endPoint) {
-    HttpHandler mhandler = new HttpMetricHandler(this.registry);
+    HttpHandler mHandler = new HttpMetricHandler(this.registry);
     String tempEndPoint = endPoint;
 
     if (endPoint == null || endPoint.equals("")) {
       tempEndPoint = "/metrics"; //default end point
     }
-    this.server.createContext(tempEndPoint, mhandler);
+    this.server.createContext(tempEndPoint, mHandler);
     return tempEndPoint;
   }
 }

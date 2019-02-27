@@ -70,7 +70,7 @@ public class RegistryService {
 
         // To run server as daemon thread use bool true
         PromHttpServer server = new PromHttpServer(socket, CollectorRegistry.defaultRegistry, true);
-        server.setContext(configService.getprometheusMetricsPath());
+        server.setContext(configService.getPrometheusMetricsPath());
       } catch (Exception e) {
         LOGGER.log(Level.SEVERE, "Error while creating http port.", e);
       }

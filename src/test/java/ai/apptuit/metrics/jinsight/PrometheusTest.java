@@ -114,7 +114,7 @@ public class PrometheusTest {
     p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
     //default port 9404
-    assertEquals("/metrics", configService.getprometheusMetricsPath());
+    assertEquals("/metrics", configService.getPrometheusMetricsPath());
   }
 
   @Test
@@ -124,7 +124,7 @@ public class PrometheusTest {
     p.setProperty(PROMETHEUS_METRICS_PATH, "/temp");
     ConfigService configService = new ConfigService(p);
     //default port 9404
-    assertEquals("/temp", configService.getprometheusMetricsPath());
+    assertEquals("/temp", configService.getPrometheusMetricsPath());
   }
 
   @Test

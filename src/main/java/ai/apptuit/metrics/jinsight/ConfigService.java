@@ -192,8 +192,8 @@ public class ConfigService {
       try {
         return ReporterType.valueOf(configReporter.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
-        LOGGER.severe("Un-supported reporting mode [" + configReporter + "]. "
-                + "Using default reporting mode: [" + DEFAULT_REPORTER_TYPE + "]");
+        LOGGER.severe("Un-supported reporting type [" + configReporter + "]. "
+                + "Using default reporting type: [" + DEFAULT_REPORTER_TYPE + "]");
         LOGGER.log(Level.FINE, e.toString(), e);
       }
     }
@@ -330,7 +330,7 @@ public class ConfigService {
     return prometheusPort;
   }
 
-  public String getprometheusMetricsPath() {
+  public String getPrometheusMetricsPath() {
     return prometheusMetricsPath;
   }
 
