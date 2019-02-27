@@ -66,7 +66,7 @@ public class ConfigService {
   private static final File JINSIGHT_HOME = new File(System.getProperty("user.home"), ".jinsight");
   private static final File UNIX_JINSIGHT_CONF_DIR = new File("/etc/jinsight/");
   private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
-  private static final ReporterType DEFAULT_REPORTER_TYPE = ReporterType.APPTUIT;
+  public static final ReporterType DEFAULT_REPORTER_TYPE = ReporterType.APPTUIT;
   private static final String DEFAULT_REPORTING_FREQUENCY = "15s";
   private static final String DEFAULT_PROMETHEUS_EXPORTER_PORT = "9404";
   private static final String DEFAULT_PROMETHEUS_METRICS_PATH = "/metrics";

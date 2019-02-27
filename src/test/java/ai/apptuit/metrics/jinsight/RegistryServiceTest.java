@@ -28,14 +28,12 @@ import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
-
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,7 +54,7 @@ public class RegistryServiceTest {
     when(mockFactory.build(any(MetricRegistry.class))).thenReturn(mockReporter);
     mockConfigService = mock(ConfigService.class);
     when(mockConfigService.getGlobalTags()).thenReturn(ConfigService.getInstance().getGlobalTags());
-    when(mockConfigService.getReporterType()).thenReturn(ConfigService.ReporterType.APPTUIT);
+    when(mockConfigService.getReporterType()).thenReturn(ConfigService.DEFAULT_REPORTER_TYPE);
   }
 
   @Test

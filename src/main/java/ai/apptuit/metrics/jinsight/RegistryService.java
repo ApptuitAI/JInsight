@@ -59,7 +59,7 @@ public class RegistryService {
       ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
               configService.getApiToken(), configService.getApiUrl(), mode);
       reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
-    } else {
+    } else if (reporterType == ConfigService.ReporterType.PROMETHEUS) {
       DropwizardExports collector = new DropwizardExports(
               registry, new TagDecodingSampleBuilder(configService.getGlobalTags()));
       CollectorRegistry.defaultRegistry.register(collector);
@@ -74,6 +74,8 @@ public class RegistryService {
       } catch (Exception e) {
         LOGGER.log(Level.SEVERE, "Error while creating http port.", e);
       }
+    } else {
+      throw new IllegalStateException();
     }
     registry.registerAll(new JvmMetricSet());
   }

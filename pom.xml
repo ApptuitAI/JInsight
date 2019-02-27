@@ -107,6 +107,7 @@ limitations under the License.
     <jacoco.version>0.8.2</jacoco.version>
     <byteman.version>4.0.5</byteman.version>
     <metrics.version>3.2.6</metrics.version>
+    <prometheus.version>0.6.0</prometheus.version>
     <apptuit.reporter.version>0.7.4</apptuit.reporter.version>
 
     <!-- Acceptance Criteria -->
@@ -129,17 +130,17 @@ limitations under the License.
     <dependency>
       <groupId>io.prometheus</groupId>
       <artifactId>simpleclient_dropwizard</artifactId>
-      <version>0.6.0</version>
+      <version>${prometheus.version}</version>
     </dependency>
     <dependency>
       <groupId>io.prometheus</groupId>
       <artifactId>simpleclient</artifactId>
-      <version>0.6.0</version>
+      <version>${prometheus.version}</version>
     </dependency>
     <dependency>
       <groupId>io.prometheus</groupId>
       <artifactId>simpleclient_httpserver</artifactId>
-      <version>0.6.0</version>
+      <version>${prometheus.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.byteman</groupId>
@@ -425,6 +426,10 @@ limitations under the License.
             <relocation>
               <pattern>org.slf4j</pattern>
               <shadedPattern>ai.apptuit.metrics.jinsight.relo.slf4j</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>io.prometheus</pattern>
+              <shadedPattern>ai.apptuit.metrics.jinsight.relo.prom</shadedPattern>
             </relocation>
             <relocation>
               <pattern>ai.apptuit.metrics.client</pattern>
