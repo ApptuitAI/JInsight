@@ -31,7 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPOutputStream;
 
 
-public class PromHttpServer  extends HTTPServer {
+public class PromHttpServer extends HTTPServer {
   private CollectorRegistry registry;
 
   private static class LocalByteArray extends ThreadLocal<ByteArrayOutputStream> {
@@ -94,8 +94,9 @@ public class PromHttpServer  extends HTTPServer {
 
   /**
    * to set the context(endpoint).
+   *
    * @param endPoint it should be a string
-   * returns the endPoint which is set
+   *                 returns the endPoint which is set
    */
   public String setContext(String endPoint) {
     HttpHandler mhandler = new HttpMetricHandler(this.registry);

@@ -54,6 +54,7 @@ public class RegistryServiceTest {
     when(mockFactory.build(any(MetricRegistry.class))).thenReturn(mockReporter);
     mockConfigService = mock(ConfigService.class);
     when(mockConfigService.getGlobalTags()).thenReturn(ConfigService.getInstance().getGlobalTags());
+    when(mockConfigService.getReporterType()).thenReturn(ConfigService.ReporterType.APPTUIT);
   }
 
   @Test

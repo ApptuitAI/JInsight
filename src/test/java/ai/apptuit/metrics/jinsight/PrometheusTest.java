@@ -51,7 +51,7 @@ public class PrometheusTest {
     return byteArrayOutputStream.toString("UTF-8");
   }
 
-  public String readGzipInputStream(InputStream inputStream) throws IOException{
+  public String readGzipInputStream(InputStream inputStream) throws IOException {
     GZIPInputStream gis = new GZIPInputStream(inputStream);
     byte[] buffer = new byte[2048];
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -61,6 +61,7 @@ public class PrometheusTest {
     }
     return byteArrayOutputStream.toString("UTF-8");
   }
+
   @Before
   public void setUp() throws Exception {
     mockFactory = mock(ApptuitReporterFactory.class);
@@ -72,16 +73,16 @@ public class PrometheusTest {
   @Test
   public void testGetReportingModePrometheus() throws Exception {
     Properties p = new Properties();
-    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
-    assertEquals(null, configService.getReportingMode());
+    assertEquals(ReporterType.PROMETHEUS, configService.getReporterType());
   }
 
   @Test
   public void testGetPrometheusPort() throws Exception {
     Properties p = new Properties();
     int port = new Random().nextInt(1000) + 6000;
-    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     p.setProperty(PROMETHEUS_EXPORTER_PORT, Integer.toString(port));
     ConfigService configService = new ConfigService(p);
     assertEquals(port, configService.getPrometheusPort());
@@ -90,7 +91,7 @@ public class PrometheusTest {
   @Test
   public void testGetPrometheusPortDefault() throws Exception {
     Properties p = new Properties();
-    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
     //default port 9404
     assertEquals(9404, configService.getPrometheusPort());
@@ -99,7 +100,7 @@ public class PrometheusTest {
   @Test
   public void testGetPrometheusPortIlligalValue() throws Exception {
     Properties p = new Properties();
-    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     p.setProperty(PROMETHEUS_EXPORTER_PORT, "12aab"); //random string
     ConfigService configService = new ConfigService(p);
     //default port 9404
@@ -109,7 +110,7 @@ public class PrometheusTest {
   @Test
   public void testGetPrometheusMetricsPathDefault() throws Exception {
     Properties p = new Properties();
-    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
     //default port 9404
     assertEquals("/metrics", configService.getprometheusMetricsPath());
@@ -118,8 +119,8 @@ public class PrometheusTest {
   @Test
   public void testGetPrometheusMetricsPath() throws Exception {
     Properties p = new Properties();
-    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
-    p.setProperty(PROMETHEUS_METRICS_PATH,"/temp");
+    p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(PROMETHEUS_METRICS_PATH, "/temp");
     ConfigService configService = new ConfigService(p);
     //default port 9404
     assertEquals("/temp", configService.getprometheusMetricsPath());
@@ -128,33 +129,32 @@ public class PrometheusTest {
   @Test
   public void testPrometheusServerCall() throws Exception {
     Properties p = new Properties();
-    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
-    new RegistryService(configService,mockFactory);
+    new RegistryService(configService, mockFactory);
     // if no build is called then it is in else block of the RegistryService i.e, promServer
-    verify(mockFactory,never()).build(any(MetricRegistry.class));
+    verify(mockFactory, never()).build(any(MetricRegistry.class));
 
   }
 
   @Test
   public void testPrometheusServer() throws Exception {
     Properties p = new Properties();
-    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
-    new RegistryService(configService,mockFactory);
+    new RegistryService(configService, mockFactory);
     try {
       URL url = new URL("http://localhost:9404/metrics");
-      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod("GET");
       connection.connect();
 
       int code = connection.getResponseCode();
       String upTimeMetricString = "jvm_uptime_millis";
       String responseString = readInputStream(connection.getInputStream());
-      assertEquals(code,200);
+      assertEquals(code, 200);
       assertNotEquals(-1, responseString.indexOf(upTimeMetricString));
-    }catch (Exception e)
-    {
+    } catch (Exception e) {
       assert false;
     }
     // if server is successfully created then there will not be any exception
@@ -165,12 +165,12 @@ public class PrometheusTest {
   @Test
   public void testPrometheusServerGZipRequest() throws Exception {
     Properties p = new Properties();
-    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "PROMETHEUS");
+    p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
-    new RegistryService(configService,mockFactory);
+    new RegistryService(configService, mockFactory);
     try {
       URL url = new URL("http://localhost:9404/metrics");
-      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestProperty("Accept-Encoding", "gzip");
       connection.setRequestMethod("GET");
       connection.connect();
@@ -179,10 +179,9 @@ public class PrometheusTest {
       String upTimeMetricString = "jvm_uptime_millis";
       String responseString = readGzipInputStream(connection.getInputStream());
       //System.out.println(responseString);
-      assertEquals(code,200);
+      assertEquals(code, 200);
       assertNotEquals(-1, responseString.indexOf(upTimeMetricString));
-    }catch (Exception e)
-    {
+    } catch (Exception e) {
       assert false;
     }
     // if server is successfully created then there will not be any exception
@@ -198,8 +197,8 @@ public class PrometheusTest {
     String dropwizardName1 = "sample.metric[label.1:value.1,label.2:value.2]";
     double b = 2.0;
     e.clear();
-    TagDecodingSampleBuilder customSampleBuilder=new TagDecodingSampleBuilder(null);
-    Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1,"",e,e,b);
+    TagDecodingSampleBuilder customSampleBuilder = new TagDecodingSampleBuilder(null);
+    Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1, "", e, e, b);
     assert sample.name.equals("sample_metric");
     assert sample.labelNames.equals(labels);
     assert sample.labelValues.equals(values);
@@ -214,8 +213,8 @@ public class PrometheusTest {
     String dropwizardName1 = "sample.metric[label.1:value.1,label.2:value.2]";
     double b = 2.0;
     e.clear();
-    TagDecodingSampleBuilder customSampleBuilder=new TagDecodingSampleBuilder(mockConfigService.getGlobalTags());
-    Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1,"",e,e,b);
+    TagDecodingSampleBuilder customSampleBuilder = new TagDecodingSampleBuilder(mockConfigService.getGlobalTags());
+    Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1, "", e, e, b);
     assert sample.name.equals("sample_metric");
     assert sample.labelNames.equals(labels);
     assert sample.labelValues.equals(values);
@@ -229,13 +228,13 @@ public class PrometheusTest {
     ArrayList<String> values = new ArrayList<>(Arrays.asList("local", "value.2", "testValue1", "testValue2"));
     String dropwizardName1 = "sample.metric[host.1:local,label.2:value.2]";
     Map<String, String> globalTags = new HashMap<>();
-    globalTags.put("host_1","JIhost");
-    globalTags.put("testTag1","testValue1");
-    globalTags.put("testTag2","testValue2");
+    globalTags.put("host_1", "JIhost");
+    globalTags.put("testTag1", "testValue1");
+    globalTags.put("testTag2", "testValue2");
     double b = 2.0;
     e.clear();
-    TagDecodingSampleBuilder customSampleBuilder=new TagDecodingSampleBuilder(globalTags);
-    Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1,"",e,e,b);
+    TagDecodingSampleBuilder customSampleBuilder = new TagDecodingSampleBuilder(globalTags);
+    Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1, "", e, e, b);
     assert sample.name.equals("sample_metric");
     assert sample.labelNames.equals(labels);
     assert sample.labelValues.equals(values);

@@ -17,6 +17,7 @@
 package ai.apptuit.metrics.jinsight;
 
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,28 +47,36 @@ import java.util.logging.Logger;
  */
 public class ConfigService {
 
-  static final public String PROMETHEUS_EXPORTER_PORT = "prometheus_exporter_port";
-  static final public String PROMETHEUS_METRICS_PATH = "prometheus_exporter_endpoint";
-  static final public String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
-  static final public String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
-  private static final Logger LOGGER = Logger.getLogger(ConfigService.class.getName());
   private static final String CONFIG_SYSTEM_PROPERTY = "jinsight.config";
   private static final String DEFAULT_CONFIG_FILE_NAME = "jinsight-config.properties";
+
+  public static final String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
+  private static final String GLOBAL_TAGS_PROPERTY_NAME = "global_tags";
+  public static final String REPORTER_PROPERTY_NAME = "reporterType";
+
+  public static final String PROMETHEUS_EXPORTER_PORT = "prometheus.exporter_port";
+  public static final String PROMETHEUS_METRICS_PATH = "prometheus.exporter_endpoint";
+
+  public static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
   private static final String ACCESS_TOKEN_PROPERTY_NAME = "apptuit.access_token";
   private static final String API_ENDPOINT_PROPERTY_NAME = "apptuit.api_url";
-  private static final String GLOBAL_TAGS_PROPERTY_NAME = "global_tags";
+
   private static final String HOST_TAG_NAME = "host";
 
   private static final File JINSIGHT_HOME = new File(System.getProperty("user.home"), ".jinsight");
   private static final File UNIX_JINSIGHT_CONF_DIR = new File("/etc/jinsight/");
   private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
+  private static final ReporterType DEFAULT_REPORTER_TYPE = ReporterType.APPTUIT;
   private static final String DEFAULT_REPORTING_FREQUENCY = "15s";
   private static final String DEFAULT_PROMETHEUS_EXPORTER_PORT = "9404";
   private static final String DEFAULT_PROMETHEUS_METRICS_PATH = "/metrics";
 
+  private static final Logger LOGGER = Logger.getLogger(ConfigService.class.getName());
+
   private static volatile ConfigService singleton = null;
   private final String apiToken;
   private final URL apiUrl;
+  private final ReporterType reporterType;
   private final ReportingMode reportingMode;
   private final long reportingFrequencyMillis;
   private final int prometheusPort;
@@ -75,15 +84,20 @@ public class ConfigService {
   private final Map<String, String> loadedGlobalTags = new HashMap<>();
   private final String agentVersion;
   private Map<String, String> globalTags = null;
-  private boolean isReportingModePrometheus;
+
+
+  public enum ReporterType {
+    PROMETHEUS, APPTUIT
+  }
 
   ConfigService(Properties config) throws ConfigurationException {
     this.apiToken = config.getProperty(ACCESS_TOKEN_PROPERTY_NAME);
+    this.reporterType = readReporter(config);
     this.reportingMode = readReportingMode(config);
     this.reportingFrequencyMillis = readReportingFrequency(config);
-    this.prometheusMetricsPath  = readPrometheusMetricsPath(config);
+    this.prometheusMetricsPath = readPrometheusMetricsPath(config);
     this.prometheusPort = readPrometheusPort(config);
-    if (apiToken == null && reportingMode == ReportingMode.API_PUT) {
+    if (this.reporterType == ReporterType.APPTUIT && apiToken == null && reportingMode == ReportingMode.API_PUT) {
       throw new ConfigurationException(
               "Could not find the property [" + ACCESS_TOKEN_PROPERTY_NAME + "]");
     }
@@ -172,14 +186,23 @@ public class ConfigService {
     return config;
   }
 
+  private ReporterType readReporter(Properties config) {
+    String configReporter = config.getProperty(REPORTER_PROPERTY_NAME);
+    if (configReporter != null && !configReporter.equals("")) {
+      try {
+        return ReporterType.valueOf(configReporter.trim().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        LOGGER.severe("Un-supported reporting mode [" + configReporter + "]. "
+                + "Using default reporting mode: [" + DEFAULT_REPORTER_TYPE + "]");
+        LOGGER.log(Level.FINE, e.toString(), e);
+      }
+    }
+    return DEFAULT_REPORTER_TYPE;
+  }
+
   private ReportingMode readReportingMode(Properties config) {
     String configMode = config.getProperty(REPORTING_MODE_PROPERTY_NAME);
-    //As at present cant edit the AgentReporter
-    //AFTER UPDATE comment out this "if" block and make "else" block as if block
-    if (configMode != null && configMode.trim().equalsIgnoreCase("PROMETHEUS")) {
-      this.isReportingModePrometheus = true;
-      return null;
-    } else if (configMode != null && !configMode.equals("")) {
+    if (configMode != null && !configMode.equals("")) {
       try {
         return ReportingMode.valueOf(configMode.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
@@ -270,10 +293,6 @@ public class ConfigService {
     return globalTags;
   }
 
-  public boolean isReportingModePrometheus() {
-    return this.isReportingModePrometheus;
-  }
-
   private Map<String, String> createGlobalTagsMap() {
     Map<String, String> retVal = new HashMap<>(loadedGlobalTags);
 
@@ -293,6 +312,10 @@ public class ConfigService {
 
   URL getApiUrl() {
     return apiUrl;
+  }
+
+  public ReporterType getReporterType() {
+    return reporterType;
   }
 
   public ReportingMode getReportingMode() {

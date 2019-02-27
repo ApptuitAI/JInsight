@@ -24,13 +24,13 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.dropwizard.DropwizardExports;
+
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 
 
 /**
@@ -52,16 +52,14 @@ public class RegistryService {
 
   RegistryService(ConfigService configService, ApptuitReporterFactory factory) {
     this.registry = new MetricRegistry();
-    ReportingMode mode = configService.getReportingMode();
+    ConfigService.ReporterType reporterType = configService.getReporterType();
 
-    //after update to the AgentReporter use
-    //if(mode != ReportingMode.PROMETHEUS)
-    if (!configService.isReportingModePrometheus()) {
+    if (reporterType == ConfigService.ReporterType.APPTUIT) {
+      ReportingMode mode = configService.getReportingMode();
       ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
               configService.getApiToken(), configService.getApiUrl(), mode);
       reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
     } else {
-
       DropwizardExports collector = new DropwizardExports(
               registry, new TagDecodingSampleBuilder(configService.getGlobalTags()));
       CollectorRegistry.defaultRegistry.register(collector);
@@ -71,7 +69,7 @@ public class RegistryService {
         InetSocketAddress socket = new InetSocketAddress(port);
 
         // To run server as daemon thread use bool true
-          PromHttpServer server = new PromHttpServer(socket, CollectorRegistry.defaultRegistry, true);
+        PromHttpServer server = new PromHttpServer(socket, CollectorRegistry.defaultRegistry, true);
         server.setContext(configService.getprometheusMetricsPath());
       } catch (Exception e) {
         LOGGER.log(Level.SEVERE, "Error while creating http port.", e);

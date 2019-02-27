@@ -58,34 +58,32 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
     Set<String> labelNames = new LinkedHashSet<>();
     List<String> labelValues = new ArrayList<>(labelCount);
 
-    addLabelsIfNotNull(labelNames,tags.keySet(),labelValues,tags.values());
-    addLabelsIfNotNull(labelNames,additionalLabelNames,labelValues,additionalLabelValues);
-    addGlobalTags(labelNames,labelValues);
-
+    addLabels(labelNames, labelValues, tags.keySet(), tags.values(), false);
+    addLabels(labelNames, labelValues, additionalLabelNames, additionalLabelValues, false);
+    if (globalTags != null) {
+      addLabels(labelNames, labelValues, globalTags.keySet(), globalTags.values(), true);
+    }
     return new Collector.MetricFamilySamples.Sample(
             Collector.sanitizeMetricName(metric),
             new ArrayList<>(labelNames),
             labelValues,
             value);
   }
-  private void addGlobalTags(Set<String> labelNames, List<String> labelValues) {
-    if (globalTags != null) {
-      for (Map.Entry<String, String> tag : globalTags.entrySet()) {
-        if (!labelNames.contains(Collector.sanitizeMetricName(tag.getKey()))) {
-          labelNames.add(Collector.sanitizeMetricName(tag.getKey()));
-          labelValues.add(tag.getValue());
-        }
-      }
-    }
-  }
 
-  private void addLabelsIfNotNull(Set<String> labelNames, Collection<String> sourceNames,
-                                  List<String> labelValues, Collection<String> sourceValues) {
-    if (sourceNames != null) {
-      for (String tag : sourceNames) {
-        labelNames.add(Collector.sanitizeMetricName(tag));
-      }
-      labelValues.addAll(sourceValues);
+  private void addLabels(Set<String> labelNames, List<String> labelValues, Collection<String> sourceNames,
+                         Collection<String> sourceValues, boolean skipDuplicate) {
+    if (sourceNames == null) {
+      return;
+    }
+
+    Iterator<String> values = sourceValues.iterator();
+    for (String tag : sourceNames) {
+      String value = values.next();
+      String sanitizedName = Collector.sanitizeMetricName(tag);
+      if (skipDuplicate && labelNames.contains(sanitizedName))
+        continue;
+      labelNames.add(sanitizedName);
+      labelValues.add(value);
     }
   }
 }
