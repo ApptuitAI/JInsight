@@ -266,8 +266,7 @@ public class PrometheusTest {
       //as mockConfigService returns null for the getReporterType we should ideally get the IllegalStateException
       assert true;
       return;
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       assert false;
     }
     assert false;
