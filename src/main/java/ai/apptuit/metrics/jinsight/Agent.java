@@ -99,16 +99,22 @@ public class Agent {
     instrumentation.appendToBootstrapClassLoaderSearch(bytemanJar);
     delegate.accept(agentArgs, instrumentation);
     ConfigService configService = ConfigService.getInstance();
-    String infoMessage = "JInsight v[" + configService.getAgentVersion() + "] initialized with reporter ["
-            + configService.getReporterType() + "]. ";
+    LOGGER.info(getStartupMessage(configService));
+  }
+
+  public static String getStartupMessage(ConfigService configService) {
+    String infoMessage = "JInsight v[" + configService.getAgentVersion()
+            + "] initialized with reporter [" + configService.getReporterType() + "]. ";
     if (configService.getReporterType() == ConfigService.ReporterType.APPTUIT) {
       infoMessage = infoMessage + "Reporting via: [" + configService.getReportingMode() + "] "
               + "every [" + (configService.getReportingFrequency() / 1000) + "] seconds";
     } else if (configService.getReporterType() == ConfigService.ReporterType.PROMETHEUS) {
       infoMessage = infoMessage + "Using port[" + configService.getPrometheusPort()
               + "] on metrics path [" + configService.getPrometheusMetricsPath() + "].";
+    } else {
+      throw new IllegalStateException();
     }
-    LOGGER.info(infoMessage);
+    return infoMessage;
   }
 
   private static JarFile createBytemanJar() {

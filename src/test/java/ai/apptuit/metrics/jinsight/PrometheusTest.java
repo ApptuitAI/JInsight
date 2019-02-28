@@ -241,4 +241,54 @@ public class PrometheusTest {
     assert sample.labelValues.equals(values);
   }
 
+  //to test the startup message for Prom And apptuit
+  @Test
+  public void testPrometheusStartUpMessage() throws Exception {
+    Properties p = new Properties();
+    p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
+    ConfigService configService = new ConfigService(p);
+    String actualMessage = Agent.getStartupMessage(configService);
+
+    String expectedMessage = "JInsight v[" + configService.getAgentVersion() + "] initialized with reporter ["
+            + configService.getReporterType() + "]. ";
+    expectedMessage = expectedMessage + "Using port[" + configService.getPrometheusPort()
+            + "] on metrics path [" + configService.getPrometheusMetricsPath() + "].";
+    //System.out.println(actualMessage);
+    assertEquals(expectedMessage, actualMessage);
+  }
+
+  @Test
+  public void testPrometheusStartUpMessageError() throws Exception {
+    when(mockConfigService.getReporterType()).thenReturn(null);
+    try {
+      String actualMessage = Agent.getStartupMessage(mockConfigService);
+    } catch (IllegalStateException e) {
+      //as mockConfigService returns null for the getReporterType we should ideally get the IllegalStateException
+      assert true;
+      return;
+    }
+    catch (Exception e) {
+      assert false;
+    }
+    assert false;
+  }
+
+  //configService readReporterTest
+  @Test
+  public void testGetConfigReadReporterTypeInvalid() throws Exception {
+    Properties p = new Properties();
+    p.setProperty("apptuit.access_token", UUID.randomUUID().toString());
+    p.setProperty(REPORTER_PROPERTY_NAME, "InvalidReporter");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(DEFAULT_REPORTER_TYPE, configService.getReporterType());
+  }
+
+  @Test
+  public void testGetConfigReadReporterTypeEmptyString() throws Exception {
+    Properties p = new Properties();
+    p.setProperty("apptuit.access_token", UUID.randomUUID().toString());
+    p.setProperty(REPORTER_PROPERTY_NAME, "");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(DEFAULT_REPORTER_TYPE, configService.getReporterType());
+  }
 }
