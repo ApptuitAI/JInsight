@@ -17,6 +17,7 @@
 package ai.apptuit.metrics.jinsight;
 
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,46 +41,65 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Provides access to Configuration options
+ * Provides access to Configuration options.
  *
  * @author Rajiv Shivane
  */
 public class ConfigService {
 
-  static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
-  static final String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
-  private static final Logger LOGGER = Logger.getLogger(ConfigService.class.getName());
   private static final String CONFIG_SYSTEM_PROPERTY = "jinsight.config";
   private static final String DEFAULT_CONFIG_FILE_NAME = "jinsight-config.properties";
+
+  public static final String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
+  private static final String GLOBAL_TAGS_PROPERTY_NAME = "global_tags";
+  public static final String REPORTER_PROPERTY_NAME = "reporter";
+
+  public static final String PROMETHEUS_EXPORTER_PORT = "prometheus.exporter_port";
+  public static final String PROMETHEUS_METRICS_PATH = "prometheus.exporter_endpoint";
+
+  public static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
   private static final String ACCESS_TOKEN_PROPERTY_NAME = "apptuit.access_token";
   private static final String API_ENDPOINT_PROPERTY_NAME = "apptuit.api_url";
-  private static final String GLOBAL_TAGS_PROPERTY_NAME = "global_tags";
+
   private static final String HOST_TAG_NAME = "host";
 
   private static final File JINSIGHT_HOME = new File(System.getProperty("user.home"), ".jinsight");
   private static final File UNIX_JINSIGHT_CONF_DIR = new File("/etc/jinsight/");
   private static final ReportingMode DEFAULT_REPORTING_MODE = ReportingMode.API_PUT;
+  public static final ReporterType DEFAULT_REPORTER_TYPE = ReporterType.APPTUIT;
   private static final String DEFAULT_REPORTING_FREQUENCY = "15s";
+  private static final String DEFAULT_PROMETHEUS_EXPORTER_PORT = "9404";
+  private static final String DEFAULT_PROMETHEUS_METRICS_PATH = "/metrics";
 
+  private static final Logger LOGGER = Logger.getLogger(ConfigService.class.getName());
 
   private static volatile ConfigService singleton = null;
   private final String apiToken;
   private final URL apiUrl;
+  private final ReporterType reporterType;
   private final ReportingMode reportingMode;
   private final long reportingFrequencyMillis;
+  private final int prometheusPort;
+  private final String prometheusMetricsPath;
   private final Map<String, String> loadedGlobalTags = new HashMap<>();
   private final String agentVersion;
   private Map<String, String> globalTags = null;
 
+
+  public enum ReporterType {
+    PROMETHEUS, APPTUIT
+  }
+
   ConfigService(Properties config) throws ConfigurationException {
     this.apiToken = config.getProperty(ACCESS_TOKEN_PROPERTY_NAME);
-
+    this.reporterType = readReporter(config);
     this.reportingMode = readReportingMode(config);
     this.reportingFrequencyMillis = readReportingFrequency(config);
-
-    if (apiToken == null && reportingMode == ReportingMode.API_PUT) {
+    this.prometheusMetricsPath = readPrometheusMetricsPath(config);
+    this.prometheusPort = readPrometheusPort(config);
+    if (this.reporterType == ReporterType.APPTUIT && apiToken == null && reportingMode == ReportingMode.API_PUT) {
       throw new ConfigurationException(
-          "Could not find the property [" + ACCESS_TOKEN_PROPERTY_NAME + "]");
+              "Could not find the property [" + ACCESS_TOKEN_PROPERTY_NAME + "]");
     }
 
     String configUrl = config.getProperty(API_ENDPOINT_PROPERTY_NAME);
@@ -119,7 +139,7 @@ public class ConfigService {
 
     if (singleton != null) {
       throw new IllegalStateException(
-          ConfigService.class.getSimpleName() + " already initialized.");
+              ConfigService.class.getSimpleName() + " already initialized.");
     }
 
     File configFile = getConfigFile();
@@ -128,7 +148,7 @@ public class ConfigService {
       singleton = new ConfigService(config);
     } catch (ConfigurationException e) {
       throw new ConfigurationException("Error loading configuration from the file ["
-          + configFile + "]: " + e.getMessage(), e);
+              + configFile + "]: " + e.getMessage(), e);
     }
   }
 
@@ -139,7 +159,7 @@ public class ConfigService {
       configFile = new File(configFilePath);
       if (!configFile.exists() || !configFile.canRead()) {
         throw new FileNotFoundException("Could not find or read config file: ["
-            + configFile.getAbsolutePath() + "]");
+                + configFile.getAbsolutePath() + "]");
       }
     } else if (canLoadDefaultProperties(UNIX_JINSIGHT_CONF_DIR)) {
       configFile = new File(UNIX_JINSIGHT_CONF_DIR, DEFAULT_CONFIG_FILE_NAME);
@@ -147,8 +167,8 @@ public class ConfigService {
       configFile = new File(JINSIGHT_HOME, DEFAULT_CONFIG_FILE_NAME);
     } else {
       throw new ConfigurationException("Could not find configuration file. "
-          + "Set the path to configuration file using the system property \""
-          + CONFIG_SYSTEM_PROPERTY + "\"");
+              + "Set the path to configuration file using the system property \""
+              + CONFIG_SYSTEM_PROPERTY + "\"");
     }
     return configFile;
   }
@@ -166,18 +186,40 @@ public class ConfigService {
     return config;
   }
 
+  private ReporterType readReporter(Properties config) {
+    String configReporter = config.getProperty(REPORTER_PROPERTY_NAME);
+    if (configReporter != null && !configReporter.equals("")) {
+      try {
+        return ReporterType.valueOf(configReporter.trim().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        LOGGER.severe("Un-supported reporting type [" + configReporter + "]. "
+                + "Using default reporting type: [" + DEFAULT_REPORTER_TYPE + "]");
+        LOGGER.log(Level.FINE, e.toString(), e);
+      }
+    }
+    return DEFAULT_REPORTER_TYPE;
+  }
+
   private ReportingMode readReportingMode(Properties config) {
     String configMode = config.getProperty(REPORTING_MODE_PROPERTY_NAME);
-    if (configMode != null) {
+    if (configMode != null && !configMode.equals("")) {
       try {
         return ReportingMode.valueOf(configMode.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
         LOGGER.severe("Un-supported reporting mode [" + configMode + "]. "
-            + "Using default reporting mode: [" + DEFAULT_REPORTING_MODE + "]");
+                + "Using default reporting mode: [" + DEFAULT_REPORTING_MODE + "]");
         LOGGER.log(Level.FINE, e.toString(), e);
       }
     }
     return DEFAULT_REPORTING_MODE;
+  }
+
+  private String readPrometheusMetricsPath(Properties config) {
+    String configPath = config.getProperty(PROMETHEUS_METRICS_PATH);
+    if (configPath != null && !configPath.equals("")) {
+      return configPath;
+    }
+    return DEFAULT_PROMETHEUS_METRICS_PATH;
   }
 
   private long readReportingFrequency(Properties config) {
@@ -187,11 +229,26 @@ public class ConfigService {
         return parseDuration(configFreq);
       } catch (DateTimeParseException | IllegalArgumentException e) {
         LOGGER.severe("Invalid reporting frequency [" + configFreq + "]. "
-            + "Using default reporting frequency: [" + DEFAULT_REPORTING_FREQUENCY + "]");
+                + "Using default reporting frequency: [" + DEFAULT_REPORTING_FREQUENCY + "]");
         LOGGER.log(Level.FINE, e.toString(), e);
       }
     }
     return parseDuration(DEFAULT_REPORTING_FREQUENCY);
+  }
+
+  private int readPrometheusPort(Properties config) {
+    String configPort = config.getProperty(PROMETHEUS_EXPORTER_PORT,
+            DEFAULT_PROMETHEUS_EXPORTER_PORT);
+    if (configPort != null && !configPort.equals("")) {
+      try {
+        return Integer.parseInt(configPort);
+      } catch (NumberFormatException e) {
+        LOGGER.severe("Invalid port [" + configPort + "]. "
+                + "Using default port: [" + DEFAULT_PROMETHEUS_EXPORTER_PORT + "]");
+        LOGGER.log(Level.FINE, e.toString(), e);
+      }
+    }
+    return Integer.parseInt(DEFAULT_PROMETHEUS_EXPORTER_PORT);
   }
 
   private long parseDuration(String durationString) {
@@ -217,9 +274,9 @@ public class ConfigService {
           }
         }
         throw new ConfigurationException("Error parsing " + GLOBAL_TAGS_PROPERTY_NAME
-            + " property: [" + tvPair + "].\n"
-            + "Expected format: " + GLOBAL_TAGS_PROPERTY_NAME
-            + "=key1:value1,key2:value2,key3:value3");
+                + " property: [" + tvPair + "].\n"
+                + "Expected format: " + GLOBAL_TAGS_PROPERTY_NAME
+                + "=key1:value1,key2:value2,key3:value3");
       }
     }
   }
@@ -232,7 +289,6 @@ public class ConfigService {
     if (globalTags != null) {
       return globalTags;
     }
-
     globalTags = Collections.unmodifiableMap(createGlobalTagsMap());
     return globalTags;
   }
@@ -258,12 +314,24 @@ public class ConfigService {
     return apiUrl;
   }
 
-  ReportingMode getReportingMode() {
+  public ReporterType getReporterType() {
+    return reporterType;
+  }
+
+  public ReportingMode getReportingMode() {
     return reportingMode;
   }
 
   long getReportingFrequency() {
     return reportingFrequencyMillis;
+  }
+
+  public int getPrometheusPort() {
+    return prometheusPort;
+  }
+
+  public String getPrometheusMetricsPath() {
+    return prometheusMetricsPath;
   }
 
   public String getAgentVersion() {
@@ -278,9 +346,10 @@ public class ConfigService {
       LOGGER.log(Level.SEVERE, "Error locating manifests.", e);
     }
 
+
     while (resources != null && resources.hasMoreElements()) {
-      URL manifestURL = resources.nextElement();
-      try (InputStream resource = manifestURL.openStream()) {
+      URL manifestUrl = resources.nextElement();
+      try (InputStream resource = manifestUrl.openStream()) {
         Manifest manifest = new Manifest(resource);
         Attributes mainAttributes = manifest.getMainAttributes();
         if (mainAttributes != null) {
@@ -294,7 +363,7 @@ public class ConfigService {
           }
         }
       } catch (IOException e) {
-        LOGGER.log(Level.SEVERE, "Error loading manifest from [" + manifestURL + "]", e);
+        LOGGER.log(Level.SEVERE, "Error loading manifest from [" + manifestUrl + "]", e);
       }
 
     }

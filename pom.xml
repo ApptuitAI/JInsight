@@ -17,8 +17,8 @@ limitations under the License.
 
 -->
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>ai.apptuit</groupId>
@@ -107,6 +107,7 @@ limitations under the License.
     <jacoco.version>0.8.2</jacoco.version>
     <byteman.version>4.0.5</byteman.version>
     <metrics.version>3.2.6</metrics.version>
+    <prometheus.version>0.6.0</prometheus.version>
     <apptuit.reporter.version>0.7.4</apptuit.reporter.version>
 
     <!-- Acceptance Criteria -->
@@ -127,6 +128,21 @@ limitations under the License.
       <version>${apptuit.reporter.version}</version>
     </dependency>
     <dependency>
+      <groupId>io.prometheus</groupId>
+      <artifactId>simpleclient_dropwizard</artifactId>
+      <version>${prometheus.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.prometheus</groupId>
+      <artifactId>simpleclient</artifactId>
+      <version>${prometheus.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.prometheus</groupId>
+      <artifactId>simpleclient_httpserver</artifactId>
+      <version>${prometheus.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.jboss.byteman</groupId>
       <artifactId>byteman</artifactId>
       <version>${byteman.version}</version>
@@ -142,8 +158,6 @@ limitations under the License.
       <artifactId>metrics-jvm</artifactId>
       <version>${metrics.version}</version>
     </dependency>
-
-
     <!--
     BCI Testing related dependencies
     -->
@@ -333,13 +347,13 @@ limitations under the License.
                   <map from="${project.build.outputDirectory}" to=""/>
                 </pathconvert>
                 <concat destfile="${byteman.merge.dir}/jinsight.btm"
-                  force="yes">
+                        force="yes">
                   <fileset dir="${project.basedir}/src">
                     <include name="**/*.btm"/>
                   </fileset>
                 </concat>
                 <java classname="ai.apptuit.metrics.jinsight.modules.common.RuleScriptGenerator"
-                  classpathref="maven.test.classpath" failonerror="true" fork="true">
+                      classpathref="maven.test.classpath" failonerror="true" fork="true">
                   <jvmarg value="-javaagent:${jacoco.rt.jar.path}=${jacoco.agent.opts}"/>
                   <arg value="${byteman.merge.dir}/jinsight.btm"/>
                   <arg line="${ruleset.classes}"/>
@@ -412,6 +426,10 @@ limitations under the License.
             <relocation>
               <pattern>org.slf4j</pattern>
               <shadedPattern>ai.apptuit.metrics.jinsight.relo.slf4j</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>io.prometheus</pattern>
+              <shadedPattern>ai.apptuit.metrics.jinsight.relo.prom</shadedPattern>
             </relocation>
             <relocation>
               <pattern>ai.apptuit.metrics.client</pattern>

@@ -19,11 +19,19 @@ package ai.apptuit.metrics.jinsight;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
+
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
+
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 /**
  * Provides access to the MetricRegistry that is pre-configured to use {@link
@@ -34,6 +42,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class RegistryService {
 
+  private static final Logger LOGGER = Logger.getLogger(RegistryService.class.getName());
   private static final RegistryService singleton = new RegistryService();
   private MetricRegistry registry = null;
 
@@ -42,14 +51,32 @@ public class RegistryService {
   }
 
   RegistryService(ConfigService configService, ApptuitReporterFactory factory) {
-    this.registry = new TracingMetricRegistry();
+    this.registry = new MetricRegistry();
+    ConfigService.ReporterType reporterType = configService.getReporterType();
 
-    ReportingMode mode = configService.getReportingMode();
+    if (reporterType == ConfigService.ReporterType.APPTUIT) {
+      ReportingMode mode = configService.getReportingMode();
+      ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
+              configService.getApiToken(), configService.getApiUrl(), mode);
+      reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
+    } else if (reporterType == ConfigService.ReporterType.PROMETHEUS) {
+      DropwizardExports collector = new DropwizardExports(
+              registry, new TagDecodingSampleBuilder(configService.getGlobalTags()));
+      CollectorRegistry.defaultRegistry.register(collector);
 
-    ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
-        configService.getApiToken(), configService.getApiUrl(), mode);
-    reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
+      try {
+        int port = configService.getPrometheusPort();
+        InetSocketAddress socket = new InetSocketAddress(port);
 
+        // To run server as daemon thread use bool true
+        PromHttpServer server = new PromHttpServer(socket, CollectorRegistry.defaultRegistry, true);
+        server.setContext(configService.getPrometheusMetricsPath());
+      } catch (Exception e) {
+        LOGGER.log(Level.SEVERE, "Error while creating http port.", e);
+      }
+    } else {
+      throw new IllegalStateException();
+    }
     registry.registerAll(new JvmMetricSet());
   }
 
@@ -62,7 +89,9 @@ public class RegistryService {
   }
 
   private ScheduledReporter createReporter(ApptuitReporterFactory factory,
-      Map<String, String> globalTags, String apiToken, URL apiUrl, ReportingMode reportingMode) {
+                                           Map<String, String> globalTags,
+                                           String apiToken, URL apiUrl,
+                                           ReportingMode reportingMode) {
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
     globalTags.forEach(factory::addGlobalTag);
