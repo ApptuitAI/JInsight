@@ -52,7 +52,7 @@ public class ConfigService {
 
   public static final String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
   private static final String GLOBAL_TAGS_PROPERTY_NAME = "global_tags";
-  public static final String REPORTER_PROPERTY_NAME = "reporterType";
+  public static final String REPORTER_PROPERTY_NAME = "reporter";
 
   public static final String PROMETHEUS_EXPORTER_PORT = "prometheus.exporter_port";
   public static final String PROMETHEUS_METRICS_PATH = "prometheus.exporter_endpoint";
