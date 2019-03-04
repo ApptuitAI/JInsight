@@ -21,6 +21,7 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.RatioGauge;
+
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryPoolMXBean;
@@ -61,34 +62,34 @@ class MemoryUsageMetrics implements MetricSet {
     final Map<String, Metric> gauges = new HashMap<>();
 
     gauges.put("total.init.bytes", (Gauge<Long>) () ->
-        mxBean.getHeapMemoryUsage().getInit() + mxBean.getNonHeapMemoryUsage().getInit()
+            mxBean.getHeapMemoryUsage().getInit() + mxBean.getNonHeapMemoryUsage().getInit()
     );
 
     gauges.put("total.used.bytes", (Gauge<Long>) () ->
-        mxBean.getHeapMemoryUsage().getUsed() + mxBean.getNonHeapMemoryUsage().getUsed()
+            mxBean.getHeapMemoryUsage().getUsed() + mxBean.getNonHeapMemoryUsage().getUsed()
     );
 
     gauges.put("total.max.bytes", (Gauge<Long>) () ->
-        mxBean.getHeapMemoryUsage().getMax() + mxBean.getNonHeapMemoryUsage().getMax()
+            mxBean.getHeapMemoryUsage().getMax() + mxBean.getNonHeapMemoryUsage().getMax()
     );
 
     gauges.put("total.committed.bytes", (Gauge<Long>) () ->
-        mxBean.getHeapMemoryUsage().getCommitted() + mxBean.getNonHeapMemoryUsage().getCommitted()
+            mxBean.getHeapMemoryUsage().getCommitted() + mxBean.getNonHeapMemoryUsage().getCommitted()
     );
 
-    gauges.put(getMetricName("init.bytes", "type", "heap"),
-        (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getInit());
+    gauges.put(getMetricName("init.bytes", "area", "heap"),
+            (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getInit());
 
-    gauges.put(getMetricName("used.bytes", "type", "heap"),
-        (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getUsed());
+    gauges.put(getMetricName("used.bytes", "area", "heap"),
+            (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getUsed());
 
-    gauges.put(getMetricName("max.bytes", "type", "heap"),
-        (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getMax());
+    gauges.put(getMetricName("max.bytes", "area", "heap"),
+            (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getMax());
 
-    gauges.put(getMetricName("committed.bytes", "type", "heap"),
-        (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getCommitted());
+    gauges.put(getMetricName("committed.bytes", "area", "heap"),
+            (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getCommitted());
 
-    gauges.put(getMetricName("usage", "type", "heap"), new RatioGauge() {
+    gauges.put(getMetricName("usage", "area", "heap"), new RatioGauge() {
       @Override
       protected Ratio getRatio() {
         final MemoryUsage usage = mxBean.getHeapMemoryUsage();
@@ -96,19 +97,19 @@ class MemoryUsageMetrics implements MetricSet {
       }
     });
 
-    gauges.put(getMetricName("init.bytes", "type", "non-heap"),
-        (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getInit());
+    gauges.put(getMetricName("init.bytes", "area", "non-heap"),
+            (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getInit());
 
-    gauges.put(getMetricName("used.bytes", "type", "non-heap"),
-        (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getUsed());
+    gauges.put(getMetricName("used.bytes", "area", "non-heap"),
+            (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getUsed());
 
-    gauges.put(getMetricName("max.bytes", "type", "non-heap"),
-        (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getMax());
+    gauges.put(getMetricName("max.bytes", "area", "non-heap"),
+            (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getMax());
 
-    gauges.put(getMetricName("committed.bytes", "type", "non-heap"),
-        (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getCommitted());
+    gauges.put(getMetricName("committed.bytes", "area", "non-heap"),
+            (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getCommitted());
 
-    gauges.put(getMetricName("usage", "type", "non-heap"), new RatioGauge() {
+    gauges.put(getMetricName("usage", "area", "non-heap"), new RatioGauge() {
       @Override
       protected Ratio getRatio() {
         final MemoryUsage usage = mxBean.getNonHeapMemoryUsage();
@@ -122,37 +123,37 @@ class MemoryUsageMetrics implements MetricSet {
       String generation = getPoolGeneration(pool.getName());
       String[] poolNameTags;
       if (generation != null) {
-        poolNameTags = new String[]{"type", generation, "name", poolName};
+        poolNameTags = new String[]{"pool", generation, "name", poolName};
       } else {
-        poolNameTags = new String[]{"type", poolName};
+        poolNameTags = new String[]{"pool", poolName};
       }
-      gauges.put(getMetricName("pools.usage", poolNameTags),
-          new RatioGauge() {
-            @Override
-            protected Ratio getRatio() {
-              MemoryUsage usage = pool.getUsage();
-              return Ratio.of(usage.getUsed(),
-                  usage.getMax() == -1 ? usage.getCommitted() : usage.getMax());
-            }
-          });
+      gauges.put(getMetricName("pool.usage", poolNameTags),
+              new RatioGauge() {
+                @Override
+                protected Ratio getRatio() {
+                  MemoryUsage usage = pool.getUsage();
+                  return Ratio.of(usage.getUsed(),
+                          usage.getMax() == -1 ? usage.getCommitted() : usage.getMax());
+                }
+              });
 
-      gauges.put(getMetricName("pools.max.bytes", poolNameTags),
-          (Gauge<Long>) () -> pool.getUsage().getMax());
+      gauges.put(getMetricName("pool.max.bytes", poolNameTags),
+              (Gauge<Long>) () -> pool.getUsage().getMax());
 
-      gauges.put(getMetricName("pools.used.bytes", poolNameTags),
-          (Gauge<Long>) () -> pool.getUsage().getUsed());
+      gauges.put(getMetricName("pool.used.bytes", poolNameTags),
+              (Gauge<Long>) () -> pool.getUsage().getUsed());
 
-      gauges.put(getMetricName("pools.committed.bytes", poolNameTags),
-          (Gauge<Long>) () -> pool.getUsage().getCommitted());
+      gauges.put(getMetricName("pool.committed.bytes", poolNameTags),
+              (Gauge<Long>) () -> pool.getUsage().getCommitted());
 
       // Only register GC usage metrics if the memory pool supports usage statistics.
       if (pool.getCollectionUsage() != null) {
-        gauges.put(getMetricName("pools.used-after-gc.bytes", poolNameTags),
-            (Gauge<Long>) () -> pool.getCollectionUsage().getUsed());
+        gauges.put(getMetricName("pool.used-after-gc.bytes", poolNameTags),
+                (Gauge<Long>) () -> pool.getCollectionUsage().getUsed());
       }
 
-      gauges.put(getMetricName("pools.init.bytes", poolNameTags),
-          (Gauge<Long>) () -> pool.getUsage().getInit());
+      gauges.put(getMetricName("pool.init.bytes", poolNameTags),
+              (Gauge<Long>) () -> pool.getUsage().getInit());
     }
 
     return Collections.unmodifiableMap(gauges);

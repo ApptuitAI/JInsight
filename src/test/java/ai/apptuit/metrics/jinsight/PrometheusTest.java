@@ -151,7 +151,7 @@ public class PrometheusTest {
       connection.connect();
 
       int code = connection.getResponseCode();
-      String upTimeMetricString = "jvm_uptime_millis";
+      String upTimeMetricString = "jvm_uptime_seconds";
       String responseString = readInputStream(connection.getInputStream());
       assertEquals(code, 200);
       assertNotEquals(-1, responseString.indexOf(upTimeMetricString));
@@ -177,7 +177,7 @@ public class PrometheusTest {
       connection.connect();
 
       int code = connection.getResponseCode();
-      String upTimeMetricString = "jvm_uptime_millis";
+      String upTimeMetricString = "jvm_uptime_seconds";
       String responseString = readGzipInputStream(connection.getInputStream());
       //System.out.println(responseString);
       assertEquals(code, 200);

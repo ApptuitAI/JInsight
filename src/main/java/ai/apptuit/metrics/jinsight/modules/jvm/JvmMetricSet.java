@@ -26,6 +26,7 @@ import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.jvm.ClassLoadingGaugeSet;
+
 import java.io.IOException;
 import java.lang.management.RuntimeMXBean;
 import java.util.Collections;
@@ -45,17 +46,17 @@ public class JvmMetricSet implements MetricSet {
   private final Map<String, Metric> metrics = new HashMap<>();
 
   public JvmMetricSet() {
-    registerSet("jvm.buffers", new BufferPoolMetrics());
-    registerSet("jvm.classloading", new ClassLoadingGaugeSet());
+    registerSet("jvm.buffer_pool", new BufferPoolMetrics());
+    registerSet("jvm.classes", new ClassLoadingGaugeSet());
     registerSet("jvm.fd", new FileDescriptorMetrics());
     registerSet("jvm.gc", new GarbageCollectorMetrics());
     registerSet("jvm.memory", new MemoryUsageMetrics());
-    registerSet("jvm.thread", new ThreadStateMetrics());
+    registerSet("jvm.threads", new ThreadStateMetrics());
 
-    metrics.put("jvm.uptime.millis", new UptimeGauge());
+    metrics.put("jvm.uptime.seconds", new UptimeGauge());
 
     try {
-      metrics.put("jvm.process.cpu.nanos", new ProcessCpuTicksGauge());
+      metrics.put("jvm.process.cpu.seconds", new ProcessCpuTicksGauge());
     } catch (ClassNotFoundException | IOException e) {
       LOGGER.log(Level.SEVERE, "Error fetching process CPU usage metrics.", e);
     }
@@ -77,17 +78,18 @@ public class JvmMetricSet implements MetricSet {
     return MetricRegistry.name(prefix, key).toLowerCase().replace('-', '_');
   }
 
-  private static class UptimeGauge implements Gauge<Long> {
+  private static class UptimeGauge implements Gauge<Double> {
 
     private final RuntimeMXBean rtMxBean = getRuntimeMXBean();
 
     @Override
-    public Long getValue() {
-      return rtMxBean.getUptime();
+    public Double getValue() {
+      // converting millis into seconds
+      return rtMxBean.getUptime() / 1000.0;
     }
   }
 
-  private static class ProcessCpuTicksGauge implements Gauge<Long> {
+  private static class ProcessCpuTicksGauge implements Gauge<Double> {
 
     private final com.sun.management.OperatingSystemMXBean osMxBean;
 
@@ -97,13 +99,14 @@ public class JvmMetricSet implements MetricSet {
       Class.forName("com.sun.management.OperatingSystemMXBean");
 
       osMxBean = newPlatformMXBeanProxy(mbsc, OPERATING_SYSTEM_MXBEAN_NAME,
-          com.sun.management.OperatingSystemMXBean.class);
+              com.sun.management.OperatingSystemMXBean.class);
 
     }
 
     @Override
-    public Long getValue() {
-      return osMxBean.getProcessCpuTime();
+    public Double getValue() {
+      //converting nanoseconds into seconds
+      return osMxBean.getProcessCpuTime() / 1000000000.0;
     }
   }
 }
