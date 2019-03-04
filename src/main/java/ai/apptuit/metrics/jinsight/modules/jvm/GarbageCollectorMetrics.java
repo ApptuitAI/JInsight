@@ -115,7 +115,7 @@ class GarbageCollectorMetrics implements MetricSet {
     }
 
     public Double getCollectionTime() {
-      // returning time in seconds
+      // converting time in millis to seconds
       return delegate.getCollectionTime() / 1000.0;
     }
 
