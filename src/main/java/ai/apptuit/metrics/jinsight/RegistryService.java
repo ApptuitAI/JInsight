@@ -60,7 +60,7 @@ public class RegistryService {
               configService.getApiToken(), configService.getApiUrl(), mode);
       reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
     } else if (reporterType == ConfigService.ReporterType.PROMETHEUS) {
-      DropwizardExports collector = new DropwizardExports(
+      DropwizardExports collector = new ApptuitDropwizardExports(
               registry, new TagDecodingSampleBuilder(configService.getGlobalTags()));
       CollectorRegistry.defaultRegistry.register(collector);
 
