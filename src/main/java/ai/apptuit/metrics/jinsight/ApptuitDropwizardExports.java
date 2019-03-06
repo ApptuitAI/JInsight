@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017 Agilx, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package ai.apptuit.metrics.jinsight;
 
 import com.codahale.metrics.*;
@@ -7,17 +23,21 @@ import io.prometheus.client.dropwizard.samplebuilder.SampleBuilder;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ApptuitDropwizardExports extends  DropwizardExports {
+public class ApptuitDropwizardExports extends io.prometheus.client.Collector implements io.prometheus.client.Collector.Describable{
   private static final Logger LOGGER = Logger.getLogger(ApptuitDropwizardExports.class.getName());
+//  private MetricRegistry superRegistry;
   private MetricRegistry registry;
   private SampleBuilder sampleBuilder;
 
   public ApptuitDropwizardExports(MetricRegistry registry, SampleBuilder builder) {
-    super(registry, builder);
+//    super(registry, builder);
+//    this.superRegistry = registry;
     this.registry = registry;
     this.sampleBuilder = builder;
+
   }
 
   private static String getHelpMessage(String metricName, Metric metric) {
@@ -25,18 +45,18 @@ public class ApptuitDropwizardExports extends  DropwizardExports {
             metricName, metric.getClass().getName());
   }
 
-  MetricFamilySamples fromSnapshotAndCount(String dropwizardName, Snapshot snapshot, long count, double factor, String helpMessage) {
+  private MetricFamilySamples fromSnapshotAndCount(String dropwizardName, Snapshot snapshot, long count, double factor, String helpMessage) {
     List<MetricFamilySamples.Sample> samples = Arrays.asList(
-            sampleBuilder.createSample(dropwizardName, "duration_min", null, null, snapshot.getMin()),
-            sampleBuilder.createSample(dropwizardName, "duration_max", null, null, snapshot.getMax()),
-            sampleBuilder.createSample(dropwizardName, "duration_mean", null, null, snapshot.getMean()),
-            sampleBuilder.createSample(dropwizardName, "duration_stddev", null, null, snapshot.getStdDev()),
-            sampleBuilder.createSample(dropwizardName, "duration", Arrays.asList("quantile"), Arrays.asList("p50"), snapshot.getMedian() * factor),
-            sampleBuilder.createSample(dropwizardName, "duration", Arrays.asList("quantile"), Arrays.asList("p75"), snapshot.get75thPercentile() * factor),
-            sampleBuilder.createSample(dropwizardName, "duration", Arrays.asList("quantile"), Arrays.asList("p95"), snapshot.get95thPercentile() * factor),
-            sampleBuilder.createSample(dropwizardName, "duration", Arrays.asList("quantile"), Arrays.asList("p98"), snapshot.get98thPercentile() * factor),
-            sampleBuilder.createSample(dropwizardName, "duration", Arrays.asList("quantile"), Arrays.asList("p99"), snapshot.get99thPercentile() * factor),
-            sampleBuilder.createSample(dropwizardName, "duration", Arrays.asList("quantile"), Arrays.asList("p999"), snapshot.get999thPercentile() * factor),
+            sampleBuilder.createSample(dropwizardName, "_duration_min", null, null, snapshot.getMin()),
+            sampleBuilder.createSample(dropwizardName, "_duration_max", null, null, snapshot.getMax()),
+            sampleBuilder.createSample(dropwizardName, "_duration_mean", null, null, snapshot.getMean()),
+            sampleBuilder.createSample(dropwizardName, "_duration_stddev", null, null, snapshot.getStdDev()),
+            sampleBuilder.createSample(dropwizardName, "_duration", Arrays.asList("quantile"), Arrays.asList("p50"), snapshot.getMedian() * factor),
+            sampleBuilder.createSample(dropwizardName, "_duration", Arrays.asList("quantile"), Arrays.asList("p75"), snapshot.get75thPercentile() * factor),
+            sampleBuilder.createSample(dropwizardName, "_duration", Arrays.asList("quantile"), Arrays.asList("p95"), snapshot.get95thPercentile() * factor),
+            sampleBuilder.createSample(dropwizardName, "_duration", Arrays.asList("quantile"), Arrays.asList("p98"), snapshot.get98thPercentile() * factor),
+            sampleBuilder.createSample(dropwizardName, "_duration", Arrays.asList("quantile"), Arrays.asList("p99"), snapshot.get99thPercentile() * factor),
+            sampleBuilder.createSample(dropwizardName, "_duration", Arrays.asList("quantile"), Arrays.asList("p999"), snapshot.get999thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, "_count", new ArrayList<String>(), new ArrayList<String>(), count)
     );
     return new MetricFamilySamples(samples.get(0).name, Type.SUMMARY, helpMessage, samples);
@@ -47,11 +67,37 @@ public class ApptuitDropwizardExports extends  DropwizardExports {
             getHelpMessage(dropwizardName, histogram));
   }
 
+  private MetricFamilySamples fromCounter(String dropwizardName, Counter counter) {
+    MetricFamilySamples.Sample sample = sampleBuilder.createSample(dropwizardName, "", new ArrayList<String>(), new ArrayList<String>(),
+            Long.valueOf(counter.getCount()).doubleValue());
+    return new MetricFamilySamples(sample.name, Type.GAUGE, getHelpMessage(dropwizardName, counter), Arrays.asList(sample));
+  }
+
+  /**
+   * Export gauge as a prometheus gauge.
+   */
+  private MetricFamilySamples fromGauge(String dropwizardName, Gauge gauge) {
+    Object obj = gauge.getValue();
+    double value;
+    if (obj instanceof Number) {
+      value = ((Number) obj).doubleValue();
+    } else if (obj instanceof Boolean) {
+      value = ((Boolean) obj) ? 1 : 0;
+    } else {
+      LOGGER.log(Level.FINE, String.format("Invalid type for Gauge %s: %s", sanitizeMetricName(dropwizardName),
+              obj == null ? "null" : obj.getClass().getName()));
+      return null;
+    }
+    MetricFamilySamples.Sample sample = sampleBuilder.createSample(dropwizardName, "",
+            new ArrayList<String>(), new ArrayList<String>(), value);
+    return new MetricFamilySamples(sample.name, Type.GAUGE, getHelpMessage(dropwizardName, gauge), Arrays.asList(sample));
+  }
+
   private MetricFamilySamples fromMeter(String dropwizardName, Meter meter) {
     List<MetricFamilySamples.Sample> samples = Arrays.asList(
-            sampleBuilder.createSample(dropwizardName, "rate", Arrays.asList("window"), Arrays.asList("1min"), meter.getOneMinuteRate()),
-            sampleBuilder.createSample(dropwizardName, "rate", Arrays.asList("window"), Arrays.asList("5min"), meter.getFiveMinuteRate()),
-            sampleBuilder.createSample(dropwizardName, "rate", Arrays.asList("window"), Arrays.asList("15min"), meter.getFifteenMinuteRate())
+            sampleBuilder.createSample(dropwizardName, "_rate", Arrays.asList("window"), Arrays.asList("1min"), meter.getOneMinuteRate()),
+            sampleBuilder.createSample(dropwizardName, "_rate", Arrays.asList("window"), Arrays.asList("5min"), meter.getFiveMinuteRate()),
+            sampleBuilder.createSample(dropwizardName, "_rate", Arrays.asList("window"), Arrays.asList("15min"), meter.getFifteenMinuteRate())
     );
     return new MetricFamilySamples(samples.get(0).name, Type.SUMMARY, getHelpMessage(dropwizardName, meter), samples);
   }
@@ -63,6 +109,7 @@ public class ApptuitDropwizardExports extends  DropwizardExports {
 
   @Override
   public List<MetricFamilySamples> collect() {
+
     Map<String, MetricFamilySamples> mfSamplesMap = new HashMap<String, MetricFamilySamples>();
 
     for (SortedMap.Entry<String, Histogram> entry : registry.getHistograms().entrySet()) {
@@ -74,10 +121,15 @@ public class ApptuitDropwizardExports extends  DropwizardExports {
     for (SortedMap.Entry<String, Meter> entry : registry.getMeters().entrySet()) {
       addToMap(mfSamplesMap, fromMeter(entry.getKey(), entry.getValue()));
     }
-    registry.removeMatching(CustomMetricFilter.FILTER);
-    ArrayList<MetricFamilySamples> samplesList = new ArrayList<>(mfSamplesMap.values());
-    samplesList.addAll(super.collect());
-    return samplesList;
+    for (SortedMap.Entry<String, Gauge> entry : registry.getGauges().entrySet()) {
+      addToMap(mfSamplesMap, fromGauge(entry.getKey(), entry.getValue()));
+    }
+    for (SortedMap.Entry<String, Counter> entry : registry.getCounters().entrySet()) {
+      addToMap(mfSamplesMap, fromCounter(entry.getKey(), entry.getValue()));
+    }
+//    this.superRegistry.removeMatching(CustomMetricFilter.FILTER);
+    return new ArrayList<>(mfSamplesMap.values());
+//    samplesList.addAll(super.collect());
   }
 
   private void addToMap(Map<String, MetricFamilySamples> mfSamplesMap, MetricFamilySamples newMfSamples) {
@@ -100,5 +152,10 @@ public class ApptuitDropwizardExports extends  DropwizardExports {
         return (metric.getClass() == Histogram.class || metric.getClass() == Timer.class || metric.getClass() == Meter.class);
       }
     };
+  }
+
+  @Override
+  public List<MetricFamilySamples> describe() {
+    return new ArrayList<MetricFamilySamples>();
   }
 }
