@@ -16,7 +16,6 @@
 
 package ai.apptuit.metrics.jinsight;
 
-import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 
