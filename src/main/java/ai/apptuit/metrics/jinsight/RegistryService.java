@@ -24,6 +24,7 @@ import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
 
 import java.net.InetSocketAddress;
 import java.net.URL;

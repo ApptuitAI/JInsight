@@ -89,7 +89,8 @@ public class ApptuitDropwizardExportsTests {
     Collector.MetricFamilySamples.Sample[] samples = {
             new Collector.MetricFamilySamples.Sample("meter_rate", Arrays.asList("window"), Arrays.asList("1min"), meter.getOneMinuteRate()),
             new Collector.MetricFamilySamples.Sample("meter_rate", Arrays.asList("window"), Arrays.asList("5min"), meter.getFiveMinuteRate()),
-            new Collector.MetricFamilySamples.Sample("meter_rate", Arrays.asList("window"), Arrays.asList("15min"), meter.getFifteenMinuteRate())
+            new Collector.MetricFamilySamples.Sample("meter_rate", Arrays.asList("window"), Arrays.asList("15min"), meter.getFifteenMinuteRate()),
+            new Collector.MetricFamilySamples.Sample("meter_total", new ArrayList<>(), new ArrayList<>(), meter.getCount())
     };
     Collector.MetricFamilySamples samplesFromExporter = exporter.collect().get(0);
     for (Collector.MetricFamilySamples.Sample sample : samples) {

@@ -108,7 +108,8 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
             sampleBuilder.createSample(dropwizardName, "_rate",
                     Arrays.asList("window"), Arrays.asList("5min"), meter.getFiveMinuteRate()),
             sampleBuilder.createSample(dropwizardName, "_rate",
-                    Arrays.asList("window"), Arrays.asList("15min"), meter.getFifteenMinuteRate())
+                    Arrays.asList("window"), Arrays.asList("15min"), meter.getFifteenMinuteRate()),
+            sampleBuilder.createSample(dropwizardName,"_total", new ArrayList<String>(), new ArrayList<String>(), meter.getCount())
     );
     return new MetricFamilySamples(samples.get(0).name, Type.SUMMARY, getHelpMessage(dropwizardName, meter), samples);
   }
