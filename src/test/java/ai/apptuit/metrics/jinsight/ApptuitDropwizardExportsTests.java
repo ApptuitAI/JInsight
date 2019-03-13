@@ -15,8 +15,8 @@
  */
 package ai.apptuit.metrics.jinsight;
 
-import com.codahale.metrics.*;
 import com.codahale.metrics.Timer;
+import com.codahale.metrics.*;
 import io.prometheus.client.Collector;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.dropwizard.samplebuilder.SampleBuilder;
@@ -25,7 +25,12 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 import static org.junit.Assert.assertEquals;
@@ -62,10 +67,10 @@ public class ApptuitDropwizardExportsTests {
     }
     Snapshot snapshot = hist.getSnapshot();
     Collector.MetricFamilySamples.Sample[] samples = {
-            new Collector.MetricFamilySamples.Sample("hist_duration_min", Collections.<String>emptyList(), Collections.<String>emptyList(), snapshot.getMin()),
-            new Collector.MetricFamilySamples.Sample("hist_duration_max", Collections.<String>emptyList(), Collections.<String>emptyList(), snapshot.getMax()),
-            new Collector.MetricFamilySamples.Sample("hist_duration_mean", Collections.<String>emptyList(), Collections.<String>emptyList(), snapshot.getMean()),
-            new Collector.MetricFamilySamples.Sample("hist_duration_stddev", Collections.<String>emptyList(), Collections.<String>emptyList(), snapshot.getStdDev()),
+            new Collector.MetricFamilySamples.Sample("hist_min", Collections.<String>emptyList(), Collections.<String>emptyList(), snapshot.getMin()),
+            new Collector.MetricFamilySamples.Sample("hist_max", Collections.<String>emptyList(), Collections.<String>emptyList(), snapshot.getMax()),
+            new Collector.MetricFamilySamples.Sample("hist_mean", Collections.<String>emptyList(), Collections.<String>emptyList(), snapshot.getMean()),
+            new Collector.MetricFamilySamples.Sample("hist_stddev", Collections.<String>emptyList(), Collections.<String>emptyList(), snapshot.getStdDev()),
             new Collector.MetricFamilySamples.Sample("hist_count", Collections.<String>emptyList(), Collections.<String>emptyList(), hist.getCount()),
     };
     Collector.MetricFamilySamples samplesFromExporter = exporter.collect().get(0);
@@ -87,9 +92,9 @@ public class ApptuitDropwizardExportsTests {
       i += 1;
     }
     Collector.MetricFamilySamples.Sample[] samples = {
-            new Collector.MetricFamilySamples.Sample("meter_rate", Arrays.asList("window"), Arrays.asList("1min"), meter.getOneMinuteRate()),
-            new Collector.MetricFamilySamples.Sample("meter_rate", Arrays.asList("window"), Arrays.asList("5min"), meter.getFiveMinuteRate()),
-            new Collector.MetricFamilySamples.Sample("meter_rate", Arrays.asList("window"), Arrays.asList("15min"), meter.getFifteenMinuteRate()),
+            new Collector.MetricFamilySamples.Sample("meter_rate", Arrays.asList("window"), Arrays.asList("1m"), meter.getOneMinuteRate()),
+            new Collector.MetricFamilySamples.Sample("meter_rate", Arrays.asList("window"), Arrays.asList("5m"), meter.getFiveMinuteRate()),
+            new Collector.MetricFamilySamples.Sample("meter_rate", Arrays.asList("window"), Arrays.asList("15m"), meter.getFifteenMinuteRate()),
             new Collector.MetricFamilySamples.Sample("meter_total", new ArrayList<>(), new ArrayList<>(), meter.getCount())
     };
     Collector.MetricFamilySamples samplesFromExporter = exporter.collect().get(0);

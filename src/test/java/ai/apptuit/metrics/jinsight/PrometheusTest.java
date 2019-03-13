@@ -16,28 +16,57 @@
 
 package ai.apptuit.metrics.jinsight;
 
-import static ai.apptuit.metrics.jinsight.ConfigService.*;
+import ai.apptuit.metrics.client.DataPoint;
+import ai.apptuit.metrics.dropwizard.ApptuitReporter;
+import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
+import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.ScheduledReporter;
+import io.prometheus.client.Collector;
+import io.prometheus.client.dropwizard.DropwizardExports;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.HttpURLConnection;
+import java.net.SocketException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
+
+//import static ai.apptuit.metrics.jinsight.ConfigService.;
+import static ai.apptuit.metrics.jinsight.ConfigService.ReporterType;
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTER_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.PROMETHEUS_EXPORTER_PORT;
+import static ai.apptuit.metrics.jinsight.ConfigService.PROMETHEUS_METRICS_PATH;
+import static ai.apptuit.metrics.jinsight.ConfigService.DEFAULT_REPORTER_TYPE;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-
-import ai.apptuit.metrics.client.DataPoint;
-import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
-import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
-import com.codahale.metrics.*;
-
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
-
-import io.prometheus.client.Collector;
-import io.prometheus.client.CollectorRegistry;
-import org.junit.Before;
-import org.junit.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class PrometheusTest {
   private ApptuitReporterFactory mockFactory;
@@ -300,46 +329,89 @@ public class PrometheusTest {
   public void testPrometheusAndApptuitAreIdentical() throws Exception {
 
     final MetricRegistry metricRegistry = new MetricRegistry();
-    final CollectorRegistry registry = new CollectorRegistry();
 
-    ApptuitDropwizardExports exporter = new ApptuitDropwizardExports(metricRegistry, new TagDecodingSampleBuilder(null));
+    TagEncodedMetricName gaugeName = TagEncodedMetricName.decode("test.metric.gauge").withTags("env", "test");
+    TagEncodedMetricName counterName = TagEncodedMetricName.decode("test.metric.counter").withTags("env", "test");
+    TagEncodedMetricName meterName = TagEncodedMetricName.decode("test.metric.meter").withTags("env", "test");
+    TagEncodedMetricName histName = TagEncodedMetricName.decode("test.metric.histogram").withTags("env", "test");
+    TagEncodedMetricName timerName = TagEncodedMetricName.decode("test.metric.timer").withTags("env", "test");
 
-    metricRegistry.registerAll(new JvmMetricSet());
+    metricRegistry.register(gaugeName.toString(), (Gauge<Integer>) () -> 120);
 
-    List<Collector.MetricFamilySamples> samples = exporter.collect();
+    Counter counter = metricRegistry.counter(counterName.toString());
+    counter.inc();
 
-    Set<String> promNames = new HashSet<>();
+    metricRegistry.meter(meterName.toString()).mark();
 
-    for (Collector.MetricFamilySamples sample : samples) {
-      for (Collector.MetricFamilySamples.Sample sample_metric : sample.samples) {
-        promNames.add(sample_metric.name);
-      }
-    }
+    Histogram histogram = metricRegistry.histogram(histName.toString());
+    histogram.update(10);
+
+    Timer timer = metricRegistry.timer(timerName.toString());
+    timer.update(20, TimeUnit.MILLISECONDS);
+
+
+    TagDecodingSampleBuilder builder = new TagDecodingSampleBuilder(null);
+    ApptuitDropwizardExports exporter = new ApptuitDropwizardExports(metricRegistry, builder);
+    Set<TagEncodedMetricName> promDatapoints = getTagEncodedMetricNames(exporter);
+
+    Set<TagEncodedMetricName> origPromDatapoints = getTagEncodedMetricNames(new DropwizardExports(metricRegistry, builder));
+    System.out.println(origPromDatapoints);
+
 
     MockServer mockServer = new MockServer();
     mockServer.start();
-    Properties p = new Properties();
-    p.setProperty(REPORTING_MODE_PROPERTY_NAME, "XCOLLECTOR");
-    p.setProperty("apptuit.sanitizer", "PROMETHEUS_SANITZER");
 
-    ConfigService configService = new ConfigService(p);
-    new RegistryService(configService,new ApptuitReporterFactory());
+    ApptuitReporterFactory factory = new ApptuitReporterFactory();
+    factory.setReportingMode(ApptuitReporter.ReportingMode.XCOLLECTOR);
+    ScheduledReporter reporter = factory.build(metricRegistry);
+    reporter.start(15, TimeUnit.SECONDS);
 
     await().atMost(50, TimeUnit.SECONDS).until(() -> mockServer.countReceivedDPs() >= 30);
+
     DataPoint[] dataPoints = mockServer.getReceivedDPs();
     mockServer.stop();
 
-    Set<String> apptuitNames = new HashSet<>();
+    HashSet<TagEncodedMetricName> apptuitTimeseries = new HashSet<>();
+    Map<String, String> tags;
+
 
     for (DataPoint dataPoint : dataPoints) {
-      String metricName = dataPoint.getMetric();
-      if (!metricName.startsWith("apptuit_reporter")) {
-        apptuitNames.add(metricName);
+      String apptuitName = dataPoint.getMetric();
+
+      if (!apptuitName.startsWith("apptuit_reporter")) {
+        tags = dataPoint.getTags();
+        TagEncodedMetricName metric = TagEncodedMetricName.decode(apptuitName).withTags(tags);
+        apptuitTimeseries.add(metric);
       }
     }
+    System.out.println(apptuitTimeseries);
 
-    assertEquals(apptuitNames, promNames);
-    assert true;
+    assertEquals(apptuitTimeseries, promDatapoints);
+
+  }
+
+  private Set<TagEncodedMetricName> getTagEncodedMetricNames(Collector exporter) {
+    List<Collector.MetricFamilySamples> samples = exporter.collect();
+
+    Set<TagEncodedMetricName> promDatapoints = new HashSet<>();
+    List<String> tempLabels, tempValues;
+
+    for (Collector.MetricFamilySamples sample : samples) {
+      for (Collector.MetricFamilySamples.Sample sample_metric : sample.samples) {
+//        public DataPoint(String metricName, long epoch, Number value, Map<String, String> tags) {
+        Map<String, String> tags = new HashMap<>();
+        String promName = sample_metric.name;
+        tempLabels = sample_metric.labelNames;
+        tempValues = sample_metric.labelValues;
+
+        for (int i = 0; i < tempLabels.size(); i++) {
+          tags.put(tempLabels.get(i), tempValues.get(i));
+        }
+        TagEncodedMetricName metric = TagEncodedMetricName.decode(promName).withTags(tags);
+        promDatapoints.add(metric);
+      }
+    }
+    return promDatapoints;
   }
 
   private static class MockServer {
@@ -407,7 +479,7 @@ public class PrometheusTest {
 
       private Map<String, String> getTags(String[] fields) {
         Map<String, String> retVal = new HashMap<>();
-        for (int i = 3; i < fields.length ; i ++) {
+        for (int i = 3; i < fields.length; i++) {
           String[] tag = fields[i].split("=");
           retVal.put(tag[0], tag[1]);
         }
