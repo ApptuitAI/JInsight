@@ -33,6 +33,7 @@ import java.util.Map;
  */
 class BufferPoolMetrics implements MetricSet {
 
+  public static final String POOL = "pool";
   private final List<BufferPoolMXBean> pools;
 
   public BufferPoolMetrics() {
@@ -41,15 +42,15 @@ class BufferPoolMetrics implements MetricSet {
 
   @Override
   public Map<String, Metric> getMetrics() {
-    final Map<String, Metric> gauges = new HashMap<String, Metric>();
+    final Map<String, Metric> gauges = new HashMap<>();
 
     for (BufferPoolMXBean pool : pools) {
       final String poolName = pool.getName();
-      gauges.put(getMetricName("capacity.bytes", "pool", poolName),
+      gauges.put(getMetricName("capacity.bytes", POOL, poolName),
               (Gauge<Long>) pool::getTotalCapacity);
-      gauges.put(getMetricName("count", "pool", poolName),
+      gauges.put(getMetricName("count", POOL, poolName),
               (Gauge<Long>) pool::getCount);
-      gauges.put(getMetricName("used.bytes", "pool", poolName),
+      gauges.put(getMetricName("used.bytes", POOL, poolName),
               (Gauge<Long>) pool::getMemoryUsed);
     }
 

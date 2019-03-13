@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 
 /**
  * Provides access to the MetricRegistry that is pre-configured to use {@link
- * ai.apptuit.metrics.dropwizard}. Rest the Agent runtime classes use this registry
+ * ai.apptuit.metrics.dropwizard.ApptuitReporter}. Rest the Agent runtime classes use this registry
  * to create metrics.
  *
  * @author Rajiv Shivane
