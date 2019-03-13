@@ -31,9 +31,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ApptuitDropwizardExportsTests {
 
@@ -75,7 +77,7 @@ public class ApptuitDropwizardExportsTests {
     };
     Collector.MetricFamilySamples samplesFromExporter = exporter.collect().get(0);
     for (Collector.MetricFamilySamples.Sample sample : samples) {
-      assert (samplesFromExporter.samples.contains(sample));
+      assertTrue(samplesFromExporter.samples.contains(sample));
     }
   }
 
@@ -99,7 +101,7 @@ public class ApptuitDropwizardExportsTests {
     };
     Collector.MetricFamilySamples samplesFromExporter = exporter.collect().get(0);
     for (Collector.MetricFamilySamples.Sample sample : samples) {
-      assert (samplesFromExporter.samples.contains(sample));
+      assertTrue(samplesFromExporter.samples.contains(sample));
     }
   }
 
@@ -168,12 +170,10 @@ public class ApptuitDropwizardExportsTests {
     ApptuitDropwizardExports exporter = new ApptuitDropwizardExports(metricRegistry, new TagDecodingSampleBuilder(null)).register(registry);
 
     Timer t = metricRegistry.timer("timer");
-    Timer.Context time = t.time();
-    Thread.sleep(1L);
-    time.stop();
+    t.update(1, TimeUnit.MILLISECONDS);
     List<Collector.MetricFamilySamples.Sample> samplesFromExporter = exporter.collect().get(0).samples;
-    // p999
-    assert (samplesFromExporter.get(samplesFromExporter.size() - 2).value > 0.001);
+
+    assertTrue(samplesFromExporter.get(samplesFromExporter.size() - 2).value >= 0.001);
     //count
     assertEquals(0, Double.compare(1.0D, samplesFromExporter.get(samplesFromExporter.size() - 1).value));
   }

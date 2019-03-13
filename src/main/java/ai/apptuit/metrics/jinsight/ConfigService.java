@@ -192,22 +192,22 @@ public class ConfigService {
     String configSanitizer = config.getProperty("apptuit.sanitizer");
     if (configSanitizer != null && !configSanitizer.equals("")) {
       try {
-        if (configSanitizer.trim().equalsIgnoreCase("PROMETHEUS_SANITZER")) {
-          return Sanitizer.PROMETHEUS_SANITZER;
-        } else if (configSanitizer.trim().equalsIgnoreCase("APPTUIT_SANITZER")) {
-          return Sanitizer.APPTUIT_SANITZER;
-        } else if (configSanitizer.trim().equalsIgnoreCase("NO_OP_SANITZER")) {
-          return Sanitizer.NO_OP_SANITZER;
+        if (configSanitizer.trim().equalsIgnoreCase("PROMETHEUS_SANITIZER")) {
+          return Sanitizer.PROMETHEUS_SANITIZER;
+        } else if (configSanitizer.trim().equalsIgnoreCase("APPTUIT_SANITIZER")) {
+          return Sanitizer.APPTUIT_SANITIZER;
+        } else if (configSanitizer.trim().equalsIgnoreCase("NO_OP_SANITIZER")) {
+          return Sanitizer.NO_OP_SANITIZER;
         } else {
           throw new IllegalArgumentException();
         }
       } catch (IllegalArgumentException e) {
         LOGGER.severe("Un-supported sanitization type [" + configSanitizer + "]. "
-                + "Using default sanitization type: [" + Sanitizer.NO_OP_SANITZER + "]");
+                + "Using default sanitization type: [" + Sanitizer.DEFAULT_SANITIZER + "]");
         LOGGER.log(Level.FINE, e.toString(), e);
       }
     }
-    return Sanitizer.NO_OP_SANITZER;
+    return Sanitizer.DEFAULT_SANITIZER;
   }
 
   private ReporterType readReporter(Properties config) {

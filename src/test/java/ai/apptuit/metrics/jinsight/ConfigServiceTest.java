@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import java.net.URL;
 import java.util.Collections;
@@ -48,6 +49,45 @@ public class ConfigServiceTest {
   public void testPutReporterNeedsToken() throws Exception {
     Properties p = new Properties();
     ConfigService configService = new ConfigService(p);
+  }
+
+  @Test
+  public void testGetSanitizerDefault() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    ConfigService configService = new ConfigService(p);
+    assertEquals(Sanitizer.DEFAULT_SANITIZER, configService.getSanitizer());
+  }
+
+  @Test
+  public void testGetSanitizerJunk() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty("apptuit.sanitizer", "Junk");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(Sanitizer.DEFAULT_SANITIZER, configService.getSanitizer());
+  }
+
+  @Test
+  public void testGetSanitizerPrometheusSanitizer() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty("apptuit.sanitizer", "PROMETHEUS_SANITIZER");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(Sanitizer.PROMETHEUS_SANITIZER, configService.getSanitizer());
+  }
+
+  @Test
+  public void testGetSanitizerApptuitSanitizer() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty("apptuit.sanitizer", "APPTUIT_SANITIZER");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(Sanitizer.APPTUIT_SANITIZER, configService.getSanitizer());
+  }
+
+  @Test
+  public void testGetSanitizerNoOpSanitizer() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    p.setProperty("apptuit.sanitizer", "NO_OP_SANITIZER");
+    ConfigService configService = new ConfigService(p);
+    assertEquals(Sanitizer.NO_OP_SANITIZER, configService.getSanitizer());
   }
 
   @Test

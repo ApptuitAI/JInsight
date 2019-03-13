@@ -44,6 +44,9 @@ class MemoryUsageMetrics implements MetricSet {
   private static final String EDEN_GEN = "eden";
   private static final String SURVIVOR_GEN = "survivor";
   private static final String OLD_GEN = "old";
+  private static final String HEAP_TAG_VALUE = "heap";
+  private static final String NON_HEAP_TAG_VALUE = "non-heap";
+  private static final String AREA_TAG_NAME = "area";
 
   private final MemoryMXBean mxBean;
   private final List<MemoryPoolMXBean> memoryPools;
@@ -77,19 +80,19 @@ class MemoryUsageMetrics implements MetricSet {
             mxBean.getHeapMemoryUsage().getCommitted() + mxBean.getNonHeapMemoryUsage().getCommitted()
     );
 
-    gauges.put(getMetricName("init.bytes", "area", "heap"),
+    gauges.put(getMetricName("init.bytes", AREA_TAG_NAME, HEAP_TAG_VALUE),
             (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getInit());
 
-    gauges.put(getMetricName("used.bytes", "area", "heap"),
+    gauges.put(getMetricName("used.bytes", AREA_TAG_NAME, HEAP_TAG_VALUE),
             (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getUsed());
 
-    gauges.put(getMetricName("max.bytes", "area", "heap"),
+    gauges.put(getMetricName("max.bytes", AREA_TAG_NAME, HEAP_TAG_VALUE),
             (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getMax());
 
-    gauges.put(getMetricName("committed.bytes", "area", "heap"),
+    gauges.put(getMetricName("committed.bytes", AREA_TAG_NAME, HEAP_TAG_VALUE),
             (Gauge<Long>) () -> mxBean.getHeapMemoryUsage().getCommitted());
 
-    gauges.put(getMetricName("usage", "area", "heap"), new RatioGauge() {
+    gauges.put(getMetricName("usage", AREA_TAG_NAME, HEAP_TAG_VALUE), new RatioGauge() {
       @Override
       protected Ratio getRatio() {
         final MemoryUsage usage = mxBean.getHeapMemoryUsage();
@@ -97,19 +100,19 @@ class MemoryUsageMetrics implements MetricSet {
       }
     });
 
-    gauges.put(getMetricName("init.bytes", "area", "non-heap"),
+    gauges.put(getMetricName("init.bytes", AREA_TAG_NAME, NON_HEAP_TAG_VALUE),
             (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getInit());
 
-    gauges.put(getMetricName("used.bytes", "area", "non-heap"),
+    gauges.put(getMetricName("used.bytes", AREA_TAG_NAME, NON_HEAP_TAG_VALUE),
             (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getUsed());
 
-    gauges.put(getMetricName("max.bytes", "area", "non-heap"),
+    gauges.put(getMetricName("max.bytes", AREA_TAG_NAME, NON_HEAP_TAG_VALUE),
             (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getMax());
 
-    gauges.put(getMetricName("committed.bytes", "area", "non-heap"),
+    gauges.put(getMetricName("committed.bytes", AREA_TAG_NAME, NON_HEAP_TAG_VALUE),
             (Gauge<Long>) () -> mxBean.getNonHeapMemoryUsage().getCommitted());
 
-    gauges.put(getMetricName("usage", "area", "non-heap"), new RatioGauge() {
+    gauges.put(getMetricName("usage", AREA_TAG_NAME, NON_HEAP_TAG_VALUE), new RatioGauge() {
       @Override
       protected Ratio getRatio() {
         final MemoryUsage usage = mxBean.getNonHeapMemoryUsage();

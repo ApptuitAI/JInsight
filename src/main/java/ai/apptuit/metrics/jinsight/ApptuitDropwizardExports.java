@@ -42,6 +42,11 @@ import java.util.logging.Logger;
 public class ApptuitDropwizardExports extends io.prometheus.client.Collector
         implements io.prometheus.client.Collector.Describable {
   private static final Logger LOGGER = Logger.getLogger(ApptuitDropwizardExports.class.getName());
+
+  private static final String QUANTILE_TAG_NAME = "quantile";
+  private static final String WINDOW_TAG_NAME = "window";
+  private static final String RATE_SUFFIX = "_rate";
+
   private MetricRegistry registry;
   private SampleBuilder sampleBuilder;
 
@@ -66,19 +71,20 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
             sampleBuilder.createSample(dropwizardName, durationSuffix + "_mean",
                     null, null, snapshot.getMean()),
             sampleBuilder.createSample(dropwizardName, durationSuffix + "_stddev",
+
                     null, null, snapshot.getStdDev()),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList("quantile"), Arrays.asList("0.5"), snapshot.getMedian() * factor),
+                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.5"), snapshot.getMedian() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList("quantile"), Arrays.asList("0.75"), snapshot.get75thPercentile() * factor),
+                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.75"), snapshot.get75thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList("quantile"), Arrays.asList("0.95"), snapshot.get95thPercentile() * factor),
+                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.95"), snapshot.get95thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList("quantile"), Arrays.asList("0.98"), snapshot.get98thPercentile() * factor),
+                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.98"), snapshot.get98thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList("quantile"), Arrays.asList("0.99"), snapshot.get99thPercentile() * factor),
+                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.99"), snapshot.get99thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList("quantile"), Arrays.asList("0.999"), snapshot.get999thPercentile() * factor),
+                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.999"), snapshot.get999thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, "_count",
                     new ArrayList<>(), new ArrayList<>(), count)
     );
@@ -92,7 +98,7 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
 
   private MetricFamilySamples fromCounter(String dropwizardName, Counter counter) {
     MetricFamilySamples.Sample sample = sampleBuilder.createSample(dropwizardName, "", new ArrayList<>(), new ArrayList<>(),
-            Long.valueOf(counter.getCount()).doubleValue());
+            counter.getCount());
     return new MetricFamilySamples(sample.name, Type.GAUGE, getHelpMessage(dropwizardName, counter), Arrays.asList(sample));
   }
 
@@ -107,8 +113,12 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
     } else if (obj instanceof Boolean) {
       value = ((Boolean) obj) ? 1 : 0;
     } else {
+      String objName = "null";
+      if (obj != null) {
+        objName = obj.getClass().getName();
+      }
       LOGGER.log(Level.FINE, String.format("Invalid type for Gauge %s: %s", sanitizeMetricName(dropwizardName),
-              obj == null ? "null" : obj.getClass().getName()));
+              objName));
       return null;
     }
     MetricFamilySamples.Sample sample = sampleBuilder.createSample(dropwizardName, "",
@@ -118,12 +128,12 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
 
   private MetricFamilySamples fromMeter(String dropwizardName, Metered meter) {
     List<MetricFamilySamples.Sample> samples = Arrays.asList(
-            sampleBuilder.createSample(dropwizardName, "_rate",
-                    Arrays.asList("window"), Arrays.asList("1m"), meter.getOneMinuteRate()),
-            sampleBuilder.createSample(dropwizardName, "_rate",
-                    Arrays.asList("window"), Arrays.asList("5m"), meter.getFiveMinuteRate()),
-            sampleBuilder.createSample(dropwizardName, "_rate",
-                    Arrays.asList("window"), Arrays.asList("15m"), meter.getFifteenMinuteRate()),
+            sampleBuilder.createSample(dropwizardName, RATE_SUFFIX,
+                    Arrays.asList(WINDOW_TAG_NAME), Arrays.asList("1m"), meter.getOneMinuteRate()),
+            sampleBuilder.createSample(dropwizardName, RATE_SUFFIX,
+                    Arrays.asList(WINDOW_TAG_NAME), Arrays.asList("5m"), meter.getFiveMinuteRate()),
+            sampleBuilder.createSample(dropwizardName, RATE_SUFFIX,
+                    Arrays.asList(WINDOW_TAG_NAME), Arrays.asList("15m"), meter.getFifteenMinuteRate()),
             sampleBuilder.createSample(dropwizardName, "_total", new ArrayList<String>(), new ArrayList<String>(), meter.getCount())
     );
     return new MetricFamilySamples(samples.get(0).name, Type.SUMMARY, getHelpMessage(dropwizardName, meter), samples);
