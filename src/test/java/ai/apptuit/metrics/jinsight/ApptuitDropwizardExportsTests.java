@@ -173,7 +173,7 @@ public class ApptuitDropwizardExportsTests {
     t.update(1, TimeUnit.MILLISECONDS);
     List<Collector.MetricFamilySamples.Sample> samplesFromExporter = exporter.collect().get(0).samples;
 
-    assert (samplesFromExporter.get(samplesFromExporter.size() - 2).value >= 0.001);
+    assertTrue(samplesFromExporter.get(samplesFromExporter.size() - 2).value >= 0.001);
     //count
     assertEquals(0, Double.compare(1.0D, samplesFromExporter.get(samplesFromExporter.size() - 1).value));
   }
