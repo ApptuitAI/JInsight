@@ -16,6 +16,7 @@
 
 package ai.apptuit.metrics.jinsight;
 
+import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 
 import java.io.BufferedInputStream;
@@ -84,7 +85,7 @@ public class ConfigService {
   private final Map<String, String> loadedGlobalTags = new HashMap<>();
   private final String agentVersion;
   private Map<String, String> globalTags = null;
-
+  private final Sanitizer sanitizer;
 
   public enum ReporterType {
     PROMETHEUS, APPTUIT
@@ -96,6 +97,7 @@ public class ConfigService {
     this.reportingMode = readReportingMode(config);
     this.reportingFrequencyMillis = readReportingFrequency(config);
     this.prometheusMetricsPath = readPrometheusMetricsPath(config);
+    this.sanitizer = readSanitizer(config);
     this.prometheusPort = readPrometheusPort(config);
     if (this.reporterType == ReporterType.APPTUIT && apiToken == null && reportingMode == ReportingMode.API_PUT) {
       throw new ConfigurationException(
@@ -184,6 +186,28 @@ public class ConfigService {
       config.load(inputStream);
     }
     return config;
+  }
+
+  private Sanitizer readSanitizer(Properties config) {
+    String configSanitizer = config.getProperty("apptuit.sanitizer");
+    if (configSanitizer != null && !configSanitizer.equals("")) {
+      try {
+        if (configSanitizer.trim().equalsIgnoreCase("PROMETHEUS_SANITZER")) {
+          return Sanitizer.PROMETHEUS_SANITZER;
+        } else if (configSanitizer.trim().equalsIgnoreCase("APPTUIT_SANITZER")) {
+          return Sanitizer.APPTUIT_SANITZER;
+        } else if (configSanitizer.trim().equalsIgnoreCase("NO_OP_SANITZER")) {
+          return Sanitizer.NO_OP_SANITZER;
+        } else {
+          throw new IllegalArgumentException();
+        }
+      } catch (IllegalArgumentException e) {
+        LOGGER.severe("Un-supported sanitization type [" + configSanitizer + "]. "
+                + "Using default sanitization type: [" + Sanitizer.NO_OP_SANITZER + "]");
+        LOGGER.log(Level.FINE, e.toString(), e);
+      }
+    }
+    return Sanitizer.NO_OP_SANITZER;
   }
 
   private ReporterType readReporter(Properties config) {
@@ -328,6 +352,10 @@ public class ConfigService {
 
   public int getPrometheusPort() {
     return prometheusPort;
+  }
+
+  public Sanitizer getSanitizer() {
+    return sanitizer;
   }
 
   public String getPrometheusMetricsPath() {

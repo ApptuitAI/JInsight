@@ -20,8 +20,13 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import io.prometheus.client.Collector;
 import io.prometheus.client.dropwizard.samplebuilder.SampleBuilder;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Extracts Metric names, label values and label names from
@@ -80,8 +85,9 @@ public class TagDecodingSampleBuilder implements SampleBuilder {
     for (String tag : sourceNames) {
       String value = values.next();
       String sanitizedName = Collector.sanitizeMetricName(tag);
-      if (skipDuplicate && labelNames.contains(sanitizedName))
+      if (skipDuplicate && labelNames.contains(sanitizedName)) {
         continue;
+      }
       labelNames.add(sanitizedName);
       labelValues.add(value);
     }

@@ -20,6 +20,7 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
+
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ class GarbageCollectorMetrics implements MetricSet {
     final Map<String, Metric> gauges = new HashMap<>();
     garbageCollectors.forEach(gc -> {
       gauges.put(getMetricName(gc, "count"), (Gauge<Long>) gc::getCollectionCount);
-      gauges.put(getMetricName(gc, "time.millis"), (Gauge<Long>) gc::getCollectionTime);
+      gauges.put(getMetricName(gc, "time.seconds"), (Gauge<Double>) gc::getCollectionTime);
     });
     gauges.put("total.count", (Gauge<Long>) () -> {
       long count = 0;
@@ -65,7 +66,7 @@ class GarbageCollectorMetrics implements MetricSet {
       return count;
     });
 
-    gauges.put("total.time.millis", (Gauge<Long>) () -> {
+    gauges.put("total.time.seconds", (Gauge<Long>) () -> {
       long time = 0;
       for (GarbageCollector gc : garbageCollectors) {
         time += gc.getCollectionTime();
@@ -77,9 +78,9 @@ class GarbageCollectorMetrics implements MetricSet {
 
   private String getMetricName(GarbageCollector gc, String submetric) {
     return TagEncodedMetricName.decode(submetric)
-        .withTags("type", gc.getName())
-        .withTags("generation", gc.getGcGeneration())
-        .toString();
+            .withTags("type", gc.getName())
+            .withTags("generation", gc.getGcGeneration())
+            .toString();
   }
 
   private static class GarbageCollector {
@@ -113,8 +114,9 @@ class GarbageCollectorMetrics implements MetricSet {
       return delegate.getCollectionCount();
     }
 
-    public Long getCollectionTime() {
-      return delegate.getCollectionTime();
+    public Double getCollectionTime() {
+      // converting time in millis to seconds
+      return delegate.getCollectionTime() / 1000.0;
     }
 
     public String getName() {

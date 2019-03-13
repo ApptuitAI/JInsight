@@ -16,29 +16,63 @@
 
 package ai.apptuit.metrics.jinsight;
 
-import static ai.apptuit.metrics.jinsight.ConfigService.*;
+import ai.apptuit.metrics.client.DataPoint;
+import ai.apptuit.metrics.dropwizard.ApptuitReporter;
+import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
+import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.ScheduledReporter;
+import io.prometheus.client.Collector;
+import io.prometheus.client.dropwizard.DropwizardExports;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.HttpURLConnection;
+import java.net.SocketException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
+
+//import static ai.apptuit.metrics.jinsight.ConfigService.;
+import static ai.apptuit.metrics.jinsight.ConfigService.ReporterType;
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTER_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.PROMETHEUS_EXPORTER_PORT;
+import static ai.apptuit.metrics.jinsight.ConfigService.PROMETHEUS_METRICS_PATH;
+import static ai.apptuit.metrics.jinsight.ConfigService.DEFAULT_REPORTER_TYPE;
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-
-import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
-import com.codahale.metrics.*;
-
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.*;
-import java.util.zip.GZIPInputStream;
-
-import io.prometheus.client.Collector;
-import org.junit.Before;
-import org.junit.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class PrometheusTest {
   private ApptuitReporterFactory mockFactory;
   private ConfigService mockConfigService;
   private PromHttpServer mockServer;
+  private static final int UDP_PORT = 8953;
 
   public String readInputStream(InputStream inputStream)
           throws IOException {
@@ -151,7 +185,7 @@ public class PrometheusTest {
       connection.connect();
 
       int code = connection.getResponseCode();
-      String upTimeMetricString = "jvm_uptime_millis";
+      String upTimeMetricString = "jvm_uptime_seconds";
       String responseString = readInputStream(connection.getInputStream());
       assertEquals(code, 200);
       assertNotEquals(-1, responseString.indexOf(upTimeMetricString));
@@ -177,7 +211,7 @@ public class PrometheusTest {
       connection.connect();
 
       int code = connection.getResponseCode();
-      String upTimeMetricString = "jvm_uptime_millis";
+      String upTimeMetricString = "jvm_uptime_seconds";
       String responseString = readGzipInputStream(connection.getInputStream());
       //System.out.println(responseString);
       assertEquals(code, 200);
@@ -290,4 +324,168 @@ public class PrometheusTest {
     ConfigService configService = new ConfigService(p);
     assertEquals(DEFAULT_REPORTER_TYPE, configService.getReporterType());
   }
+
+  @Test
+  public void testPrometheusAndApptuitAreIdentical() throws Exception {
+
+    final MetricRegistry metricRegistry = new MetricRegistry();
+
+    TagEncodedMetricName gaugeName = TagEncodedMetricName.decode("test.metric.gauge").withTags("env", "test");
+    TagEncodedMetricName counterName = TagEncodedMetricName.decode("test.metric.counter").withTags("env", "test");
+    TagEncodedMetricName meterName = TagEncodedMetricName.decode("test.metric.meter").withTags("env", "test");
+    TagEncodedMetricName histName = TagEncodedMetricName.decode("test.metric.histogram").withTags("env", "test");
+    TagEncodedMetricName timerName = TagEncodedMetricName.decode("test.metric.timer").withTags("env", "test");
+
+    metricRegistry.register(gaugeName.toString(), (Gauge<Integer>) () -> 120);
+
+    Counter counter = metricRegistry.counter(counterName.toString());
+    counter.inc();
+
+    metricRegistry.meter(meterName.toString()).mark();
+
+    Histogram histogram = metricRegistry.histogram(histName.toString());
+    histogram.update(10);
+
+    Timer timer = metricRegistry.timer(timerName.toString());
+    timer.update(20, TimeUnit.MILLISECONDS);
+
+
+    TagDecodingSampleBuilder builder = new TagDecodingSampleBuilder(null);
+    ApptuitDropwizardExports exporter = new ApptuitDropwizardExports(metricRegistry, builder);
+    Set<TagEncodedMetricName> promDatapoints = getTagEncodedMetricNames(exporter);
+
+    Set<TagEncodedMetricName> origPromDatapoints = getTagEncodedMetricNames(new DropwizardExports(metricRegistry, builder));
+    System.out.println(origPromDatapoints);
+
+
+    MockServer mockServer = new MockServer();
+    mockServer.start();
+
+    ApptuitReporterFactory factory = new ApptuitReporterFactory();
+    factory.setReportingMode(ApptuitReporter.ReportingMode.XCOLLECTOR);
+    ScheduledReporter reporter = factory.build(metricRegistry);
+    reporter.start(15, TimeUnit.SECONDS);
+
+    await().atMost(50, TimeUnit.SECONDS).until(() -> mockServer.countReceivedDPs() >= 30);
+
+    DataPoint[] dataPoints = mockServer.getReceivedDPs();
+    mockServer.stop();
+
+    HashSet<TagEncodedMetricName> apptuitTimeseries = new HashSet<>();
+    Map<String, String> tags;
+
+
+    for (DataPoint dataPoint : dataPoints) {
+      String apptuitName = dataPoint.getMetric();
+
+      if (!apptuitName.startsWith("apptuit_reporter")) {
+        tags = dataPoint.getTags();
+        TagEncodedMetricName metric = TagEncodedMetricName.decode(apptuitName).withTags(tags);
+        apptuitTimeseries.add(metric);
+      }
+    }
+    System.out.println(apptuitTimeseries);
+
+    assertEquals(apptuitTimeseries, promDatapoints);
+
+  }
+
+  private Set<TagEncodedMetricName> getTagEncodedMetricNames(Collector exporter) {
+    List<Collector.MetricFamilySamples> samples = exporter.collect();
+
+    Set<TagEncodedMetricName> promDatapoints = new HashSet<>();
+    List<String> tempLabels, tempValues;
+
+    for (Collector.MetricFamilySamples sample : samples) {
+      for (Collector.MetricFamilySamples.Sample sample_metric : sample.samples) {
+//        public DataPoint(String metricName, long epoch, Number value, Map<String, String> tags) {
+        Map<String, String> tags = new HashMap<>();
+        String promName = sample_metric.name;
+        tempLabels = sample_metric.labelNames;
+        tempValues = sample_metric.labelValues;
+
+        for (int i = 0; i < tempLabels.size(); i++) {
+          tags.put(tempLabels.get(i), tempValues.get(i));
+        }
+        TagEncodedMetricName metric = TagEncodedMetricName.decode(promName).withTags(tags);
+        promDatapoints.add(metric);
+      }
+    }
+    return promDatapoints;
+  }
+
+  private static class MockServer {
+
+    private final DatagramSocket socket;
+    private final byte[] buf = new byte[8192];
+    private final Thread thread;
+    private final List<DataPoint> receivedDPs = new ArrayList<>();
+    private boolean running = true;
+
+    public MockServer() throws SocketException {
+      socket = new DatagramSocket(UDP_PORT);
+      thread = new Thread(new RequestProcessor());
+      thread.setDaemon(true);
+    }
+
+    public void start() {
+      thread.start();
+    }
+
+    public void stop() {
+      running = false;
+      thread.interrupt();
+    }
+
+    public int countReceivedDPs() {
+      return receivedDPs.size();
+    }
+
+    public DataPoint[] getReceivedDPs() {
+      return receivedDPs.toArray(new DataPoint[receivedDPs.size()]);
+    }
+
+    public void clearReceivedDPs() {
+      receivedDPs.clear();
+    }
+
+    private class RequestProcessor implements Runnable {
+
+      @Override
+      public void run() {
+        while (running) {
+          DatagramPacket packet = new DatagramPacket(buf, buf.length);
+          try {
+            socket.receive(packet);
+            String data = new String(packet.getData(), 0, packet.getLength());
+            //System.err.printf("Got packet of [%d] bytes.\n", data.length());
+            Scanner lines = new Scanner(data).useDelimiter("\n");
+//            lines.forEachRemaining(line -> receivedDPs.add(toDataPoint(line)));
+            while (lines.hasNext()) {
+              receivedDPs.add(toDataPoint(lines.nextLine()));
+            }
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+        }
+      }
+
+      private DataPoint toDataPoint(String line) {
+        //DataPoint(String metricName, long epoch, Number value, Map<String, String> tags)
+        String[] fields = line.split(" ");
+        return new DataPoint(fields[0], Long.parseLong(fields[1]),
+                Double.parseDouble(fields[2]), getTags(fields));
+      }
+
+      private Map<String, String> getTags(String[] fields) {
+        Map<String, String> retVal = new HashMap<>();
+        for (int i = 3; i < fields.length; i++) {
+          String[] tag = fields[i].split("=");
+          retVal.put(tag[0], tag[1]);
+        }
+        return retVal;
+      }
+    }
+  }
+
 }

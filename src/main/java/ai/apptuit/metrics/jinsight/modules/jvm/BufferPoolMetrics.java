@@ -20,6 +20,7 @@ import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
+
 import java.lang.management.BufferPoolMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.Collections;
@@ -44,12 +45,12 @@ class BufferPoolMetrics implements MetricSet {
 
     for (BufferPoolMXBean pool : pools) {
       final String poolName = pool.getName();
-      gauges.put(getMetricName("capacity.bytes", "type", poolName),
-          (Gauge<Long>) pool::getTotalCapacity);
-      gauges.put(getMetricName("count", "type", poolName),
-          (Gauge<Long>) pool::getCount);
-      gauges.put(getMetricName("used.bytes", "type", poolName),
-          (Gauge<Long>) pool::getMemoryUsed);
+      gauges.put(getMetricName("capacity.bytes", "pool", poolName),
+              (Gauge<Long>) pool::getTotalCapacity);
+      gauges.put(getMetricName("count", "pool", poolName),
+              (Gauge<Long>) pool::getCount);
+      gauges.put(getMetricName("used.bytes", "pool", poolName),
+              (Gauge<Long>) pool::getMemoryUsed);
     }
 
     return Collections.unmodifiableMap(gauges);

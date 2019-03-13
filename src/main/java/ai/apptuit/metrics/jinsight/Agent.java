@@ -99,6 +99,7 @@ public class Agent {
     instrumentation.appendToBootstrapClassLoaderSearch(bytemanJar);
     delegate.accept(agentArgs, instrumentation);
     ConfigService configService = ConfigService.getInstance();
+    RegistryService.getRegistryService();
     LOGGER.info(getStartupMessage(configService));
   }
 

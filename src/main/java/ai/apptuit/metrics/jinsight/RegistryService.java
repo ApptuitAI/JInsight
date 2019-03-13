@@ -16,6 +16,7 @@
 
 package ai.apptuit.metrics.jinsight;
 
+import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
@@ -23,7 +24,6 @@ import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import io.prometheus.client.CollectorRegistry;
-import io.prometheus.client.dropwizard.DropwizardExports;
 
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 
 /**
  * Provides access to the MetricRegistry that is pre-configured to use {@link
- * ai.apptuit.metrics.dropwizard.ApptuitReporter}. Rest the Agent runtime classes use this registry
+ * ai.apptuit.metrics.dropwizard}. Rest the Agent runtime classes use this registry
  * to create metrics.
  *
  * @author Rajiv Shivane
@@ -45,6 +45,7 @@ public class RegistryService {
   private static final Logger LOGGER = Logger.getLogger(RegistryService.class.getName());
   private static final RegistryService singleton = new RegistryService();
   private MetricRegistry registry = null;
+  private Sanitizer sanitizer = null;
 
   private RegistryService() {
     this(ConfigService.getInstance(), new ApptuitReporterFactory());
@@ -56,11 +57,12 @@ public class RegistryService {
 
     if (reporterType == ConfigService.ReporterType.APPTUIT) {
       ReportingMode mode = configService.getReportingMode();
+      sanitizer = configService.getSanitizer();
       ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
               configService.getApiToken(), configService.getApiUrl(), mode);
       reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
     } else if (reporterType == ConfigService.ReporterType.PROMETHEUS) {
-      DropwizardExports collector = new DropwizardExports(
+      ApptuitDropwizardExports collector = new ApptuitDropwizardExports(
               registry, new TagDecodingSampleBuilder(configService.getGlobalTags()));
       CollectorRegistry.defaultRegistry.register(collector);
 
@@ -98,7 +100,9 @@ public class RegistryService {
     factory.setApiKey(apiToken);
     factory.setApiUrl(apiUrl != null ? apiUrl.toString() : null);
     factory.setReportingMode(reportingMode);
-
+    if (sanitizer != null) {
+      factory.setSanitizer(sanitizer);
+    }
     return factory.build(registry);
   }
 }
