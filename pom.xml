@@ -108,7 +108,7 @@ limitations under the License.
     <byteman.version>4.0.5</byteman.version>
     <metrics.version>3.2.6</metrics.version>
     <prometheus.version>0.6.0</prometheus.version>
-    <apptuit.reporter.version>0.8.1</apptuit.reporter.version>
+    <apptuit.reporter.version>0.8.3</apptuit.reporter.version>
 
     <!-- Acceptance Criteria -->
     <enforce.code.style>false</enforce.code.style>
