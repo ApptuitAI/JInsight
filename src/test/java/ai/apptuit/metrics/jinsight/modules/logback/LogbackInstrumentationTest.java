@@ -134,6 +134,24 @@ public class LogbackInstrumentationTest {
   }
 
   @Test
+  public void testThrowableWithParams() {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("error", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("throwCount", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("throw[RuntimeException]", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("fingerprint[RuntimeException]", (s, aLong) -> aLong + 1);
+
+    String param = "Hello World!";
+    logger.error("Error {} throwable", param, testException);
+
+    assertEquals(expectedCounts, getCurrentCounts());
+    assertEquals(expectedFingerprint.getChecksum(), testAppender.getFingerprint());
+    Assert.assertThat(testAppender.getLogContent(),
+        CoreMatchers.containsString("[error:" + expectedFingerprint.getChecksum() + "]"));
+  }
+
+  @Test
   public void testLogTrace() {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("total", (s, aLong) -> aLong + 1);
