@@ -21,6 +21,7 @@ import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.LogLevel;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import org.jboss.byteman.rule.Rule;
+import org.slf4j.MDC;
 
 /**
  * @author Rajiv Shivane
@@ -42,17 +43,26 @@ public class LogbackRuleHelper extends RuleHelper {
     tracker.track(level, (throwableProxy != null), throwable, fingerprint);
   }
 
-  public String beforeBuildEvent(Throwable throwable) {
+  public void beforeBuildEvent(Object[] params, Throwable t) {
+    Throwable throwable = getThrowableToLog(params, t);
+    if (throwable == null) {
+      return;
+    }
+
     ErrorFingerprint fingerprint = ErrorFingerprint.fromThrowable(throwable);
     if (fingerprint != null) {
       CURRENT_FINGERPRINT.set(fingerprint);
-      return fingerprint.getChecksum();
+      String checksum = fingerprint.getChecksum();
+      MDC.put(LogEventTracker.FINGERPRINT_PROPERTY_NAME, checksum);
     }
-    return null;
   }
 
-  public void afterBuildEvent(Throwable throwable) {
-    CURRENT_FINGERPRINT.remove();
+  public void afterBuildEvent(Object[] params, Throwable t) {
+    Throwable throwable = getThrowableToLog(params, t);
+    if (throwable != null) {
+      CURRENT_FINGERPRINT.remove();
+      MDC.remove(LogEventTracker.FINGERPRINT_PROPERTY_NAME);
+    }
   }
 
   public String convertMessage(ILoggingEvent event, String origMessage) {
@@ -61,5 +71,21 @@ public class LogbackRuleHelper extends RuleHelper {
       return origMessage;
     }
     return "[error:" + fingerprint + "] " + origMessage;
+  }
+
+  private Throwable getThrowableToLog(Object[] params, Throwable t) {
+    if (t != null) {
+      return t;
+    }
+
+    if (params == null || params.length == 0) {
+      return null;
+    }
+
+    final Object lastEntry = params[params.length - 1];
+    if (lastEntry instanceof Throwable) {
+      return (Throwable) lastEntry;
+    }
+    return null;
   }
 }
