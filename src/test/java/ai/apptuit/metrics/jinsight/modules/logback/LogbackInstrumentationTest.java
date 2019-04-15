@@ -28,13 +28,19 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.contrib.jackson.JacksonJsonFormatter;
+import ch.qos.logback.contrib.json.classic.JsonLayout;
 import ch.qos.logback.core.OutputStreamAppender;
+import ch.qos.logback.core.encoder.Encoder;
+import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import org.hamcrest.CoreMatchers;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -87,7 +93,7 @@ public class LogbackInstrumentationTest {
   }
 
   @After
-  public void tearDown() throws Exception {
+  public void tearDown() {
     logger.setLevel(origLevel);
   }
 
@@ -111,7 +117,7 @@ public class LogbackInstrumentationTest {
   }
 
   @Test
-  public void testThrowable() throws Exception {
+  public void testThrowable() {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("total", (s, aLong) -> aLong + 1);
     expectedCounts.compute("error", (s, aLong) -> aLong + 1);
@@ -128,7 +134,7 @@ public class LogbackInstrumentationTest {
   }
 
   @Test
-  public void testLogTrace() throws Exception {
+  public void testLogTrace() {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("total", (s, aLong) -> aLong + 1);
     expectedCounts.compute("trace", (s, aLong) -> aLong + 1);
@@ -140,7 +146,7 @@ public class LogbackInstrumentationTest {
 
 
   @Test
-  public void testLogDebug() throws Exception {
+  public void testLogDebug() {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("total", (s, aLong) -> aLong + 1);
     expectedCounts.compute("debug", (s, aLong) -> aLong + 1);
@@ -152,7 +158,7 @@ public class LogbackInstrumentationTest {
 
 
   @Test
-  public void testLogInfo() throws Exception {
+  public void testLogInfo() {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("total", (s, aLong) -> aLong + 1);
     expectedCounts.compute("info", (s, aLong) -> aLong + 1);
@@ -164,7 +170,7 @@ public class LogbackInstrumentationTest {
 
 
   @Test
-  public void testLogWarn() throws Exception {
+  public void testLogWarn() {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("total", (s, aLong) -> aLong + 1);
     expectedCounts.compute("warn", (s, aLong) -> aLong + 1);
@@ -175,7 +181,7 @@ public class LogbackInstrumentationTest {
   }
 
   @Test
-  public void testLogError() throws Exception {
+  public void testLogError() {
     Map<String, Long> expectedCounts = getCurrentCounts();
     expectedCounts.compute("total", (s, aLong) -> aLong + 1);
     expectedCounts.compute("error", (s, aLong) -> aLong + 1);
@@ -186,7 +192,7 @@ public class LogbackInstrumentationTest {
   }
 
   @Test
-  public void testLogLevel() throws Exception {
+  public void testLogLevel() {
     logger.setLevel(Level.ERROR);
 
     Map<String, Long> expectedCounts = getCurrentCounts();
@@ -200,6 +206,55 @@ public class LogbackInstrumentationTest {
     logger.error("error!");
 
     assertEquals(expectedCounts, getCurrentCounts());
+  }
+
+  @Test
+  public void testJsonFingerprint() {
+    Map<String, Long> expectedCounts = getCurrentCounts();
+    expectedCounts.compute("total", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("error", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("throwCount", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("throw[RuntimeException]", (s, aLong) -> aLong + 1);
+    expectedCounts.compute("fingerprint[RuntimeException]", (s, aLong) -> aLong + 1);
+
+    Logger jsonLogger = getJacksonJsonLogger(LogbackInstrumentationTest.class.getName() + ".json");
+    jsonLogger.error("Error with throwable", testException);
+
+    TestAppender appender = (TestAppender) jsonLogger.getAppender(TestAppender.APPENDER_NAME);
+    assertEquals(expectedCounts, getCurrentCounts());
+    assertEquals(expectedFingerprint.getChecksum(), appender.getFingerprint());
+
+    JSONObject obj= (JSONObject) JSONValue.parse(appender.getLogContent());
+    JSONObject mdc = (JSONObject) obj.get("mdc");
+
+    assertEquals(expectedFingerprint.getChecksum(), mdc.get("errorFingerprint"));
+  }
+
+
+  private Logger getJacksonJsonLogger(String loggerName) {
+
+    JacksonJsonFormatter formatter = new JacksonJsonFormatter();
+    formatter.setPrettyPrint(false);
+
+    JsonLayout layout = new JsonLayout();
+    layout.setTimestampFormat("yyyy-MM-dd HH:mm:ss,SSS");
+    layout.setAppendLineSeparator(true);
+    layout.setJsonFormatter(formatter);
+
+    LoggerContext logCtx = new LoggerContext();
+    LayoutWrappingEncoder<ILoggingEvent> logEncoder = new LayoutWrappingEncoder<>();
+    logEncoder.setLayout(layout);
+    logEncoder.setContext(logCtx);
+    logEncoder.start();
+
+    TestAppender testAppender = new TestAppender(logCtx, logEncoder);
+    testAppender.start();
+
+    Logger log = logCtx.getLogger(loggerName);
+    log.setAdditive(false);
+    log.setLevel(Level.INFO);
+    log.addAppender(testAppender);
+    return log;
   }
 
 
@@ -217,13 +272,14 @@ public class LogbackInstrumentationTest {
 
   private static class TestAppender extends OutputStreamAppender<ILoggingEvent> {
 
+    public static final String APPENDER_NAME = "test";
     private ByteArrayOutputStream logBuffer = new ByteArrayOutputStream();
     private String fingerprint;
 
-    public TestAppender(LoggerContext logCtx, PatternLayoutEncoder logEncoder) {
+    public TestAppender(LoggerContext logCtx, Encoder<ILoggingEvent> logEncoder) {
       super();
       setContext(logCtx);
-      setName("test");
+      setName(APPENDER_NAME);
       setEncoder(logEncoder);
       setOutputStream(logBuffer);
     }
