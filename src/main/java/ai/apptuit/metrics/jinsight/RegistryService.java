@@ -61,15 +61,15 @@ public class RegistryService {
 
   private void initialize(ConfigService configService, ApptuitReporterFactory factory) {
     registry.registerAll(new JvmMetricSet());
-    JInsightReporter jInsightReporter = JInsightReporter.getInstance();
-    jInsightReporter.registerUnchecked(registry);
-    startReportingOnRegistryCollection(configService, factory, jInsightReporter);
+    MetricRegistryCollection metricRegistryCollection = MetricRegistryCollection.getInstance();
+    metricRegistryCollection.initialize(registry);
+    startReportingOnRegistryCollection(configService, factory, metricRegistryCollection);
   }
 
   private void startReportingOnRegistryCollection(ConfigService configService,
-      ApptuitReporterFactory factory, JInsightReporter jInsightReporter) {
+      ApptuitReporterFactory factory, MetricRegistryCollection metricRegistryCollection) {
 
-    MetricRegistry registryCollection = jInsightReporter.getRegistryCollection();
+    MetricRegistry registryCollection = metricRegistryCollection.getRegistryCollection();
     ConfigService.ReporterType reporterType = configService.getReporterType();
     if (reporterType == ConfigService.ReporterType.APPTUIT) {
       ReportingMode mode = configService.getReportingMode();

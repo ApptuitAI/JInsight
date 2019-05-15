@@ -45,7 +45,7 @@ import org.junit.Test;
 /**
  * @author Rajiv Shivane
  */
-public class JInsightReporterTest {
+public class MetricRegistryCollectionTest {
 
   private MetricRegistry registry;
 
@@ -53,28 +53,28 @@ public class JInsightReporterTest {
 
   @Before
   public void setUp() throws Exception {
-    JInsightReporter jInsightReporter = JInsightReporter.getInstance();
-    registryCollection = jInsightReporter.getRegistryCollection();
+    MetricRegistryCollection metricRegistryCollection = MetricRegistryCollection.getInstance();
+    registryCollection = metricRegistryCollection.getRegistryCollection();
     registry = new MetricRegistry();
-    jInsightReporter.register(registry);
+    metricRegistryCollection.register(registry);
   }
 
   @Test
   public void testRegister() throws Exception {
-    JInsightReporter jInsightReporter = JInsightReporter.getInstance();
+    MetricRegistryCollection metricRegistryCollection = MetricRegistryCollection.getInstance();
     MetricRegistry registry = new MetricRegistry();
-    assertTrue(jInsightReporter.register(registry));
-    assertFalse(jInsightReporter.register(registry));
+    assertTrue(metricRegistryCollection.register(registry));
+    assertFalse(metricRegistryCollection.register(registry));
   }
 
   @Test
   public void testDeRegister() throws Exception {
-    JInsightReporter jInsightReporter = JInsightReporter.getInstance();
+    MetricRegistryCollection metricRegistryCollection = MetricRegistryCollection.getInstance();
     MetricRegistry registry = new MetricRegistry();
-    assertFalse(jInsightReporter.deRegister(registry));
-    assertTrue(jInsightReporter.register(registry));
-    assertTrue(jInsightReporter.deRegister(registry));
-    assertFalse(jInsightReporter.deRegister(registry));
+    assertFalse(metricRegistryCollection.deRegister(registry));
+    assertTrue(metricRegistryCollection.register(registry));
+    assertTrue(metricRegistryCollection.deRegister(registry));
+    assertFalse(metricRegistryCollection.deRegister(registry));
   }
 
   @Test

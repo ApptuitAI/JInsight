@@ -50,18 +50,22 @@ import java.util.logging.Logger;
 /**
  * @author Rajiv Shivane
  */
-public class JInsightReporter {
+public class MetricRegistryCollection {
 
-  private static final Logger LOGGER = Logger.getLogger(JInsightReporter.class.getName());
-  private static final JInsightReporter SINGLETON = new JInsightReporter();
+  private static final Logger LOGGER = Logger.getLogger(MetricRegistryCollection.class.getName());
+  private static final MetricRegistryCollection SINGLETON = new MetricRegistryCollection();
 
-  private final MetricRegistryCollection collection = new MetricRegistryCollection();
+  private final AggregatedMetricRegistry collection = new AggregatedMetricRegistry();
 
 
-  private JInsightReporter() {
+  private MetricRegistryCollection() {
   }
 
-  public static JInsightReporter getInstance() {
+  void initialize(MetricRegistry jinsightRegistry) {
+    registerUnchecked(jinsightRegistry);
+  }
+
+  public static MetricRegistryCollection getInstance() {
     return SINGLETON;
   }
 
@@ -72,7 +76,7 @@ public class JInsightReporter {
     return registerUnchecked(metricRegistry);
   }
 
-  boolean registerUnchecked(Object metricRegistry) {
+  private boolean registerUnchecked(Object metricRegistry) {
     return collection.registerMetricRegistry(metricRegistry);
   }
 
@@ -420,7 +424,7 @@ public class JInsightReporter {
 
   }
 
-  private static class MetricRegistryCollection extends MetricRegistry {
+  private static class AggregatedMetricRegistry extends MetricRegistry {
 
     private final Map<Object, MetricRegistryWrapper> registries = new WeakHashMap<>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();

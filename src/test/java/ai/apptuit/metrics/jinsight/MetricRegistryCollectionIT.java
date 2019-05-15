@@ -30,7 +30,7 @@ import org.junit.Test;
 /**
  * @author Rajiv Shivane
  */
-public class JInsightReporterIT {
+public class MetricRegistryCollectionIT {
 
   private static final boolean DEBUG = false;
 
@@ -41,11 +41,11 @@ public class JInsightReporterIT {
     String counterName = "test.counter";
     long value = 7;
 
-    JInsightReporter jInsightReporter = JInsightReporter.getInstance();
-    Class<? extends JInsightReporter> jirClass = jInsightReporter.getClass();
+    MetricRegistryCollection metricRegistryCollection = MetricRegistryCollection.getInstance();
+    Class<? extends MetricRegistryCollection> jirClass = metricRegistryCollection.getClass();
     Method getRegistryCollection = jirClass.getDeclaredMethod("getRegistryCollection");
     getRegistryCollection.setAccessible(true);
-    Object registryCollection = getRegistryCollection.invoke(jInsightReporter);
+    Object registryCollection = getRegistryCollection.invoke(metricRegistryCollection);
     Method getCounters = registryCollection.getClass().getMethod("getCounters");
 
     registerGCableRegistry(finalized, counterName, value);
@@ -77,7 +77,7 @@ public class JInsightReporterIT {
         finalized.set(true);
       }
     };
-    JInsightReporter instance = JInsightReporter.getInstance();
+    MetricRegistryCollection instance = MetricRegistryCollection.getInstance();
     instance.register(registry);
 
     Counter counter = registry.counter(name);
