@@ -30,8 +30,7 @@ import java.util.logging.Logger;
 import org.jboss.byteman.agent.Main;
 
 /**
- * The main agent class for JInsight. A wrapper around ByteMan Agent to easy configuration and
- * setup
+ * The main agent class for JInsight. A wrapper around ByteMan Agent to easy configuration and setup
  *
  * @author Rajiv Shivane
  */
@@ -42,10 +41,10 @@ public class Agent {
   private static final String BYTEMAN_JAR_RESOURCE_NAME = "META-INF/boot/byteman.jar";
   private static final String BTM_SCRIPTS_RESOURCE_PATH = "META-INF/btm-scripts/jinsight.btm";
   private static final String MODULE_LOADER_CLASSNAME =
-          "ai.apptuit.metrics.jinsight.ContextualModuleLoader";
+      "ai.apptuit.metrics.jinsight.ContextualModuleLoader";
 
   private static final String AGENT_PARAMS = "resourcescript:" + BTM_SCRIPTS_RESOURCE_PATH
-          + ",modules:" + MODULE_LOADER_CLASSNAME;
+      + ",modules:" + MODULE_LOADER_CLASSNAME;
 
   public static void premain(String agentArgs, Instrumentation instrumentation) throws Exception {
     main0(agentArgs, instrumentation, (a, i) -> {
@@ -68,10 +67,10 @@ public class Agent {
   }
 
   private static void main0(String agentArgs, Instrumentation instrumentation,
-                            BiConsumer<String, Instrumentation> delegate) {
+      BiConsumer<String, Instrumentation> delegate) {
     if (ClassLoader.getSystemResource(BTM_SCRIPTS_RESOURCE_PATH) == null) {
       LOGGER.severe("Could not load " + BTM_SCRIPTS_RESOURCE_PATH + "."
-              + "Agent will not be started.");
+          + "Agent will not be started.");
       return;
     }
 
@@ -99,23 +98,26 @@ public class Agent {
     instrumentation.appendToBootstrapClassLoaderSearch(bytemanJar);
     delegate.accept(agentArgs, instrumentation);
     ConfigService configService = ConfigService.getInstance();
-    RegistryService.getRegistryService();
-    LOGGER.info(getStartupMessage(configService));
+    boolean initialized = RegistryService.getRegistryService().isInitialized();
+    LOGGER.info(getStartupMessage(configService, initialized));
   }
 
-  public static String getStartupMessage(ConfigService configService) {
-    String infoMessage = "JInsight v[" + configService.getAgentVersion()
-            + "] initialized with reporter [" + configService.getReporterType() + "]. ";
-    if (configService.getReporterType() == ConfigService.ReporterType.APPTUIT) {
-      infoMessage = infoMessage + "Reporting via: [" + configService.getReportingMode() + "] "
-              + "every [" + (configService.getReportingFrequency() / 1000) + "] seconds";
-    } else if (configService.getReporterType() == ConfigService.ReporterType.PROMETHEUS) {
-      infoMessage = infoMessage + "Using port[" + configService.getPrometheusPort()
-              + "] on metrics path [" + configService.getPrometheusMetricsPath() + "].";
+  public static String getStartupMessage(ConfigService configService, boolean initialized) {
+    ConfigService.ReporterType reporterType = configService.getReporterType();
+    StringBuilder infoMessage = new StringBuilder();
+    infoMessage.append(String.format("Initializing JInsight v[%s] with config [reporter: %s] ",
+        configService.getAgentVersion(), reporterType));
+    if (reporterType == ConfigService.ReporterType.APPTUIT) {
+      infoMessage.append(String.format("[mode: %s ] [frequency: %s seconds]",
+          configService.getReportingMode(), (configService.getReportingFrequency() / 1000)));
+    } else if (reporterType == ConfigService.ReporterType.PROMETHEUS) {
+      infoMessage.append(String.format("[port: %s] [metrics-path: %s ]",
+          configService.getPrometheusPort(), configService.getPrometheusMetricsPath()));
     } else {
       throw new IllegalStateException();
     }
-    return infoMessage;
+    infoMessage.append(initialized ? ": SUCCESSFUL" : ": FAILED");
+    return infoMessage.toString();
   }
 
   private static JarFile createBytemanJar() {

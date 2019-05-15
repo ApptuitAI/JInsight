@@ -25,6 +25,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import io.prometheus.client.CollectorRegistry;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.Map;
@@ -44,42 +45,56 @@ public class RegistryService {
 
   private static final Logger LOGGER = Logger.getLogger(RegistryService.class.getName());
   private static final RegistryService singleton = new RegistryService();
-  private MetricRegistry registry = null;
+
+  private MetricRegistry registry = new MetricRegistry();
   private Sanitizer sanitizer = null;
+  private boolean initialized = false;
 
   private RegistryService() {
     this(ConfigService.getInstance(), new ApptuitReporterFactory());
   }
 
   RegistryService(ConfigService configService, ApptuitReporterFactory factory) {
-    this.registry = new MetricRegistry();
-    ConfigService.ReporterType reporterType = configService.getReporterType();
+    registry.registerAll(new JvmMetricSet());
+    JInsightReporter jInsightReporter = JInsightReporter.getInstance();
+    jInsightReporter._register(registry);
+    startReportingOnRegistryCollection(configService, factory, jInsightReporter);
+  }
 
+  private void startReportingOnRegistryCollection(ConfigService configService,
+      ApptuitReporterFactory factory, JInsightReporter jInsightReporter) {
+
+    MetricRegistry registryCollection = jInsightReporter.getRegistryCollection();
+    ConfigService.ReporterType reporterType = configService.getReporterType();
     if (reporterType == ConfigService.ReporterType.APPTUIT) {
       ReportingMode mode = configService.getReportingMode();
       sanitizer = configService.getSanitizer();
       ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
-              configService.getApiToken(), configService.getApiUrl(), mode);
+              configService.getApiToken(), configService.getApiUrl(), mode, registryCollection);
       reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
+      initialized=true;
     } else if (reporterType == ConfigService.ReporterType.PROMETHEUS) {
-      ApptuitDropwizardExports collector = new ApptuitDropwizardExports(
-              registry, new TagDecodingSampleBuilder(configService.getGlobalTags()));
-      CollectorRegistry.defaultRegistry.register(collector);
+      CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
+      ApptuitDropwizardExports collector = new ApptuitDropwizardExports(registryCollection,
+          new TagDecodingSampleBuilder(configService.getGlobalTags()));
+      collectorRegistry.register(collector);
 
       try {
         int port = configService.getPrometheusPort();
         InetSocketAddress socket = new InetSocketAddress(port);
-
-        // To run server as daemon thread use bool true
-        PromHttpServer server = new PromHttpServer(socket, CollectorRegistry.defaultRegistry, true);
+        PromHttpServer server = new PromHttpServer(socket, collectorRegistry, true);
         server.setContext(configService.getPrometheusMetricsPath());
-      } catch (Exception e) {
+        initialized=true;
+      } catch (IOException e) {
         LOGGER.log(Level.SEVERE, "Error while creating http port.", e);
       }
     } else {
       throw new IllegalStateException();
     }
-    registry.registerAll(new JvmMetricSet());
+  }
+
+  public boolean isInitialized() {
+    return initialized;
   }
 
   public static MetricRegistry getMetricRegistry() {
@@ -93,7 +108,8 @@ public class RegistryService {
   private ScheduledReporter createReporter(ApptuitReporterFactory factory,
                                            Map<String, String> globalTags,
                                            String apiToken, URL apiUrl,
-                                           ReportingMode reportingMode) {
+                                           ReportingMode reportingMode,
+                                           MetricRegistry registry) {
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
     globalTags.forEach(factory::addGlobalTag);
