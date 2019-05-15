@@ -16,20 +16,34 @@
 
 package ai.apptuit.metrics.jinsight;
 
+import static ai.apptuit.metrics.jinsight.ConfigService.DEFAULT_REPORTER_TYPE;
+import static ai.apptuit.metrics.jinsight.ConfigService.PROMETHEUS_EXPORTER_PORT;
+import static ai.apptuit.metrics.jinsight.ConfigService.PROMETHEUS_METRICS_PATH;
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTER_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.ReporterType;
+import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import ai.apptuit.metrics.client.DataPoint;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
-import com.codahale.metrics.Timer;
+
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
+import com.codahale.metrics.Timer;
 import io.prometheus.client.Collector;
 import io.prometheus.client.dropwizard.DropwizardExports;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,8 +53,8 @@ import java.net.DatagramSocket;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,30 +66,20 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
+import org.hamcrest.CoreMatchers;
+import org.junit.Before;
+import org.junit.Test;
 
-//import static ai.apptuit.metrics.jinsight.ConfigService.;
-import static ai.apptuit.metrics.jinsight.ConfigService.ReporterType;
-import static ai.apptuit.metrics.jinsight.ConfigService.REPORTER_PROPERTY_NAME;
-import static ai.apptuit.metrics.jinsight.ConfigService.PROMETHEUS_EXPORTER_PORT;
-import static ai.apptuit.metrics.jinsight.ConfigService.PROMETHEUS_METRICS_PATH;
-import static ai.apptuit.metrics.jinsight.ConfigService.DEFAULT_REPORTER_TYPE;
-import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class PrometheusTest {
+
   private ApptuitReporterFactory mockFactory;
   private ConfigService mockConfigService;
   private PromHttpServer mockServer;
   private static final int UDP_PORT = 8953;
 
   public String readInputStream(InputStream inputStream)
-          throws IOException {
+      throws IOException {
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     byte[] buffer = new byte[2048];
     int length;
@@ -178,22 +182,16 @@ public class PrometheusTest {
     p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
     new RegistryService(configService, mockFactory);
-    try {
-      URL url = new URL("http://localhost:9404/metrics");
-      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-      connection.setRequestMethod("GET");
-      connection.connect();
+    URL url = new URL("http://localhost:9404/metrics");
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setRequestMethod("GET");
+    connection.connect();
 
-      int code = connection.getResponseCode();
-      String upTimeMetricString = "jvm_uptime_seconds";
-      String responseString = readInputStream(connection.getInputStream());
-      assertEquals(code, 200);
-      assertNotEquals(-1, responseString.indexOf(upTimeMetricString));
-    } catch (Exception e) {
-      assert false;
-    }
-    // if server is successfully created then there will not be any exception
-    assert true;
+    int code = connection.getResponseCode();
+    String upTimeMetricString = "jvm_uptime_seconds";
+    String responseString = readInputStream(connection.getInputStream());
+    assertEquals(code, 200);
+    assertNotEquals(-1, responseString.indexOf(upTimeMetricString));
   }
 
 
@@ -203,24 +201,18 @@ public class PrometheusTest {
     p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
     new RegistryService(configService, mockFactory);
-    try {
-      URL url = new URL("http://localhost:9404/metrics");
-      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-      connection.setRequestProperty("Accept-Encoding", "gzip");
-      connection.setRequestMethod("GET");
-      connection.connect();
+    URL url = new URL("http://localhost:9404/metrics");
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setRequestProperty("Accept-Encoding", "gzip");
+    connection.setRequestMethod("GET");
+    connection.connect();
 
-      int code = connection.getResponseCode();
-      String upTimeMetricString = "jvm_uptime_seconds";
-      String responseString = readGzipInputStream(connection.getInputStream());
-      //System.out.println(responseString);
-      assertEquals(code, 200);
-      assertNotEquals(-1, responseString.indexOf(upTimeMetricString));
-    } catch (Exception e) {
-      assert false;
-    }
-    // if server is successfully created then there will not be any exception
-    assert true;
+    int code = connection.getResponseCode();
+    String upTimeMetricString = "jvm_uptime_seconds";
+    String responseString = readGzipInputStream(connection.getInputStream());
+    //System.out.println(responseString);
+    assertEquals(code, 200);
+    assertNotEquals(-1, responseString.indexOf(upTimeMetricString));
   }
 
 
@@ -234,9 +226,9 @@ public class PrometheusTest {
     e.clear();
     TagDecodingSampleBuilder customSampleBuilder = new TagDecodingSampleBuilder(null);
     Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1, "", e, e, b);
-    assert sample.name.equals("sample_metric");
-    assert sample.labelNames.equals(labels);
-    assert sample.labelValues.equals(values);
+    assertEquals("sample_metric", sample.name);
+    assertEquals(labels, sample.labelNames);
+    assertEquals(values, sample.labelValues);
   }
 
   @Test
@@ -244,15 +236,16 @@ public class PrometheusTest {
     //global_tags=host:junit, testTag1:testValue1, testTag2:testValue2
     ArrayList<String> e = new ArrayList<>();
     ArrayList<String> labels = new ArrayList<>(Arrays.asList("label_1", "label_2", "host", "testTag1", "testTag2"));
-    ArrayList<String> values = new ArrayList<>(Arrays.asList("value.1", "value.2", "junit", "testValue1", "testValue2"));
+    ArrayList<String> values = new ArrayList<>(
+        Arrays.asList("value.1", "value.2", "junit", "testValue1", "testValue2"));
     String dropwizardName1 = "sample.metric[label.1:value.1,label.2:value.2]";
     double b = 2.0;
     e.clear();
     TagDecodingSampleBuilder customSampleBuilder = new TagDecodingSampleBuilder(mockConfigService.getGlobalTags());
     Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1, "", e, e, b);
-    assert sample.name.equals("sample_metric");
-    assert sample.labelNames.equals(labels);
-    assert sample.labelValues.equals(values);
+    assertEquals("sample_metric", sample.name);
+    assertEquals(labels, sample.labelNames);
+    assertEquals(values, sample.labelValues);
   }
 
   @Test
@@ -270,9 +263,9 @@ public class PrometheusTest {
     e.clear();
     TagDecodingSampleBuilder customSampleBuilder = new TagDecodingSampleBuilder(globalTags);
     Collector.MetricFamilySamples.Sample sample = customSampleBuilder.createSample(dropwizardName1, "", e, e, b);
-    assert sample.name.equals("sample_metric");
-    assert sample.labelNames.equals(labels);
-    assert sample.labelValues.equals(values);
+    assertEquals("sample_metric", sample.name);
+    assertEquals(labels, sample.labelNames);
+    assertEquals(values, sample.labelValues);
   }
 
   //to test the startup message for Prom And apptuit
@@ -281,29 +274,24 @@ public class PrometheusTest {
     Properties p = new Properties();
     p.setProperty(REPORTER_PROPERTY_NAME, "PROMETHEUS");
     ConfigService configService = new ConfigService(p);
-    String actualMessage = Agent.getStartupMessage(configService);
+    String actualMessage = Agent.getStartupMessage(configService, true);
+    assertThat(actualMessage, CoreMatchers.containsString("v[" + configService.getAgentVersion() + "]"));
+    assertThat(actualMessage, CoreMatchers.containsString(configService.getReporterType().toString()));
+    assertThat(actualMessage, CoreMatchers.containsString(String.valueOf(configService.getPrometheusPort())));
+    assertThat(actualMessage, CoreMatchers.containsString(configService.getPrometheusMetricsPath()));
+    assertThat(actualMessage, CoreMatchers.endsWith("SUCCESSFUL"));
+  }
 
-    String expectedMessage = "JInsight v[" + configService.getAgentVersion() + "] initialized with reporter ["
-            + configService.getReporterType() + "]. ";
-    expectedMessage = expectedMessage + "Using port[" + configService.getPrometheusPort()
-            + "] on metrics path [" + configService.getPrometheusMetricsPath() + "].";
-    //System.out.println(actualMessage);
-    assertEquals(expectedMessage, actualMessage);
+  @Test(expected = IllegalStateException.class)
+  public void testPrometheusWrongReporterType() throws Exception {
+    when(mockConfigService.getReporterType()).thenReturn(null);
+    String actualMessage = Agent.getStartupMessage(mockConfigService, false);
   }
 
   @Test
   public void testPrometheusStartUpMessageError() throws Exception {
-    when(mockConfigService.getReporterType()).thenReturn(null);
-    try {
-      String actualMessage = Agent.getStartupMessage(mockConfigService);
-    } catch (IllegalStateException e) {
-      //as mockConfigService returns null for the getReporterType we should ideally get the IllegalStateException
-      assert true;
-      return;
-    } catch (Exception e) {
-      assert false;
-    }
-    assert false;
+    String actualMessage = Agent.getStartupMessage(mockConfigService, false);
+    assertThat(actualMessage, CoreMatchers.endsWith("FAILED"));
   }
 
   //configService readReporterTest
@@ -349,14 +337,13 @@ public class PrometheusTest {
     Timer timer = metricRegistry.timer(timerName.toString());
     timer.update(20, TimeUnit.MILLISECONDS);
 
-
     TagDecodingSampleBuilder builder = new TagDecodingSampleBuilder(null);
     ApptuitDropwizardExports exporter = new ApptuitDropwizardExports(metricRegistry, builder);
     Set<TagEncodedMetricName> promDatapoints = getTagEncodedMetricNames(exporter);
 
-    Set<TagEncodedMetricName> origPromDatapoints = getTagEncodedMetricNames(new DropwizardExports(metricRegistry, builder));
-    System.out.println(origPromDatapoints);
-
+    Set<TagEncodedMetricName> origPromDatapoints = getTagEncodedMetricNames(
+        new DropwizardExports(metricRegistry, builder));
+//    System.out.println(origPromDatapoints);
 
     MockServer mockServer = new MockServer();
     mockServer.start();
@@ -374,7 +361,6 @@ public class PrometheusTest {
     HashSet<TagEncodedMetricName> apptuitTimeseries = new HashSet<>();
     Map<String, String> tags;
 
-
     for (DataPoint dataPoint : dataPoints) {
       String apptuitName = dataPoint.getMetric();
 
@@ -384,7 +370,7 @@ public class PrometheusTest {
         apptuitTimeseries.add(metric);
       }
     }
-    System.out.println(apptuitTimeseries);
+//    System.out.println(apptuitTimeseries);
 
     assertEquals(apptuitTimeseries, promDatapoints);
 
@@ -474,7 +460,7 @@ public class PrometheusTest {
         //DataPoint(String metricName, long epoch, Number value, Map<String, String> tags)
         String[] fields = line.split(" ");
         return new DataPoint(fields[0], Long.parseLong(fields[1]),
-                Double.parseDouble(fields[2]), getTags(fields));
+            Double.parseDouble(fields[2]), getTags(fields));
       }
 
       private Map<String, String> getTags(String[] fields) {
