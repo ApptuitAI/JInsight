@@ -20,11 +20,9 @@ import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
 import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
-
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import io.prometheus.client.CollectorRegistry;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -35,9 +33,8 @@ import java.util.logging.Logger;
 
 
 /**
- * Provides access to the MetricRegistry that is pre-configured to use {@link
- * ai.apptuit.metrics.dropwizard}. Rest the Agent runtime classes use this registry
- * to create metrics.
+ * Provides access to the MetricRegistry that is pre-configured to use {@link ai.apptuit.metrics.dropwizard}. Rest the
+ * Agent runtime classes use this registry to create metrics.
  *
  * @author Rajiv Shivane
  */
@@ -51,10 +48,18 @@ public class RegistryService {
   private boolean initialized = false;
 
   private RegistryService() {
-    this(ConfigService.getInstance(), new ApptuitReporterFactory());
   }
 
   RegistryService(ConfigService configService, ApptuitReporterFactory factory) {
+    initialize(configService, factory);
+  }
+
+  boolean initialize() {
+    initialize(ConfigService.getInstance(), new ApptuitReporterFactory());
+    return initialized;
+  }
+
+  private void initialize(ConfigService configService, ApptuitReporterFactory factory) {
     registry.registerAll(new JvmMetricSet());
     JInsightReporter jInsightReporter = JInsightReporter.getInstance();
     jInsightReporter.registerUnchecked(registry);
@@ -70,9 +75,9 @@ public class RegistryService {
       ReportingMode mode = configService.getReportingMode();
       sanitizer = configService.getSanitizer();
       ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
-              configService.getApiToken(), configService.getApiUrl(), mode, registryCollection);
+          configService.getApiToken(), configService.getApiUrl(), mode, registryCollection);
       reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
-      initialized=true;
+      initialized = true;
     } else if (reporterType == ConfigService.ReporterType.PROMETHEUS) {
       CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
       ApptuitDropwizardExports collector = new ApptuitDropwizardExports(registryCollection,
@@ -84,7 +89,7 @@ public class RegistryService {
         InetSocketAddress socket = new InetSocketAddress(port);
         PromHttpServer server = new PromHttpServer(socket, collectorRegistry, true);
         server.setContext(configService.getPrometheusMetricsPath());
-        initialized=true;
+        initialized = true;
       } catch (IOException e) {
         LOGGER.log(Level.SEVERE, "Error while creating http port.", e);
       }
@@ -98,7 +103,11 @@ public class RegistryService {
   }
 
   public static MetricRegistry getMetricRegistry() {
-    return getRegistryService().registry;
+    RegistryService registryService = getRegistryService();
+    if (!registryService.isInitialized()) {
+      throw new IllegalStateException("RegistryService not yet initialized.");
+    }
+    return registryService.registry;
   }
 
   public static RegistryService getRegistryService() {
@@ -106,10 +115,10 @@ public class RegistryService {
   }
 
   private ScheduledReporter createReporter(ApptuitReporterFactory factory,
-                                           Map<String, String> globalTags,
-                                           String apiToken, URL apiUrl,
-                                           ReportingMode reportingMode,
-                                           MetricRegistry registry) {
+      Map<String, String> globalTags,
+      String apiToken, URL apiUrl,
+      ReportingMode reportingMode,
+      MetricRegistry registry) {
     factory.setRateUnit(TimeUnit.SECONDS);
     factory.setDurationUnit(TimeUnit.MILLISECONDS);
     globalTags.forEach(factory::addGlobalTag);

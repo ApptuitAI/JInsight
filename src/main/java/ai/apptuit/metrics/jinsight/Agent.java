@@ -26,7 +26,6 @@ import java.util.function.BiConsumer;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.jboss.byteman.agent.Main;
 
 /**
@@ -98,8 +97,8 @@ public class Agent {
     instrumentation.appendToBootstrapClassLoaderSearch(bytemanJar);
     delegate.accept(agentArgs, instrumentation);
     ConfigService configService = ConfigService.getInstance();
-    boolean initialized = RegistryService.getRegistryService().isInitialized();
-    LOGGER.info(getStartupMessage(configService, initialized));
+    boolean success = RegistryService.getRegistryService().initialize();
+    LOGGER.info(getStartupMessage(configService, success));
   }
 
   public static String getStartupMessage(ConfigService configService, boolean initialized) {
