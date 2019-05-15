@@ -69,10 +69,10 @@ public class JInsightReporter {
     if (!RegistryService.getRegistryService().isInitialized()) {
       throw new IllegalStateException("JInsight not initialized - cannot report ");
     }
-    return _register(metricRegistry);
+    return registerUnchecked(metricRegistry);
   }
 
-  boolean _register(Object metricRegistry) {
+  boolean registerUnchecked(Object metricRegistry) {
     return collection.registerMetricRegistry(metricRegistry);
   }
 
@@ -112,7 +112,8 @@ public class JInsightReporter {
       }
     }
 
-    private WeakReference reference;
+    private final Map<MetricType, Method> methods = new WeakHashMap<>();
+    private final WeakReference reference;
 
     public MetricRegistryWrapper(Object delegate) {
       if (delegate == null) {
@@ -141,8 +142,6 @@ public class JInsightReporter {
         LOGGER.log(Level.SEVERE, "Error collecting metrics from [" + getDelegate() + "]", e);
       }
     }
-
-    private Map<MetricType, Method> methods = new WeakHashMap<>();
 
     private <T extends Metric> Method getAccessorMethod(MetricType type) throws NoSuchMethodException {
       Method method = methods.get(type);

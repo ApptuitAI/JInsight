@@ -57,7 +57,7 @@ public class RegistryService {
   RegistryService(ConfigService configService, ApptuitReporterFactory factory) {
     registry.registerAll(new JvmMetricSet());
     JInsightReporter jInsightReporter = JInsightReporter.getInstance();
-    jInsightReporter._register(registry);
+    jInsightReporter.registerUnchecked(registry);
     startReportingOnRegistryCollection(configService, factory, jInsightReporter);
   }
 
