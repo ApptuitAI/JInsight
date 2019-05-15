@@ -19,6 +19,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.codahale.metrics.Clock;
@@ -34,8 +35,10 @@ import com.codahale.metrics.SlidingTimeWindowReservoir;
 import com.codahale.metrics.Snapshot;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.UniformReservoir;
+import java.io.ByteArrayOutputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -205,6 +208,12 @@ public class JInsightReporterTest {
     assertEquals(snapshot.getValue(0.001), wrappedSnapshot.getValue(0.001), 0.001);
     assertArrayEquals(snapshot.getValues(), wrappedSnapshot.getValues());
 
+    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    wrappedSnapshot.dump(output);
+
+    if (snapshot.size() > 0) {
+      assertThat(new String(output.toByteArray()), CoreMatchers.not(""));
+    }
   }
 
   @Test
