@@ -55,7 +55,7 @@ public class MetricRegistryCollection {
   private static final Logger LOGGER = Logger.getLogger(MetricRegistryCollection.class.getName());
   private static final MetricRegistryCollection SINGLETON = new MetricRegistryCollection();
 
-  private final AggregatedMetricRegistry collection = new AggregatedMetricRegistry();
+  private final AggregatedMetricRegistry aggregatedMetricRegistry = new AggregatedMetricRegistry();
 
 
   private MetricRegistryCollection() {
@@ -77,15 +77,15 @@ public class MetricRegistryCollection {
   }
 
   private boolean registerUnchecked(Object metricRegistry) {
-    return collection.registerMetricRegistry(metricRegistry);
+    return aggregatedMetricRegistry.registerMetricRegistry(metricRegistry);
   }
 
   public boolean deRegister(Object metricRegistry) {
-    return collection.deRegisterMetricRegistry(metricRegistry);
+    return aggregatedMetricRegistry.deRegisterMetricRegistry(metricRegistry);
   }
 
-  MetricRegistry getRegistryCollection() {
-    return collection;
+  MetricRegistry getAggregatedMetricRegistry() {
+    return aggregatedMetricRegistry;
   }
 
   private static class MetricRegistryWrapper {

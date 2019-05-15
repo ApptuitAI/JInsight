@@ -43,9 +43,9 @@ public class MetricRegistryCollectionIT {
 
     MetricRegistryCollection metricRegistryCollection = MetricRegistryCollection.getInstance();
     Class<? extends MetricRegistryCollection> jirClass = metricRegistryCollection.getClass();
-    Method getRegistryCollection = jirClass.getDeclaredMethod("getRegistryCollection");
-    getRegistryCollection.setAccessible(true);
-    Object registryCollection = getRegistryCollection.invoke(metricRegistryCollection);
+    Method getAggregatedMetricRegistry = jirClass.getDeclaredMethod("getAggregatedMetricRegistry");
+    getAggregatedMetricRegistry.setAccessible(true);
+    Object registryCollection = getAggregatedMetricRegistry.invoke(metricRegistryCollection);
     Method getCounters = registryCollection.getClass().getMethod("getCounters");
 
     registerGCableRegistry(finalized, counterName, value);

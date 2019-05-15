@@ -69,18 +69,18 @@ public class RegistryService {
   private void startReportingOnRegistryCollection(ConfigService configService,
       ApptuitReporterFactory factory, MetricRegistryCollection metricRegistryCollection) {
 
-    MetricRegistry registryCollection = metricRegistryCollection.getRegistryCollection();
+    MetricRegistry aggregatedMetricRegistry = metricRegistryCollection.getAggregatedMetricRegistry();
     ConfigService.ReporterType reporterType = configService.getReporterType();
     if (reporterType == ConfigService.ReporterType.APPTUIT) {
       ReportingMode mode = configService.getReportingMode();
       sanitizer = configService.getSanitizer();
       ScheduledReporter reporter = createReporter(factory, configService.getGlobalTags(),
-          configService.getApiToken(), configService.getApiUrl(), mode, registryCollection);
+          configService.getApiToken(), configService.getApiUrl(), mode, aggregatedMetricRegistry);
       reporter.start(configService.getReportingFrequency(), TimeUnit.MILLISECONDS);
       initialized = true;
     } else if (reporterType == ConfigService.ReporterType.PROMETHEUS) {
       CollectorRegistry collectorRegistry = CollectorRegistry.defaultRegistry;
-      ApptuitDropwizardExports collector = new ApptuitDropwizardExports(registryCollection,
+      ApptuitDropwizardExports collector = new ApptuitDropwizardExports(aggregatedMetricRegistry,
           new TagDecodingSampleBuilder(configService.getGlobalTags()));
       collectorRegistry.register(collector);
 

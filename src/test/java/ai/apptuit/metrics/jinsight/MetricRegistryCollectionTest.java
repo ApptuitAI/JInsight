@@ -48,13 +48,12 @@ import org.junit.Test;
 public class MetricRegistryCollectionTest {
 
   private MetricRegistry registry;
-
-  private MetricRegistry registryCollection;
+  private MetricRegistry aggregatedMetricRegistry;
 
   @Before
   public void setUp() throws Exception {
     MetricRegistryCollection metricRegistryCollection = MetricRegistryCollection.getInstance();
-    registryCollection = metricRegistryCollection.getRegistryCollection();
+    aggregatedMetricRegistry = metricRegistryCollection.getAggregatedMetricRegistry();
     registry = new MetricRegistry();
     metricRegistryCollection.register(registry);
   }
@@ -82,7 +81,7 @@ public class MetricRegistryCollectionTest {
     final String metricName = "test.gauge";
     AtomicLong gaugeValue = new AtomicLong();
     Gauge gauge = registry.gauge(metricName, () -> () -> gaugeValue);
-    Gauge wrappedGauge = registryCollection.getGauges().get(metricName);
+    Gauge wrappedGauge = aggregatedMetricRegistry.getGauges().get(metricName);
     assertNotEquals("Wrapped Metric is not expected to be same as original metric",
         gauge, wrappedGauge);
 
@@ -102,7 +101,7 @@ public class MetricRegistryCollectionTest {
   public void testCounter() throws Exception {
     final String metricName = "test.counter";
     Counter counter = registry.counter(metricName);
-    Counter wrappedCounter = registryCollection.getCounters().get(metricName);
+    Counter wrappedCounter = aggregatedMetricRegistry.getCounters().get(metricName);
     assertNotEquals("Wrapped Metric is not expected to be same as original metric",
         counter, wrappedCounter);
 
@@ -124,7 +123,7 @@ public class MetricRegistryCollectionTest {
   public void testHistogramDefault() throws Exception {
     final String metricName = "test.histogram.default";
     Histogram histogram = registry.histogram(metricName);
-    Histogram wrappedHistogram = registryCollection.getHistograms().get(metricName);
+    Histogram wrappedHistogram = aggregatedMetricRegistry.getHistograms().get(metricName);
     testHistogram(histogram, wrappedHistogram);
   }
 
@@ -133,7 +132,7 @@ public class MetricRegistryCollectionTest {
   public void testHistogramExponentiallyDecayingReservoir() throws Exception {
     final String metricName = "test.histogram.exp";
     Histogram histogram = registry.histogram(metricName, () -> new Histogram(new ExponentiallyDecayingReservoir()));
-    Histogram wrappedHistogram = registryCollection.getHistograms().get(metricName);
+    Histogram wrappedHistogram = aggregatedMetricRegistry.getHistograms().get(metricName);
     testHistogram(histogram, wrappedHistogram);
   }
 
@@ -144,7 +143,7 @@ public class MetricRegistryCollectionTest {
     Histogram histogram = registry.histogram(metricName,
         () -> new Histogram(new SlidingTimeWindowArrayReservoir(300, TimeUnit.SECONDS))
     );
-    Histogram wrappedHistogram = registryCollection.getHistograms().get(metricName);
+    Histogram wrappedHistogram = aggregatedMetricRegistry.getHistograms().get(metricName);
     testHistogram(histogram, wrappedHistogram);
   }
 
@@ -155,7 +154,7 @@ public class MetricRegistryCollectionTest {
     Histogram histogram = registry.histogram(metricName,
         () -> new Histogram(new SlidingTimeWindowReservoir(300, TimeUnit.SECONDS))
     );
-    Histogram wrappedHistogram = registryCollection.getHistograms().get(metricName);
+    Histogram wrappedHistogram = aggregatedMetricRegistry.getHistograms().get(metricName);
     testHistogram(histogram, wrappedHistogram);
   }
 
@@ -165,7 +164,7 @@ public class MetricRegistryCollectionTest {
     Histogram histogram = registry.histogram(metricName,
         () -> new Histogram(new UniformReservoir())
     );
-    Histogram wrappedHistogram = registryCollection.getHistograms().get(metricName);
+    Histogram wrappedHistogram = aggregatedMetricRegistry.getHistograms().get(metricName);
     testHistogram(histogram, wrappedHistogram);
   }
 
@@ -221,7 +220,7 @@ public class MetricRegistryCollectionTest {
     final String metricName = "test.meter";
     final AdjustableClock clock = new AdjustableClock();
     Meter meter = registry.meter(metricName, () -> new Meter(clock));
-    Meter wrappedMeter = registryCollection.getMeters().get(metricName);
+    Meter wrappedMeter = aggregatedMetricRegistry.getMeters().get(metricName);
     assertNotEquals("Wrapped Metric is not expected to be same as original metric",
         meter, wrappedMeter);
 
@@ -249,7 +248,7 @@ public class MetricRegistryCollectionTest {
     final AdjustableClock clock = new AdjustableClock();
     Timer timer = registry.timer(metricName,
         () -> new Timer(new ExponentiallyDecayingReservoir(), clock));
-    Timer wrappedTimer = registryCollection.getTimers().get(metricName);
+    Timer wrappedTimer = aggregatedMetricRegistry.getTimers().get(metricName);
     assertNotEquals("Wrapped Metric is not expected to be same as original metric",
         timer, wrappedTimer);
 
