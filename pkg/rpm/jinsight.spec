@@ -8,7 +8,6 @@ Release:        @PACKAGE_REVISION@
 License:        Apache License
 Summary:        Apptuit JInsight - A Java agent to collect metrics from Java applications
 URL:            https://apptuit.ai/jinsight
-Requires:       xcollector
 Packager:       JInsight Maintainers <hello+jinsight@apptuit.ai>
 
 

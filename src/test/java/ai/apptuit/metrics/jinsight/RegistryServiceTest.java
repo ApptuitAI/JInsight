@@ -56,7 +56,7 @@ public class RegistryServiceTest {
     when(mockFactory.build(any(MetricRegistry.class))).thenReturn(mockReporter);
     mockConfigService = mock(ConfigService.class);
     when(mockConfigService.getGlobalTags()).thenReturn(ConfigService.getInstance().getGlobalTags());
-    when(mockConfigService.getReporterType()).thenReturn(ConfigService.DEFAULT_REPORTER_TYPE);
+    when(mockConfigService.getReporterType()).thenReturn(ConfigService.ReporterType.APPTUIT);
   }
 
   @Test
@@ -92,6 +92,7 @@ public class RegistryServiceTest {
   @Test
   public void testGlobalHostTagByDefault() throws Exception {
     Properties properties = new Properties();
+    properties.setProperty("reporter", ConfigService.ReporterType.APPTUIT.toString());
     properties.setProperty("apptuit.access_token", UUID.randomUUID().toString());
     ConfigService configService = new ConfigService(properties);
     new RegistryService(configService, mockFactory);
