@@ -4,7 +4,6 @@ License: Apache-2.0
 Architecture: @DEB_TARGET@
 Maintainer: JInsight Maintainers <hello+jinsight@apptuit.ai>
 Installed-Size: 1108
-Depends: xcollector
 Provides: jinsight
 Section: utils
 Priority: optional

@@ -48,6 +48,7 @@ public class ConfigServiceTest {
   @Test(expected = ConfigurationException.class)
   public void testPutReporterNeedsToken() throws Exception {
     Properties p = new Properties();
+    p.setProperty("reporter", ConfigService.ReporterType.APPTUIT.toString());
     ConfigService configService = new ConfigService(p);
   }
 
