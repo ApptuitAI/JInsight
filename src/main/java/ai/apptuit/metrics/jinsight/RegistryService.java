@@ -19,6 +19,7 @@ package ai.apptuit.metrics.jinsight;
 import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
+import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
@@ -61,6 +62,9 @@ public class RegistryService {
 
   private void initialize(ConfigService configService, ApptuitReporterFactory factory) {
     registry.registerAll(new JvmMetricSet());
+    String buildInfoMetricName = TagEncodedMetricName.decode("jinsight").submetric("build_info")
+        .withTags("version", configService.getAgentVersion()).toString();
+    registry.gauge(buildInfoMetricName, () -> () -> 1L);
     MetricRegistryCollection metricRegistryCollection = MetricRegistryCollection.getInstance();
     metricRegistryCollection.initialize(registry);
     startReportingOnRegistryCollection(configService, factory, metricRegistryCollection);

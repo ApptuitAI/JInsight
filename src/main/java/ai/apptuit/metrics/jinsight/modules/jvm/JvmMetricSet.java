@@ -21,6 +21,7 @@ import static java.lang.management.ManagementFactory.getPlatformMBeanServer;
 import static java.lang.management.ManagementFactory.getRuntimeMXBean;
 import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 
+import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
@@ -42,6 +43,10 @@ import javax.management.MBeanServerConnection;
 public class JvmMetricSet implements MetricSet {
 
   private static final Logger LOGGER = Logger.getLogger(JvmMetricSet.class.getName());
+  static final String JVM_INFO_METRIC_NAME = TagEncodedMetricName.decode("jvm.info")
+      .withTags("version", System.getProperty("java.version"))
+      .withTags("vendor", System.getProperty("java.vendor"))
+      .toString();
 
   private final Map<String, Metric> metrics = new HashMap<>();
 
@@ -54,6 +59,8 @@ public class JvmMetricSet implements MetricSet {
     registerSet("jvm.threads", new ThreadStateMetrics());
 
     metrics.put("jvm.uptime.seconds", new UptimeGauge());
+
+    metrics.put(JVM_INFO_METRIC_NAME, (Gauge) () -> 1L);
 
     try {
       metrics.put("jvm.process.cpu.seconds", new ProcessCpuTicksGauge());
@@ -99,7 +106,7 @@ public class JvmMetricSet implements MetricSet {
       Class.forName("com.sun.management.OperatingSystemMXBean");
 
       osMxBean = newPlatformMXBeanProxy(mbsc, OPERATING_SYSTEM_MXBEAN_NAME,
-              com.sun.management.OperatingSystemMXBean.class);
+          com.sun.management.OperatingSystemMXBean.class);
 
     }
 
