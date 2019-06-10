@@ -28,8 +28,9 @@ CLASS ch.qos.logback.classic.Logger
 METHOD buildLoggingEventAndAppend
 HELPER ai.apptuit.metrics.jinsight.modules.logback.LogbackRuleHelper
 AT ENTRY
-IF $6 != null || $5 !=null
-DO beforeBuildEvent($5, $6)
+BIND throwable = getThrowableToLog($5, $6)
+IF throwable != null
+DO org.slf4j.MDC.put(ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.FINGERPRINT_PROPERTY_NAME, beforeBuildEvent(throwable))
 ENDRULE
 
 RULE Logback Logger buildLoggingEventAndAppend exit
@@ -37,8 +38,10 @@ CLASS ch.qos.logback.classic.Logger
 METHOD buildLoggingEventAndAppend
 HELPER ai.apptuit.metrics.jinsight.modules.logback.LogbackRuleHelper
 AT EXIT
-IF $6 != null || $5 !=null
-DO afterBuildEvent($5, $6);
+BIND throwable = getThrowableToLog($5, $6)
+IF throwable != null
+DO afterBuildEvent(throwable);
+org.slf4j.MDC.remove(ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.FINGERPRINT_PROPERTY_NAME)
 ENDRULE
 
 RULE Logback Logger buildLoggingEventAndAppend exception exit
@@ -46,8 +49,10 @@ CLASS ch.qos.logback.classic.Logger
 METHOD buildLoggingEventAndAppend
 HELPER ai.apptuit.metrics.jinsight.modules.logback.LogbackRuleHelper
 AT EXCEPTION EXIT
-IF $6 != null || $5 !=null
-DO afterBuildEvent($5, $6);
+BIND throwable = getThrowableToLog($5, $6)
+IF throwable != null
+DO afterBuildEvent(throwable);
+org.slf4j.MDC.remove(ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.FINGERPRINT_PROPERTY_NAME)
 ENDRULE
 
 RULE Logback MessageConverter convert exit
