@@ -65,14 +65,14 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
     Snapshot snapshot = samplingObj.getSnapshot();
     List<MetricFamilySamples.Sample> samples = Arrays.asList(
             sampleBuilder.createSample(dropwizardName, durationSuffix + "_min",
-                    null, null, snapshot.getMin()),
+                    null, null, snapshot.getMin() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix + "_max",
-                    null, null, snapshot.getMax()),
+                    null, null, snapshot.getMax() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix + "_mean",
-                    null, null, snapshot.getMean()),
+                    null, null, snapshot.getMean() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix + "_stddev",
+                    null, null, snapshot.getStdDev() * factor),
 
-                    null, null, snapshot.getStdDev()),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
                     Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.5"), snapshot.getMedian() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
@@ -85,6 +85,7 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
                     Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.99"), snapshot.get99thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
                     Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.999"), snapshot.get999thPercentile() * factor),
+
             sampleBuilder.createSample(dropwizardName, "_count",
                     new ArrayList<>(), new ArrayList<>(), count)
     );
