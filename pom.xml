@@ -106,9 +106,9 @@ limitations under the License.
     <junit.version>4.12</junit.version>
     <jacoco.version>0.8.2</jacoco.version>
     <byteman.version>4.0.5</byteman.version>
-    <metrics.version>3.2.6</metrics.version>
-    <prometheus.version>0.6.0</prometheus.version>
-    <apptuit.reporter.version>0.8.4</apptuit.reporter.version>
+    <metrics.version>4.0.6</metrics.version>
+    <prometheus.version>0.7.0</prometheus.version>
+    <apptuit.reporter.version>0.8.5</apptuit.reporter.version>
 
     <!-- Acceptance Criteria -->
     <enforce.code.style>false</enforce.code.style>
@@ -302,7 +302,7 @@ limitations under the License.
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.9.9</version>
+      <version>2.10.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
