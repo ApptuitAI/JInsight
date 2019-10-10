@@ -20,10 +20,10 @@ sudo: false
 env:
   matrix:
     - METRICS_VERSION=3.2.6
-    - METRICS_VERSION=4.0.2
+    - METRICS_VERSION=4.0.6
 
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 services:
   - memcached
@@ -44,22 +44,22 @@ cache:
 
 before_install:
   - sudo apt-get install jq
-  - wget -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.5/codacy-coverage-reporter-4.0.5-assembly.jar
+  - wget -nv -O ~/.codacy/reporter/codacy-reporter-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.5/codacy-coverage-reporter-4.0.5-assembly.jar
   - |
-    wget -O ~/.rpmlint/rpmlint-1.9.tar.gz https://github.com/rpm-software-management/rpmlint/archive/rpmlint-1.9.tar.gz;
+    wget -nv -O ~/.rpmlint/rpmlint-1.9.tar.gz https://github.com/rpm-software-management/rpmlint/archive/rpmlint-1.9.tar.gz;
     tar xvfz ~/.rpmlint/rpmlint-1.9.tar.gz -C ~/.rpmlint;
     BUILDER=$USER sudo make install -C ~$BUILDER/.rpmlint/rpmlint-rpmlint-1.9
 
 
 install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y xmlstarlet
-  - sudo apt-get install -y rpm python-rpm
-  - sudo apt-get install -y lintian
+  - sudo apt-get -qq install -y xmlstarlet
+  - sudo apt-get -qq install -y rpm python-rpm
+  - sudo apt-get -qq install -y lintian
 #  - sudo apt-get install -y rpmlint
 
 before_script:
-  - if [[ "$METRICS_VERSION" = "3.2.6" ]]; then export IS_PRIMARY_MATRIX_JOB=true; fi
+  - if [[ "$METRICS_VERSION" = "4.0.6" ]]; then export IS_PRIMARY_MATRIX_JOB=true; fi
   - xmlstarlet ed --inplace -u "/_:project/_:properties/_:metrics.version" -v "$METRICS_VERSION" pom.xml;
   - SEMVER_REGEX="^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$"
   - |
@@ -74,9 +74,9 @@ before_script:
 script:
   - |
     if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && [[ "$IS_PRIMARY_MATRIX_JOB" = "true" ]]; then
-      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1
+      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
     else
-      mvn verify -Denv.server.ip=127.0.0.1
+      mvn verify -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
     fi
   - make -C pkg/deb
   - make -C pkg/rpm

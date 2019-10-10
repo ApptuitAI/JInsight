@@ -31,6 +31,7 @@ import io.prometheus.client.dropwizard.samplebuilder.SampleBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,17 +75,22 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
                     null, null, snapshot.getStdDev() * factor),
 
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.5"), snapshot.getMedian() * factor),
+                Collections.singletonList(QUANTILE_TAG_NAME), Collections.singletonList("0.5"), snapshot.getMedian() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.75"), snapshot.get75thPercentile() * factor),
+                Collections.singletonList(QUANTILE_TAG_NAME),
+                Collections.singletonList("0.75"), snapshot.get75thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.95"), snapshot.get95thPercentile() * factor),
+                Collections.singletonList(QUANTILE_TAG_NAME),
+                Collections.singletonList("0.95"), snapshot.get95thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.98"), snapshot.get98thPercentile() * factor),
+                Collections.singletonList(QUANTILE_TAG_NAME),
+                Collections.singletonList("0.98"), snapshot.get98thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.99"), snapshot.get99thPercentile() * factor),
+                Collections.singletonList(QUANTILE_TAG_NAME),
+                Collections.singletonList("0.99"), snapshot.get99thPercentile() * factor),
             sampleBuilder.createSample(dropwizardName, durationSuffix,
-                    Arrays.asList(QUANTILE_TAG_NAME), Arrays.asList("0.999"), snapshot.get999thPercentile() * factor),
+                Collections.singletonList(QUANTILE_TAG_NAME),
+                Collections.singletonList("0.999"), snapshot.get999thPercentile() * factor),
 
             sampleBuilder.createSample(dropwizardName, "_count",
                     new ArrayList<>(), new ArrayList<>(), count)
@@ -100,7 +106,8 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
   private MetricFamilySamples fromCounter(String dropwizardName, Counter counter) {
     MetricFamilySamples.Sample sample = sampleBuilder.createSample(dropwizardName, "", new ArrayList<>(), new ArrayList<>(),
             counter.getCount());
-    return new MetricFamilySamples(sample.name, Type.GAUGE, getHelpMessage(dropwizardName, counter), Arrays.asList(sample));
+    return new MetricFamilySamples(sample.name, Type.GAUGE, getHelpMessage(dropwizardName, counter),
+        Collections.singletonList(sample));
   }
 
   /**
@@ -124,25 +131,25 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
     }
     MetricFamilySamples.Sample sample = sampleBuilder.createSample(dropwizardName, "",
             new ArrayList<>(), new ArrayList<>(), value);
-    return new MetricFamilySamples(sample.name, Type.GAUGE, getHelpMessage(dropwizardName, gauge), Arrays.asList(sample));
+    return new MetricFamilySamples(sample.name, Type.GAUGE, getHelpMessage(dropwizardName, gauge),
+        Collections.singletonList(sample));
   }
 
   private MetricFamilySamples fromMeter(String dropwizardName, Metered meter) {
     List<MetricFamilySamples.Sample> samples = Arrays.asList(
             sampleBuilder.createSample(dropwizardName, RATE_SUFFIX,
-                    Arrays.asList(WINDOW_TAG_NAME), Arrays.asList("1m"), meter.getOneMinuteRate()),
+                Collections.singletonList(WINDOW_TAG_NAME), Collections.singletonList("1m"), meter.getOneMinuteRate()),
             sampleBuilder.createSample(dropwizardName, RATE_SUFFIX,
-                    Arrays.asList(WINDOW_TAG_NAME), Arrays.asList("5m"), meter.getFiveMinuteRate()),
+                Collections.singletonList(WINDOW_TAG_NAME), Collections.singletonList("5m"), meter.getFiveMinuteRate()),
             sampleBuilder.createSample(dropwizardName, RATE_SUFFIX,
-                    Arrays.asList(WINDOW_TAG_NAME), Arrays.asList("15m"), meter.getFifteenMinuteRate()),
-            sampleBuilder.createSample(dropwizardName, "_total", new ArrayList<String>(), new ArrayList<String>(), meter.getCount())
+                Collections.singletonList(WINDOW_TAG_NAME), Collections.singletonList("15m"), meter.getFifteenMinuteRate()),
+            sampleBuilder.createSample(dropwizardName, "_total", new ArrayList<>(), new ArrayList<>(), meter.getCount())
     );
     return new MetricFamilySamples(samples.get(0).name, Type.SUMMARY, getHelpMessage(dropwizardName, meter), samples);
   }
 
   private MetricFamilySamples fromTimer(String dropwizardName, Timer timer) {
-    List<MetricFamilySamples.Sample> samples = new ArrayList<>();
-    samples.addAll(fromMeter(dropwizardName, timer).samples);
+    List<MetricFamilySamples.Sample> samples = new ArrayList<>(fromMeter(dropwizardName, timer).samples);
     samples.remove(samples.size() - 1);
     samples.addAll(fromSnapshotAndCount(dropwizardName, "_duration", timer, timer.getCount(),
             1.0D / TimeUnit.SECONDS.toNanos(1L), getHelpMessage(dropwizardName, timer)).samples);
@@ -155,20 +162,27 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
 
     Map<String, MetricFamilySamples> mfSamplesMap = new HashMap<>();
 
-    for (SortedMap.Entry<String, Histogram> entry : registry.getHistograms().entrySet()) {
-      addToMap(mfSamplesMap, fromHistogram(entry.getKey(), entry.getValue()));
-    }
-    for (SortedMap.Entry<String, Timer> entry : registry.getTimers().entrySet()) {
-      addToMap(mfSamplesMap, fromTimer(entry.getKey(), entry.getValue()));
-    }
-    for (SortedMap.Entry<String, Meter> entry : registry.getMeters().entrySet()) {
-      addToMap(mfSamplesMap, fromMeter(entry.getKey(), entry.getValue()));
-    }
-    for (SortedMap.Entry<String, Gauge> entry : registry.getGauges().entrySet()) {
-      addToMap(mfSamplesMap, fromGauge(entry.getKey(), entry.getValue()));
-    }
-    for (SortedMap.Entry<String, Counter> entry : registry.getCounters().entrySet()) {
-      addToMap(mfSamplesMap, fromCounter(entry.getKey(), entry.getValue()));
+    for (SortedMap.Entry<String, Metric> entry : registry.getMetrics().entrySet()) {
+      try {
+        Metric metric = entry.getValue();
+        MetricFamilySamples samples;
+        if (metric instanceof Histogram) {
+            samples = fromHistogram(entry.getKey(), (Histogram) metric);
+        } else if(metric instanceof Timer) {
+          samples = fromTimer(entry.getKey(), (Timer) metric);
+        } else if(metric instanceof Meter) {
+          samples = fromMeter(entry.getKey(), (Meter) metric);
+        } else if(metric instanceof Gauge) {
+          samples = fromGauge(entry.getKey(), (Gauge) metric);
+        } else if(metric instanceof Counter) {
+          samples = fromCounter(entry.getKey(), (Counter) metric);
+        } else {
+          continue;
+        }
+        addToMap(mfSamplesMap, samples);
+      } catch (RuntimeException rte) {
+        LOGGER.log(Level.SEVERE, "Error collecting fromHistogram [" + entry.getKey() + "]", rte);
+      }
     }
     return new ArrayList<>(mfSamplesMap.values());
   }
