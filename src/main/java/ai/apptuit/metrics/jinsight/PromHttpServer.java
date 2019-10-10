@@ -32,52 +32,11 @@ import java.util.zip.GZIPOutputStream;
 
 
 public class PromHttpServer extends HTTPServer {
+
+  private static final ThreadLocal<ByteArrayOutputStream> THREAD_LOCAL_BUFFER = ThreadLocal
+      .withInitial(() -> new ByteArrayOutputStream(1 << 20));
+
   private CollectorRegistry registry;
-
-  private static class LocalByteArray extends ThreadLocal<ByteArrayOutputStream> {
-    protected ByteArrayOutputStream initialValue() {
-      return new ByteArrayOutputStream(1 << 20);
-    }
-  }
-
-  static class HttpMetricHandler implements HttpHandler {
-
-    private CollectorRegistry registry;
-    private final LocalByteArray response = new LocalByteArray();
-
-    HttpMetricHandler(CollectorRegistry registry) {
-      this.registry = registry;
-    }
-
-
-    public void handle(HttpExchange t) throws IOException {
-      String query = t.getRequestURI().getRawQuery();
-
-      ByteArrayOutputStream response = this.response.get();
-      response.reset();
-      OutputStreamWriter osw = new OutputStreamWriter(response, StandardCharsets.UTF_8);
-
-      TextFormat.write004(osw, registry.filteredMetricFamilySamples(parseQuery(query)));
-      osw.flush();
-      osw.close();
-      response.flush();
-      response.close();
-
-      t.getResponseHeaders().set("Content-Type", TextFormat.CONTENT_TYPE_004);
-      if (shouldUseCompression(t)) {
-        t.getResponseHeaders().set("Content-Encoding", "gzip");
-        t.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-        final GZIPOutputStream os = new GZIPOutputStream(t.getResponseBody());
-        response.writeTo(os);
-        os.close();
-      } else {
-        t.getResponseHeaders().set("Content-Length", String.valueOf(response.size()));
-        t.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.size());
-        response.writeTo(t.getResponseBody());
-      }
-      t.close();
-    }
-  }
 
   /**
    * constructor for the PromHttpServer.
@@ -108,5 +67,44 @@ public class PromHttpServer extends HTTPServer {
     this.server.createContext(tempEndPoint, mHandler);
     return tempEndPoint;
   }
+
+  private static class HttpMetricHandler implements HttpHandler {
+
+    private CollectorRegistry registry;
+
+    HttpMetricHandler(CollectorRegistry registry) {
+      this.registry = registry;
+    }
+
+
+    public void handle(HttpExchange t) throws IOException {
+      String query = t.getRequestURI().getRawQuery();
+
+      ByteArrayOutputStream baos = THREAD_LOCAL_BUFFER.get();
+      baos.reset();
+      OutputStreamWriter osw = new OutputStreamWriter(baos, StandardCharsets.UTF_8);
+
+      TextFormat.write004(osw, registry.filteredMetricFamilySamples(parseQuery(query)));
+      osw.flush();
+      osw.close();
+      baos.flush();
+      baos.close();
+
+      t.getResponseHeaders().set("Content-Type", TextFormat.CONTENT_TYPE_004);
+      if (shouldUseCompression(t)) {
+        t.getResponseHeaders().set("Content-Encoding", "gzip");
+        t.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
+        final GZIPOutputStream os = new GZIPOutputStream(t.getResponseBody());
+        baos.writeTo(os);
+        os.close();
+      } else {
+        t.getResponseHeaders().set("Content-Length", String.valueOf(baos.size()));
+        t.sendResponseHeaders(HttpURLConnection.HTTP_OK, baos.size());
+        baos.writeTo(t.getResponseBody());
+      }
+      t.close();
+    }
+  }
+
 }
 
