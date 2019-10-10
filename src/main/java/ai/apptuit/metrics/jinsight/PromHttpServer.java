@@ -33,6 +33,7 @@ import java.util.zip.GZIPOutputStream;
 
 public class PromHttpServer extends HTTPServer {
 
+  @SuppressWarnings("squid:S5164")
   private static final ThreadLocal<ByteArrayOutputStream> THREAD_LOCAL_BUFFER = ThreadLocal
       .withInitial(() -> new ByteArrayOutputStream(1 << 20));
 
