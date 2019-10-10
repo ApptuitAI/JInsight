@@ -74,9 +74,9 @@ before_script:
 script:
   - |
     if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && [[ "$IS_PRIMARY_MATRIX_JOB" = "true" ]]; then
-      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1
+      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
     else
-      mvn verify -Denv.server.ip=127.0.0.1
+      mvn verify -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
     fi
   - make -C pkg/deb
   - make -C pkg/rpm
