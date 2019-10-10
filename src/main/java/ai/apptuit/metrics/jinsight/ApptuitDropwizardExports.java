@@ -156,19 +156,39 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
     Map<String, MetricFamilySamples> mfSamplesMap = new HashMap<>();
 
     for (SortedMap.Entry<String, Histogram> entry : registry.getHistograms().entrySet()) {
-      addToMap(mfSamplesMap, fromHistogram(entry.getKey(), entry.getValue()));
+      try {
+        addToMap(mfSamplesMap, fromHistogram(entry.getKey(), entry.getValue()));
+      } catch (RuntimeException rte) {
+        LOGGER.log(Level.SEVERE, "Error collecting fromHistogram [" + entry.getKey() + "]", rte);
+      }
     }
     for (SortedMap.Entry<String, Timer> entry : registry.getTimers().entrySet()) {
-      addToMap(mfSamplesMap, fromTimer(entry.getKey(), entry.getValue()));
+      try {
+        addToMap(mfSamplesMap, fromTimer(entry.getKey(), entry.getValue()));
+      } catch (RuntimeException rte) {
+        LOGGER.log(Level.SEVERE, "Error collecting fromTimer [" + entry.getKey() + "]", rte);
+      }
     }
     for (SortedMap.Entry<String, Meter> entry : registry.getMeters().entrySet()) {
-      addToMap(mfSamplesMap, fromMeter(entry.getKey(), entry.getValue()));
+      try {
+        addToMap(mfSamplesMap, fromMeter(entry.getKey(), entry.getValue()));
+      } catch (RuntimeException rte) {
+        LOGGER.log(Level.SEVERE, "Error collecting fromMeter [" + entry.getKey() + "]", rte);
+      }
     }
     for (SortedMap.Entry<String, Gauge> entry : registry.getGauges().entrySet()) {
-      addToMap(mfSamplesMap, fromGauge(entry.getKey(), entry.getValue()));
+      try {
+        addToMap(mfSamplesMap, fromGauge(entry.getKey(), entry.getValue()));
+      } catch (RuntimeException rte) {
+        LOGGER.log(Level.SEVERE, "Error collecting fromGauge [" + entry.getKey() + "]", rte);
+      }
     }
     for (SortedMap.Entry<String, Counter> entry : registry.getCounters().entrySet()) {
-      addToMap(mfSamplesMap, fromCounter(entry.getKey(), entry.getValue()));
+      try {
+        addToMap(mfSamplesMap, fromCounter(entry.getKey(), entry.getValue()));
+      } catch (RuntimeException rte) {
+        LOGGER.log(Level.SEVERE, "Error collecting fromCounter [" + entry.getKey() + "]", rte);
+      }
     }
     return new ArrayList<>(mfSamplesMap.values());
   }

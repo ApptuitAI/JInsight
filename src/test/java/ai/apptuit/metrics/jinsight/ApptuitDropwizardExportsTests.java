@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ApptuitDropwizardExportsTests {
@@ -176,6 +177,23 @@ public class ApptuitDropwizardExportsTests {
     assertTrue(samplesFromExporter.get(samplesFromExporter.size() - 2).value >= 0.001);
     //count
     assertEquals(0, Double.compare(1.0D, samplesFromExporter.get(samplesFromExporter.size() - 1).value));
+  }
+
+  @Test
+  public void testBrokenMetrics() {
+    MetricRegistry metricRegistry = new MetricRegistry();
+    CollectorRegistry registry = new CollectorRegistry();
+    ApptuitDropwizardExports exporter = new ApptuitDropwizardExports(metricRegistry, new TagDecodingSampleBuilder(null));
+    exporter.register(registry);
+
+    metricRegistry.register("good.gauge", (Gauge<Integer>) () -> 1234);
+    metricRegistry.register("bad.gauge", (Gauge<Integer>) () -> {
+      throw new RuntimeException();
+    });
+
+    assertEquals(new Double(1234),
+        registry.getSampleValue("good_gauge", new String[]{}, new String[]{}));
+    assertNull(registry.getSampleValue("bad_gauge", new String[]{}, new String[]{}));
   }
 
   @Test
