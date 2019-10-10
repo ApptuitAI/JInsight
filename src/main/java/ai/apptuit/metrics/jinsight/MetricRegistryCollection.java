@@ -479,6 +479,17 @@ public class MetricRegistryCollection {
       return getMetrics(MetricRegistryWrapper.MetricType.Timer, filter);
     }
 
+    @Override
+    public Map<String, Metric> getMetrics() {
+      Map<String, Metric> metrics = new TreeMap<>();
+      metrics.putAll(getGauges(MetricFilter.ALL));
+      metrics.putAll(getCounters(MetricFilter.ALL));
+      metrics.putAll(getHistograms(MetricFilter.ALL));
+      metrics.putAll(getMeters(MetricFilter.ALL));
+      metrics.putAll(getTimers(MetricFilter.ALL));
+      return metrics;
+    }
+
     private <T extends Metric> SortedMap<String, T> getMetrics(MetricRegistryWrapper.MetricType type,
         MetricFilter filter) {
 
