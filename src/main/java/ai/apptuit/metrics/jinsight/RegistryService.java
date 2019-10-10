@@ -90,8 +90,8 @@ public class RegistryService {
 
       try {
         int port = configService.getPrometheusPort();
-        InetSocketAddress socket = new InetSocketAddress(port);
-        PromHttpServer server = new PromHttpServer(socket, collectorRegistry, true);
+        InetSocketAddress address = new InetSocketAddress(port);
+        PromHttpServer server = new PromHttpServer(address, collectorRegistry, true);
         server.setContext(configService.getPrometheusMetricsPath());
         initialized = true;
       } catch (IOException e) {

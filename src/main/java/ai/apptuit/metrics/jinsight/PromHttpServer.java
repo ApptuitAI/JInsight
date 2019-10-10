@@ -42,10 +42,10 @@ public class PromHttpServer extends HTTPServer {
    * constructor for the PromHttpServer.
    */
 
-  public PromHttpServer(InetSocketAddress socket,
+  public PromHttpServer(InetSocketAddress address,
                         CollectorRegistry registry,
                         boolean daemon) throws IOException {
-    super(socket, registry, daemon);
+    super(address, registry, daemon);
     this.registry = registry;
     this.server.removeContext("/");
     this.server.removeContext("/metrics");
