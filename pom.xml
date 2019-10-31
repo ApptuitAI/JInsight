@@ -108,7 +108,7 @@ limitations under the License.
     <byteman.version>4.0.5</byteman.version>
     <metrics.version>4.0.6</metrics.version>
     <prometheus.version>0.7.0</prometheus.version>
-    <apptuit.reporter.version>0.8.5</apptuit.reporter.version>
+    <apptuit.reporter.version>0.8.6</apptuit.reporter.version>
 
     <!-- Acceptance Criteria -->
     <enforce.code.style>false</enforce.code.style>
@@ -124,8 +124,8 @@ limitations under the License.
 
   <dependencies>
     <dependency>
-      <groupId>ai.apptuit</groupId>
-      <artifactId>metrics-apptuit</artifactId>
+      <groupId>ai.apptuit.metrics</groupId>
+      <artifactId>metrics-apptuit-dropwizard</artifactId>
       <version>${apptuit.reporter.version}</version>
     </dependency>
     <dependency>

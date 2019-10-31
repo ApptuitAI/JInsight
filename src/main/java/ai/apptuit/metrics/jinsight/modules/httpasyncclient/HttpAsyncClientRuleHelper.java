@@ -16,7 +16,7 @@
 
 package ai.apptuit.metrics.jinsight.modules.httpasyncclient;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
 import ai.apptuit.metrics.jinsight.modules.httpurlconnection.UrlConnectionRuleHelper;

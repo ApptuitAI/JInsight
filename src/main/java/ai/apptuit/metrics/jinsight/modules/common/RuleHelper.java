@@ -16,7 +16,7 @@
 
 package ai.apptuit.metrics.jinsight.modules.common;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Clock;
 import com.codahale.metrics.MetricRegistry;

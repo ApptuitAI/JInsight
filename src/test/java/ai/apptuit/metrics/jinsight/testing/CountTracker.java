@@ -18,7 +18,7 @@ package ai.apptuit.metrics.jinsight.testing;
 
 import static org.junit.Assert.assertEquals;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import com.codahale.metrics.Counting;
 import com.codahale.metrics.MetricRegistry;
 import java.util.Arrays;

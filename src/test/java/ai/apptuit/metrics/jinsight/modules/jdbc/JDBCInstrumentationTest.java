@@ -19,7 +19,7 @@ package ai.apptuit.metrics.jinsight.modules.jdbc;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;

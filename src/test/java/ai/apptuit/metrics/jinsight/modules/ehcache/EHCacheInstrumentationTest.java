@@ -18,7 +18,7 @@ package ai.apptuit.metrics.jinsight.modules.ehcache;
 
 import static org.junit.Assert.assertEquals;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;

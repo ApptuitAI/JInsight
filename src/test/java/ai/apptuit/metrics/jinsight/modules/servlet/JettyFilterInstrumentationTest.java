@@ -19,7 +19,7 @@ package ai.apptuit.metrics.jinsight.modules.servlet;
 import static ai.apptuit.metrics.jinsight.modules.servlet.ContextMetricsHelper.ROOT_CONTEXT_PATH;
 import static ai.apptuit.metrics.jinsight.modules.servlet.JettyRuleHelper.JETTY_METRIC_PREFIX;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import java.net.MalformedURLException;
 import java.net.URL;
 import org.eclipse.jetty.server.Server;

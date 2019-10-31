@@ -17,17 +17,12 @@
 package ai.apptuit.metrics.jinsight.modules.jvm;
 
 import static ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet.JVM_INFO_METRIC_NAME;
-import static java.lang.management.ManagementFactory.getRuntimeMXBean;
 import static org.junit.Assert.assertEquals;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import com.codahale.metrics.MetricRegistry;
-
-import java.lang.management.RuntimeMXBean;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
-
 import org.junit.Before;
 import org.junit.Test;
 

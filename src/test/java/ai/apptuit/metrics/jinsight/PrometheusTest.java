@@ -32,9 +32,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import ai.apptuit.metrics.client.DataPoint;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
