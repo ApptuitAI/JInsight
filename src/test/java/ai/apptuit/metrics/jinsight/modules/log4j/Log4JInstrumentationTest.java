@@ -21,7 +21,7 @@ import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.FINGER
 import static ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker.THROWABLES_BASE_NAME;
 import static org.junit.Assert.assertEquals;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.RegistryService;
 import ai.apptuit.metrics.jinsight.modules.logback.ErrorFingerprint;
 import ai.apptuit.metrics.jinsight.modules.logback.LogEventTracker;

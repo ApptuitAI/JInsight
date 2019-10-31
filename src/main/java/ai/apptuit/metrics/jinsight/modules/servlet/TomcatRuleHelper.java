@@ -16,7 +16,7 @@
 
 package ai.apptuit.metrics.jinsight.modules.servlet;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
 import java.io.IOException;
 import javax.servlet.ServletException;

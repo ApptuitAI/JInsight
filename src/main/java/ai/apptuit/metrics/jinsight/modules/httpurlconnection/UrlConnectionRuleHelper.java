@@ -16,7 +16,7 @@
 
 package ai.apptuit.metrics.jinsight.modules.httpurlconnection;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.modules.common.RuleHelper;
 import com.codahale.metrics.Clock;
 import com.codahale.metrics.Timer;

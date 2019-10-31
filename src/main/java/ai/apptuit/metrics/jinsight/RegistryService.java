@@ -17,9 +17,9 @@
 package ai.apptuit.metrics.jinsight;
 
 import ai.apptuit.metrics.client.Sanitizer;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.dropwizard.ApptuitReporterFactory;
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
 import ai.apptuit.metrics.jinsight.modules.jvm.JvmMetricSet;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;

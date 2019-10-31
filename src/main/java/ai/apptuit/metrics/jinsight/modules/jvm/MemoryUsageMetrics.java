@@ -16,7 +16,7 @@
 
 package ai.apptuit.metrics.jinsight.modules.jvm;
 
-import ai.apptuit.metrics.dropwizard.TagEncodedMetricName;
+import ai.apptuit.metrics.client.TagEncodedMetricName;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
