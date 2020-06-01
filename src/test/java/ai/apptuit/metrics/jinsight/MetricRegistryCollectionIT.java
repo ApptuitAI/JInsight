@@ -22,9 +22,9 @@ import static org.junit.Assert.assertNotNull;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.awaitility.Duration;
 import org.junit.Test;
 
 /**
@@ -64,7 +64,7 @@ public class MetricRegistryCollectionIT {
             System.gc();
           }
         })
-        .await().atMost(Duration.ONE_MINUTE).untilTrue(finalized);
+        .await().atMost(Duration.ofMinutes(1)).untilTrue(finalized);
   }
 
 
