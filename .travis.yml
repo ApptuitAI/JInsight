@@ -74,7 +74,8 @@ before_script:
 script:
   - |
     if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && [[ "$IS_PRIMARY_MATRIX_JOB" = "true" ]]; then
-      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
+      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN \
+          -Dsonar.projectKey=${SONAR_PROJECT} -Dsonar.login=${SONAR_TOKEN} -Dsonar.organization=${SONAR_ORG} -Dsonar.host.url=https://sonarcloud.io
     else
       mvn verify -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
     fi
