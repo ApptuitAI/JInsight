@@ -1,7 +1,7 @@
 [![Download](https://api.bintray.com/packages/apptuitai/maven/jinsight/images/download.svg)](https://github.com/ApptuitAI/JInsight/releases/latest)
 [![Build Status](https://img.shields.io/travis/ApptuitAI/JInsight.svg)](https://travis-ci.com/ApptuitAI/JInsight)
 [![Sonar Cloud](https://sonarcloud.io/api/project_badges/measure?project=ai.apptuit%3Ajinsight&metric=alert_status)](https://sonarcloud.io/dashboard?id=ai.apptuit:jinsight)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/54bc7668658440afa60e071c24e670c6)](https://www.codacy.com/app/ApptuitAI/JInsight)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/8cf7b2c6aa354b0ebb09fe61fb6d3ea1)](https://www.codacy.com/gh/ApptuitAI/JInsight)
 [![Code Coverage](https://img.shields.io/codecov/c/github/ApptuitAI/JInsight.svg)](https://codecov.io/gh/ApptuitAI/JInsight)
 [![License](https://img.shields.io/github/license/ApptuitAI/JInsight.svg)](https://github.com/ApptuitAI/JInsight/blob/master/LICENSE)
 
