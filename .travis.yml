@@ -59,7 +59,7 @@ install:
 #  - sudo apt-get install -y rpmlint
 
 before_script:
-  - if [[ "$METRICS_VERSION" = "4.0.6" ]]; then export IS_PRIMARY_MATRIX_JOB=true; fi
+  - if [[ "$METRICS_VERSION" = "4.1.9" ]]; then export IS_PRIMARY_MATRIX_JOB=true; fi
   - xmlstarlet ed --inplace -u "/_:project/_:properties/_:metrics.version" -v "$METRICS_VERSION" pom.xml;
   - SEMVER_REGEX="^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$"
   - |
