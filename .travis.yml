@@ -32,8 +32,6 @@ services:
 addons:
   sonarcloud:
     organization: "$SONAR_ORG"
-    token:
-      secure: "$SONAR_TOKEN"
 
 cache:
   directories:
