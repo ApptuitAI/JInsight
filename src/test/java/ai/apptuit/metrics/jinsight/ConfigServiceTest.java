@@ -16,6 +16,7 @@
 
 package ai.apptuit.metrics.jinsight;
 
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTER_PROPERTY_NAME;
 import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_FREQ_PROPERTY_NAME;
 import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_MODE_PROPERTY_NAME;
 import static org.junit.Assert.assertEquals;
@@ -25,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
+import ai.apptuit.metrics.jinsight.ConfigService.ReporterType;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
@@ -222,11 +224,20 @@ public class ConfigServiceTest {
 
   @Test
   public void testPutReporterHasHostTagAlways() throws Exception {
-    Properties p = getDefaultConfigProperties();
+    Properties p = getApptuitReporterConfigProperties(ReportingMode.API_PUT);
     ConfigService configService = new ConfigService(p);
     Map<String, String> globalTags = configService.getGlobalTags();
     assertEquals(1, globalTags.size());
     assertTrue(globalTags.get("host") != null);
+  }
+
+  @Test
+  public void testNonPutReporterDoesNotHaveHostTag() throws Exception {
+    Properties p = getDefaultConfigProperties();
+    ConfigService configService = new ConfigService(p);
+    Map<String, String> globalTags = configService.getGlobalTags();
+    assertEquals(0, globalTags.size());
+    assertTrue(globalTags.get("host") == null);
   }
 
   @Test
@@ -249,10 +260,9 @@ public class ConfigServiceTest {
     p.setProperty("global_tags", "k1:" + v1 + ", k2 : " + v2);
     ConfigService configService = new ConfigService(p);
     Map<String, String> globalTags = configService.getGlobalTags();
-    assertEquals(3, globalTags.size());
+    assertEquals(2, globalTags.size());
     assertEquals(v1, globalTags.get("k1"));
     assertEquals(v2, globalTags.get("k2"));
-    assertNotNull(globalTags.get("host"));
   }
 
   @Test(expected = ConfigurationException.class)
@@ -287,11 +297,17 @@ public class ConfigServiceTest {
     assertEquals(System.getProperty("project.version"), cs.getAgentVersion());
   }
 
-
-
   private Properties getDefaultConfigProperties() {
+    return new Properties();
+  }
+
+  private Properties getApptuitReporterConfigProperties(ReportingMode reportingMode) {
     Properties p = new Properties();
-    p.setProperty("apptuit.access_token", UUID.randomUUID().toString());
+    p.setProperty(REPORTER_PROPERTY_NAME, ReporterType.APPTUIT.name());
+    p.setProperty(REPORTING_MODE_PROPERTY_NAME, reportingMode.name());
+    if (reportingMode == ReportingMode.API_PUT) {
+      p.setProperty("apptuit.access_token", UUID.randomUUID().toString());
+    }
     return p;
   }
 }

@@ -320,7 +320,7 @@ public class ConfigService {
   private Map<String, String> createGlobalTagsMap() {
     Map<String, String> retVal = new HashMap<>(loadedGlobalTags);
 
-    if (getReportingMode() == ReportingMode.API_PUT) {
+    if (getReporterType() == ReporterType.APPTUIT && getReportingMode() == ReportingMode.API_PUT) {
       String hostname = retVal.get(HOST_TAG_NAME);
       if (hostname == null || "".equals(hostname.trim())) {
         try {
