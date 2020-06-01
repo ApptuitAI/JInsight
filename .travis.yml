@@ -20,7 +20,7 @@ sudo: false
 env:
   matrix:
     - METRICS_VERSION=3.2.6
-    - METRICS_VERSION=4.0.6
+    - METRICS_VERSION=4.1.9
 
 jdk:
   - openjdk8
