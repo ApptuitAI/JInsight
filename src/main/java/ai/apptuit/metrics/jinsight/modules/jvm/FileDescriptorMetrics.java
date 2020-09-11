@@ -37,15 +37,17 @@ class FileDescriptorMetrics implements MetricSet {
 
   private static final Logger LOGGER = Logger.getLogger(FileDescriptorMetrics.class.getName());
 
-  private OperatingSystemMXBean osMxBean;
+  private final Class unixOSMBeanClass;
+  private final OperatingSystemMXBean osMxBean;
 
-  public FileDescriptorMetrics() {
+  public FileDescriptorMetrics() throws ClassNotFoundException {
     this(getOperatingSystemMXBean());
   }
 
-  public FileDescriptorMetrics(OperatingSystemMXBean osMxBean) {
-
+  public FileDescriptorMetrics(OperatingSystemMXBean osMxBean) throws ClassNotFoundException {
     this.osMxBean = osMxBean;
+    unixOSMBeanClass = Class.forName("com.sun.management.UnixOperatingSystemMXBean");
+    unixOSMBeanClass.cast(this.osMxBean);
   }
 
   public Map<String, Metric> getMetrics() {
@@ -59,7 +61,8 @@ class FileDescriptorMetrics implements MetricSet {
 
   private Long getMetricLong(String name) {
     try {
-      return invoke(name);
+      final Method method = unixOSMBeanClass.getDeclaredMethod(name);
+      return (Long) method.invoke(osMxBean);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
       LOGGER.log(Level.SEVERE,
           "Error fetching file descriptor metrics from OperatingSystemMXBean", e);
@@ -67,10 +70,4 @@ class FileDescriptorMetrics implements MetricSet {
     }
   }
 
-  private long invoke(String name)
-      throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-    final Method method = osMxBean.getClass().getDeclaredMethod(name);
-    method.setAccessible(true);
-    return (Long) method.invoke(osMxBean);
-  }
 }

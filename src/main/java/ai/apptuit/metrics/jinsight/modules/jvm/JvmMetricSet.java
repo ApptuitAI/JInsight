@@ -53,7 +53,12 @@ public class JvmMetricSet implements MetricSet {
   public JvmMetricSet() {
     registerSet("jvm.buffer_pool", new BufferPoolMetrics());
     registerSet("jvm.classes", new ClassLoadingGaugeSet());
-    registerSet("jvm.fd", new FileDescriptorMetrics());
+    try {
+      registerSet("jvm.fd", new FileDescriptorMetrics());
+    } catch (ClassNotFoundException|RuntimeException e) {
+      LOGGER.log(Level.SEVERE, "Could not load FileDescriptorMetrics."
+              + " File descriptor metrics will not be available.", e);
+    }
     registerSet("jvm.gc", new GarbageCollectorMetrics());
     registerSet("jvm.memory", new MemoryUsageMetrics());
     registerSet("jvm.threads", new ThreadStateMetrics());
