@@ -105,7 +105,7 @@ limitations under the License.
     <surefire.version>3.0.0-M3</surefire.version>
     <junit.version>4.13</junit.version>
     <jacoco.version>0.8.5</jacoco.version>
-    <byteman.version>4.0.6</byteman.version>
+    <byteman.version>4.0.13</byteman.version>
     <metrics.version>4.1.9</metrics.version>
     <prometheus.version>0.9.0</prometheus.version>
     <apptuit.reporter.version>0.9.2</apptuit.reporter.version>
@@ -147,7 +147,6 @@ limitations under the License.
       <groupId>org.jboss.byteman</groupId>
       <artifactId>byteman</artifactId>
       <version>${byteman.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>
@@ -434,6 +433,7 @@ limitations under the License.
               <Premain-Class>ai.apptuit.metrics.jinsight.Agent</Premain-Class>
               <Agent-Class>ai.apptuit.metrics.jinsight.Agent</Agent-Class>
               <Agent-Version>${project.version}</Agent-Version>
+              <Implementation-Version>${project.version}</Implementation-Version>
               <Can-Redefine-Classes>true</Can-Redefine-Classes>
               <Can-Retransform-Classes>true</Can-Retransform-Classes>
             </manifestEntries>
