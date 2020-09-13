@@ -102,7 +102,7 @@ limitations under the License.
     <java.version>1.8</java.version>
     <maven.version>3.5</maven.version>
     <netty.version>4.1.15.Final</netty.version>
-    <surefire.version>3.0.0-M3</surefire.version>
+    <surefire.version>3.0.0-M5</surefire.version>
     <junit.version>4.13</junit.version>
     <jacoco.version>0.8.5</jacoco.version>
     <byteman.version>4.0.13</byteman.version>
@@ -569,7 +569,7 @@ limitations under the License.
           <dependency>
             <groupId>com.puppycrawl.tools</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>8.33</version>
+            <version>8.36.1</version>
           </dependency>
         </dependencies>
         <configuration>
