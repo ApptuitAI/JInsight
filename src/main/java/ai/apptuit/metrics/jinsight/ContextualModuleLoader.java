@@ -17,10 +17,14 @@
 package ai.apptuit.metrics.jinsight;
 
 import ai.apptuit.metrics.jinsight.ContextualModuleLoader.ModuleClassLoader;
+import java.io.File;
+import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -88,8 +92,47 @@ public class ContextualModuleLoader implements ModuleSystem<ModuleClassLoader> {
 
   public static class ModuleClassLoader extends URLClassLoader {
 
+    private static final URL[] SYS_CLASS_PATH = getSystemClassPath();
+
     public ModuleClassLoader(ClassLoader cl) {
-      super(((URLClassLoader) ClassLoader.getSystemClassLoader()).getURLs(), cl);
+      super(SYS_CLASS_PATH, cl);
+    }
+
+    private static URL[] getSystemClassPath() {
+      String cp = System.getProperty("java.class.path");
+      if (cp == null || cp.isEmpty()) {
+        String initialModuleName = System.getProperty("jdk.module.main");
+        cp = initialModuleName == null ? "" : null;
+      }
+
+      ArrayList<URL> path = new ArrayList<>();
+      int off;
+      if (cp != null) {
+        off = 0;
+
+        int next;
+        do {
+          next = cp.indexOf(File.pathSeparator, off);
+          String element = next == -1 ? cp.substring(off) : cp.substring(off, next);
+          if (!element.isEmpty()) {
+            URL url = toFileURL(element);
+            if (url != null) {
+              path.add(url);
+            }
+          }
+
+          off = next + 1;
+        } while (next != -1);
+      }
+      return path.toArray(new URL[0]);
+    }
+
+    private static URL toFileURL(String path) {
+      try {
+        return (new File(path)).getCanonicalFile().toURI().toURL();
+      } catch (IOException e) {
+        return null;
+      }
     }
 
     public Class<?> addClass(String name, byte[] bytes)
