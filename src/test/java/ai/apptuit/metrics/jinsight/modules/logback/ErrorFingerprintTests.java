@@ -144,8 +144,8 @@ public class ErrorFingerprintTests {
 
     Exception beforeInflation = _createReflectedException(false);
 
-    assertTrue(_checkStackTrace(beforeInflation, "sun.reflect.NativeMethodAccessorImpl.invoke0"));
-    assertFalse(_checkStackTrace(beforeInflation, "sun.reflect.GeneratedMethodAccessor"));
+    assertTrue(_checkStackTrace(beforeInflation, ".reflect.NativeMethodAccessorImpl.invoke0"));
+    assertFalse(_checkStackTrace(beforeInflation, ".reflect.GeneratedMethodAccessor"));
 
     //https://blogs.oracle.com/buck/entry/inflation_system_properties
     for (int i = 0; i < 100; i++) {
@@ -153,7 +153,7 @@ public class ErrorFingerprintTests {
     }
 
     Exception afterInflation = _createReflectedException(false);
-    assertTrue(_checkStackTrace(afterInflation, "sun.reflect.GeneratedMethodAccessor"));
+    assertTrue(_checkStackTrace(afterInflation, ".reflect.GeneratedMethodAccessor"));
 
     ErrorFingerprint fpBefore = fromThrowable(beforeInflation);
     ErrorFingerprint fbAfter = fromThrowable(afterInflation);

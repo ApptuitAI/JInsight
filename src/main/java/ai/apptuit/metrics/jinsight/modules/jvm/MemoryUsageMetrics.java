@@ -39,7 +39,8 @@ import java.util.regex.Pattern;
  */
 class MemoryUsageMetrics implements MetricSet {
 
-  private static final Pattern WHITESPACE = Pattern.compile("[\\s]+");
+  private static final Pattern SPECIAL_CHARS = Pattern.compile("[\\s-']+");
+  private static final Pattern SPECIAL_CHARS_ENDING = Pattern.compile("[\\s-']+$");
 
   private static final String EDEN_GEN = "eden";
   private static final String SURVIVOR_GEN = "survivor";
@@ -121,9 +122,9 @@ class MemoryUsageMetrics implements MetricSet {
     });
 
     for (final MemoryPoolMXBean pool : memoryPools) {
-      final String poolName = WHITESPACE.matcher(pool.getName()).replaceAll("_").toLowerCase();
-
-      String generation = getPoolGeneration(pool.getName());
+      String poolNameOrig = pool.getName();
+      final String poolName = sanitizePoolName(poolNameOrig);
+      String generation = getPoolGeneration(poolNameOrig);
       String[] poolNameTags;
       if (generation != null) {
         poolNameTags = new String[]{"pool", generation, "name", poolName};
@@ -160,6 +161,11 @@ class MemoryUsageMetrics implements MetricSet {
     }
 
     return Collections.unmodifiableMap(gauges);
+  }
+
+  static String sanitizePoolName(String poolName) {
+    String s = SPECIAL_CHARS_ENDING.matcher(poolName.toLowerCase()).replaceAll("");
+    return SPECIAL_CHARS.matcher(s).replaceAll("_");
   }
 
   private String getMetricName(String base, String... tags) {

@@ -32,6 +32,90 @@ import org.junit.Test;
  */
 public class JvmMetricSetTest {
 
+
+  private static final String [] JDK8_MEM_METRICS = {
+    "jvm.memory.pool.committed.bytes[pool:code_cache]",
+    "jvm.memory.pool.committed.bytes[pool:compressed_class_space]",
+    "jvm.memory.pool.committed.bytes[pool:metaspace]",
+    "jvm.memory.pool.committed.bytes[name:ps_eden_space,pool:eden]",
+    "jvm.memory.pool.committed.bytes[name:ps_old_gen,pool:old]",
+    "jvm.memory.pool.committed.bytes[name:ps_survivor_space,pool:survivor]",
+    "jvm.memory.pool.init.bytes[pool:code_cache]",
+    "jvm.memory.pool.init.bytes[pool:compressed_class_space]",
+    "jvm.memory.pool.init.bytes[pool:metaspace]",
+    "jvm.memory.pool.init.bytes[name:ps_eden_space,pool:eden]",
+    "jvm.memory.pool.init.bytes[name:ps_old_gen,pool:old]",
+    "jvm.memory.pool.init.bytes[name:ps_survivor_space,pool:survivor]",
+    "jvm.memory.pool.max.bytes[pool:code_cache]",
+    "jvm.memory.pool.max.bytes[pool:compressed_class_space]",
+    "jvm.memory.pool.max.bytes[pool:metaspace]",
+    "jvm.memory.pool.max.bytes[name:ps_eden_space,pool:eden]",
+    "jvm.memory.pool.max.bytes[name:ps_old_gen,pool:old]",
+    "jvm.memory.pool.max.bytes[name:ps_survivor_space,pool:survivor]",
+    "jvm.memory.pool.usage[pool:code_cache]",
+    "jvm.memory.pool.usage[pool:compressed_class_space]",
+    "jvm.memory.pool.usage[pool:metaspace]",
+    "jvm.memory.pool.usage[name:ps_eden_space,pool:eden]",
+    "jvm.memory.pool.usage[name:ps_old_gen,pool:old]",
+    "jvm.memory.pool.usage[name:ps_survivor_space,pool:survivor]",
+    "jvm.memory.pool.used.bytes[pool:code_cache]",
+    "jvm.memory.pool.used.bytes[pool:compressed_class_space]",
+    "jvm.memory.pool.used.bytes[pool:metaspace]",
+    "jvm.memory.pool.used.bytes[name:ps_eden_space,pool:eden]",
+    "jvm.memory.pool.used.bytes[name:ps_old_gen,pool:old]",
+    "jvm.memory.pool.used.bytes[name:ps_survivor_space,pool:survivor]",
+    "jvm.memory.pool.used_after_gc.bytes[name:ps_eden_space,pool:eden]",
+    "jvm.memory.pool.used_after_gc.bytes[name:ps_old_gen,pool:old]",
+    "jvm.memory.pool.used_after_gc.bytes[name:ps_survivor_space,pool:survivor]"
+  };
+
+  private static final String [] JDK11_MEM_METRICS = {
+    "jvm.memory.pool.committed.bytes[name:g1_eden_space,pool:eden]",
+    "jvm.memory.pool.committed.bytes[name:g1_old_gen,pool:old]",
+    "jvm.memory.pool.committed.bytes[name:g1_survivor_space,pool:survivor]",
+    //JEP 197: Segmented Code Cache https://openjdk.java.net/jeps/197
+    "jvm.memory.pool.committed.bytes[pool:codeheap_non_nmethods]",
+    "jvm.memory.pool.committed.bytes[pool:codeheap_non_profiled_nmethods]",
+    "jvm.memory.pool.committed.bytes[pool:codeheap_profiled_nmethods]",
+    "jvm.memory.pool.committed.bytes[pool:compressed_class_space]",
+    "jvm.memory.pool.committed.bytes[pool:metaspace]",
+    "jvm.memory.pool.init.bytes[name:g1_eden_space,pool:eden]",
+    "jvm.memory.pool.init.bytes[name:g1_old_gen,pool:old]",
+    "jvm.memory.pool.init.bytes[name:g1_survivor_space,pool:survivor]",
+    "jvm.memory.pool.init.bytes[pool:codeheap_non_nmethods]",
+    "jvm.memory.pool.init.bytes[pool:codeheap_non_profiled_nmethods]",
+    "jvm.memory.pool.init.bytes[pool:codeheap_profiled_nmethods]",
+    "jvm.memory.pool.init.bytes[pool:compressed_class_space]",
+    "jvm.memory.pool.init.bytes[pool:metaspace]",
+    "jvm.memory.pool.max.bytes[name:g1_eden_space,pool:eden]",
+    "jvm.memory.pool.max.bytes[name:g1_old_gen,pool:old]",
+    "jvm.memory.pool.max.bytes[name:g1_survivor_space,pool:survivor]",
+    "jvm.memory.pool.max.bytes[pool:codeheap_non_nmethods]",
+    "jvm.memory.pool.max.bytes[pool:codeheap_non_profiled_nmethods]",
+    "jvm.memory.pool.max.bytes[pool:codeheap_profiled_nmethods]",
+    "jvm.memory.pool.max.bytes[pool:compressed_class_space]",
+    "jvm.memory.pool.max.bytes[pool:metaspace]",
+    "jvm.memory.pool.usage[name:g1_eden_space,pool:eden]",
+    "jvm.memory.pool.usage[name:g1_old_gen,pool:old]",
+    "jvm.memory.pool.usage[name:g1_survivor_space,pool:survivor]",
+    "jvm.memory.pool.usage[pool:codeheap_non_nmethods]",
+    "jvm.memory.pool.usage[pool:codeheap_non_profiled_nmethods]",
+    "jvm.memory.pool.usage[pool:codeheap_profiled_nmethods]",
+    "jvm.memory.pool.usage[pool:compressed_class_space]",
+    "jvm.memory.pool.usage[pool:metaspace]",
+    "jvm.memory.pool.used.bytes[name:g1_eden_space,pool:eden]",
+    "jvm.memory.pool.used.bytes[name:g1_old_gen,pool:old]",
+    "jvm.memory.pool.used.bytes[name:g1_survivor_space,pool:survivor]",
+    "jvm.memory.pool.used.bytes[pool:codeheap_non_nmethods]",
+    "jvm.memory.pool.used.bytes[pool:codeheap_non_profiled_nmethods]",
+    "jvm.memory.pool.used.bytes[pool:codeheap_profiled_nmethods]",
+    "jvm.memory.pool.used.bytes[pool:compressed_class_space]",
+    "jvm.memory.pool.used.bytes[pool:metaspace]",
+    "jvm.memory.pool.used_after_gc.bytes[name:g1_eden_space,pool:eden]",
+    "jvm.memory.pool.used_after_gc.bytes[name:g1_old_gen,pool:old]",
+    "jvm.memory.pool.used_after_gc.bytes[name:g1_survivor_space,pool:survivor]"
+  };
+
   private MetricRegistry registry;
 
   @Before
@@ -42,7 +126,19 @@ public class JvmMetricSetTest {
 
   @Test
   public void testJVMMetrics() throws Exception {
+
+    boolean isJDK9Plus = false;
+    try {
+      Runtime.class.getMethod("version");
+      isJDK9Plus = true;
+    } catch (NoSuchMethodException e) {
+      //Expected
+    }
+
+    String gc_type_old = isJDK9Plus ? "g1_old_generation" : "ps_marksweep";
+    String gc_type_young = isJDK9Plus ? "g1_young_generation" : "ps_scavenge";
     List<String> expected = Arrays.asList(
+            JVM_INFO_METRIC_NAME,
             "jvm.buffer_pool.capacity.bytes[pool:direct]",
             "jvm.buffer_pool.capacity.bytes[pool:mapped]",
             "jvm.buffer_pool.count[pool:direct]",
@@ -51,10 +147,10 @@ public class JvmMetricSetTest {
             "jvm.buffer_pool.used.bytes[pool:mapped]",
             "jvm.classes.loaded",
             "jvm.classes.unloaded",
-            "jvm.gc.count[generation:old,type:ps_marksweep]",
-            "jvm.gc.time.seconds[generation:old,type:ps_marksweep]",
-            "jvm.gc.count[generation:young,type:ps_scavenge]",
-            "jvm.gc.time.seconds[generation:young,type:ps_scavenge]",
+            "jvm.gc.count[generation:old,type:" + gc_type_old + "]",
+            "jvm.gc.count[generation:young,type:" + gc_type_young + "]",
+            "jvm.gc.time.seconds[generation:old,type:" + gc_type_old + "]",
+            "jvm.gc.time.seconds[generation:young,type:" + gc_type_young + "]",
             "jvm.gc.total.count",
             "jvm.gc.total.time.seconds",
             "jvm.memory.committed.bytes[area:heap]",
@@ -67,39 +163,6 @@ public class JvmMetricSetTest {
             "jvm.memory.usage[area:non_heap]",
             "jvm.memory.used.bytes[area:heap]",
             "jvm.memory.used.bytes[area:non_heap]",
-            "jvm.memory.pool.committed.bytes[pool:code_cache]",
-            "jvm.memory.pool.committed.bytes[pool:compressed_class_space]",
-            "jvm.memory.pool.committed.bytes[pool:metaspace]",
-            "jvm.memory.pool.committed.bytes[name:ps_eden_space,pool:eden]",
-            "jvm.memory.pool.committed.bytes[name:ps_old_gen,pool:old]",
-            "jvm.memory.pool.committed.bytes[name:ps_survivor_space,pool:survivor]",
-            "jvm.memory.pool.init.bytes[pool:code_cache]",
-            "jvm.memory.pool.init.bytes[pool:compressed_class_space]",
-            "jvm.memory.pool.init.bytes[pool:metaspace]",
-            "jvm.memory.pool.init.bytes[name:ps_eden_space,pool:eden]",
-            "jvm.memory.pool.init.bytes[name:ps_old_gen,pool:old]",
-            "jvm.memory.pool.init.bytes[name:ps_survivor_space,pool:survivor]",
-            "jvm.memory.pool.max.bytes[pool:code_cache]",
-            "jvm.memory.pool.max.bytes[pool:compressed_class_space]",
-            "jvm.memory.pool.max.bytes[pool:metaspace]",
-            "jvm.memory.pool.max.bytes[name:ps_eden_space,pool:eden]",
-            "jvm.memory.pool.max.bytes[name:ps_old_gen,pool:old]",
-            "jvm.memory.pool.max.bytes[name:ps_survivor_space,pool:survivor]",
-            "jvm.memory.pool.usage[pool:code_cache]",
-            "jvm.memory.pool.usage[pool:compressed_class_space]",
-            "jvm.memory.pool.usage[pool:metaspace]",
-            "jvm.memory.pool.usage[name:ps_eden_space,pool:eden]",
-            "jvm.memory.pool.usage[name:ps_old_gen,pool:old]",
-            "jvm.memory.pool.usage[name:ps_survivor_space,pool:survivor]",
-            "jvm.memory.pool.used.bytes[pool:code_cache]",
-            "jvm.memory.pool.used.bytes[pool:compressed_class_space]",
-            "jvm.memory.pool.used.bytes[pool:metaspace]",
-            "jvm.memory.pool.used.bytes[name:ps_eden_space,pool:eden]",
-            "jvm.memory.pool.used.bytes[name:ps_old_gen,pool:old]",
-            "jvm.memory.pool.used.bytes[name:ps_survivor_space,pool:survivor]",
-            "jvm.memory.pool.used_after_gc.bytes[name:ps_eden_space,pool:eden]",
-            "jvm.memory.pool.used_after_gc.bytes[name:ps_old_gen,pool:old]",
-            "jvm.memory.pool.used_after_gc.bytes[name:ps_survivor_space,pool:survivor]",
             "jvm.memory.total.committed.bytes",
             "jvm.memory.total.init.bytes",
             "jvm.memory.total.max.bytes",
@@ -117,15 +180,32 @@ public class JvmMetricSetTest {
             "jvm.threads.deadlocks",
             "jvm.uptime.seconds"
     );
+
     TreeSet<String> expectedMetrics = new TreeSet<>(expected);
+
+    if (isJDK9Plus){
+      expectedMetrics.addAll(Arrays.asList(JDK11_MEM_METRICS));
+    } else {
+      expectedMetrics.addAll(Arrays.asList(JDK8_MEM_METRICS));
+    }
+
+    try {
+      // https://openjdk.java.net/jeps/352
+      Class.forName("jdk.nio.mapmode.ExtendedMapMode");
+      expectedMetrics.addAll(Arrays.asList(
+        "jvm.buffer_pool.capacity.bytes[pool:mapped_non_volatile_memory]",
+        "jvm.buffer_pool.count[pool:mapped_non_volatile_memory]",
+        "jvm.buffer_pool.used.bytes[pool:mapped_non_volatile_memory]"
+      ));
+    } catch (ClassNotFoundException e) {
+      //Expected pre JDK14
+    }
 
     String osName = System.getProperty("os.name").toLowerCase();
     if (!osName.contains("windows")) {
       expectedMetrics.add("jvm.fd.max");
       expectedMetrics.add("jvm.fd.open");
     }
-
-    expectedMetrics.add(JVM_INFO_METRIC_NAME);
 
     assertEquals(expectedMetrics, registry.getNames());
   }

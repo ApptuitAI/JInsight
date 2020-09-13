@@ -14,16 +14,24 @@
 #  limitations under the License.
 #
 
-language: java
 sudo: false
 
-env:
-  matrix:
-    - METRICS_VERSION=3.2.6
-    - METRICS_VERSION=4.1.9
+language: java
 
 jdk:
   - openjdk8
+  - openjdk11
+  - openjdk12
+  - openjdk13
+  - openjdk14
+
+env:
+  - METRICS_VERSION=3.2.6
+  - METRICS_VERSION=4.1.9
+
+#jobs:
+#  allow_failures:
+#    - jdk: openjdk11
 
 services:
   - memcached
@@ -104,6 +112,7 @@ deploy:
     on:
       tags: true
       condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
+      jdk: openjdk8
   - edge:
       branch: v1.8.47
     provider: bintray
@@ -113,6 +122,7 @@ deploy:
     on:
       tags: true
       condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
+      jdk: openjdk8
   - edge:
           branch: v1.8.47
     provider: bintray
@@ -122,3 +132,4 @@ deploy:
     on:
       tags: true
       condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
+      jdk: openjdk8

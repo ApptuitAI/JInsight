@@ -16,6 +16,8 @@
 
 package ai.apptuit.metrics.jinsight.modules.jvm;
 
+import static ai.apptuit.metrics.jinsight.modules.jvm.MemoryUsageMetrics.sanitizePoolName;
+
 import ai.apptuit.metrics.client.TagEncodedMetricName;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
@@ -46,7 +48,7 @@ class BufferPoolMetrics implements MetricSet {
     final Map<String, Metric> gauges = new HashMap<>();
 
     for (BufferPoolMXBean pool : pools) {
-      final String poolName = pool.getName();
+      final String poolName = sanitizePoolName(pool.getName());
       gauges.put(getMetricName("capacity.bytes", POOL_TAG_NAME, poolName),
               (Gauge<Long>) pool::getTotalCapacity);
       gauges.put(getMetricName("count", POOL_TAG_NAME, poolName),

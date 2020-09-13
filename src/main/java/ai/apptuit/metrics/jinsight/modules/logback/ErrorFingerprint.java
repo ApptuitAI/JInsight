@@ -181,12 +181,13 @@ public class ErrorFingerprint {
                 at java.lang.reflect.Method.invoke(Method.java:497)
             */
 
-      if ("sun.reflect.NativeMethodAccessorImpl".equals(className)) {
+      if ("sun.reflect.NativeMethodAccessorImpl".equals(className) || "jdk.internal.reflect.NativeMethodAccessorImpl".equals(className)) {
         if (traceElement.getMethodName().equals("invoke0")) {
           return;
         }
         className = "sun.reflect.$$MethodAccessor$$";
-      } else if (className.startsWith("sun.reflect.GeneratedMethodAccessor")) {
+      } else if (className.startsWith("sun.reflect.GeneratedMethodAccessor")
+              || className.startsWith("jdk.internal.reflect.GeneratedMethodAccessor")) {
         className = "sun.reflect.$$MethodAccessor$$";
       }
     }
