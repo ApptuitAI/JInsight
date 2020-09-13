@@ -121,7 +121,8 @@ class MemoryUsageMetrics implements MetricSet {
     });
 
     for (final MemoryPoolMXBean pool : memoryPools) {
-      final String poolName = WHITESPACE.matcher(pool.getName()).replaceAll("_").toLowerCase();
+      final String poolName = WHITESPACE.matcher(pool.getName()).replaceAll("_")
+              .replace("'", "").toLowerCase();
 
       String generation = getPoolGeneration(pool.getName());
       String[] poolNameTags;
