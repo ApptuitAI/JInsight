@@ -73,6 +73,7 @@ public class JvmMetricSetTest {
     "jvm.memory.pool.committed.bytes[name:g1_eden_space,pool:eden]",
     "jvm.memory.pool.committed.bytes[name:g1_old_gen,pool:old]",
     "jvm.memory.pool.committed.bytes[name:g1_survivor_space,pool:survivor]",
+    //JEP 197: Segmented Code Cache https://openjdk.java.net/jeps/197
     "jvm.memory.pool.committed.bytes[pool:codeheap_non_nmethods]",
     "jvm.memory.pool.committed.bytes[pool:codeheap_non_profiled_nmethods]",
     "jvm.memory.pool.committed.bytes[pool:codeheap_profiled_nmethods]",
@@ -186,6 +187,18 @@ public class JvmMetricSetTest {
       expectedMetrics.addAll(Arrays.asList(JDK11_MEM_METRICS));
     } else {
       expectedMetrics.addAll(Arrays.asList(JDK8_MEM_METRICS));
+    }
+
+    try {
+      // https://openjdk.java.net/jeps/352
+      Class.forName("jdk.nio.mapmode.ExtendedMapMode");
+      expectedMetrics.addAll(Arrays.asList(
+        "jvm.buffer_pool.capacity.bytes[pool:mapped_non_volatile_memory]",
+        "jvm.buffer_pool.count[pool:mapped_non_volatile_memory]",
+        "jvm.buffer_pool.used.bytes[pool:mapped_non_volatile_memory]"
+      ));
+    } catch (ClassNotFoundException e) {
+      //Expected pre JDK14
     }
 
     String osName = System.getProperty("os.name").toLowerCase();
