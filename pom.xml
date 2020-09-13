@@ -113,7 +113,7 @@ limitations under the License.
     <!-- Acceptance Criteria -->
     <enforce.code.style>false</enforce.code.style>
     <ignore.license.checks>false</ignore.license.checks>
-    <enforce.findbugs>true</enforce.findbugs>
+    <enforce.spotbugs>true</enforce.spotbugs>
     <minimum.complexity.coverage>0.60</minimum.complexity.coverage>
     <minimum.instruction.coverage>0.80</minimum.instruction.coverage>
     <max.agent.file.size>2.5</max.agent.file.size>
@@ -615,13 +615,13 @@ limitations under the License.
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-        <version>3.0.5</version>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>4.0.4</version>
         <configuration>
           <xmlOutput>true</xmlOutput>
           <effort>Max</effort>
-          <failOnError>${enforce.findbugs}</failOnError>
+          <failOnError>${enforce.spotbugs}</failOnError>
           <includeTests>false</includeTests>
           <xmlOutputDirectory>${project.build.directory}/reports/</xmlOutputDirectory>
           <outputDirectory>${project.build.directory}/reports/</outputDirectory>
@@ -785,11 +785,6 @@ limitations under the License.
         <version>0.12</version>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-        <version>3.0.5</version>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-report-plugin</artifactId>
         <version>${surefire.version}</version>
@@ -851,7 +846,7 @@ limitations under the License.
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>3.1.11</version>
+        <version>4.0.4</version>
         <configuration>
           <effort>Max</effort>
         </configuration>
