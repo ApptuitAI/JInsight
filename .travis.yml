@@ -21,14 +21,17 @@ language: java
 jdk:
   - openjdk8
   - openjdk11
+  - openjdk12
+  - openjdk13
+  - openjdk14
 
 env:
   - METRICS_VERSION=3.2.6
   - METRICS_VERSION=4.1.9
 
-jobs:
-  allow_failures:
-    - jdk: openjdk11
+#jobs:
+#  allow_failures:
+#    - jdk: openjdk11
 
 services:
   - memcached
