@@ -106,33 +106,26 @@ public class ContextualModuleLoader implements ModuleSystem<ModuleClassLoader> {
       }
 
       ArrayList<URL> path = new ArrayList<>();
-      int off;
       if (cp != null) {
-        off = 0;
-
+        int off = 0;
         int next;
         do {
           next = cp.indexOf(File.pathSeparator, off);
           String element = next == -1 ? cp.substring(off) : cp.substring(off, next);
           if (!element.isEmpty()) {
-            URL url = toFileURL(element);
-            if (url != null) {
+            try {
+              URL url = (new File(element)).getCanonicalFile().toURI().toURL();
               path.add(url);
+            } catch (IOException ignored) {
+              //Ignore invalid urls
             }
           }
 
           off = next + 1;
         } while (next != -1);
       }
+      path.add(ContextualModuleLoader.class.getProtectionDomain().getCodeSource().getLocation());
       return path.toArray(new URL[0]);
-    }
-
-    private static URL toFileURL(String path) {
-      try {
-        return (new File(path)).getCanonicalFile().toURI().toURL();
-      } catch (IOException e) {
-        return null;
-      }
     }
 
     public Class<?> addClass(String name, byte[] bytes)
