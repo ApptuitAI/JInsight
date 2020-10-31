@@ -48,6 +48,9 @@ public class Agent {
   public static void premain(String agentArgs, Instrumentation instrumentation) throws Exception {
     main0(agentArgs, instrumentation, (a, i) -> {
       try {
+        if (isBciDisabled()) {
+          return;
+        }
         Main.premain(a, i);
       } catch (Exception e) {
         throw new AgentInitializationException(e);
@@ -58,11 +61,18 @@ public class Agent {
   public static void agentmain(String agentArgs, Instrumentation instrumentation) throws Exception {
     main0(agentArgs, instrumentation, (a, i) -> {
       try {
+        if (isBciDisabled()) {
+          return;
+        }
         Main.agentmain(a, i);
       } catch (Exception e) {
         throw new AgentInitializationException(e);
       }
     });
+  }
+
+  private static boolean isBciDisabled() {
+    return Boolean.parseBoolean(System.getenv("JINSIGHT_DISABLE_BCI"));
   }
 
   private static void main0(String agentArgs, Instrumentation instrumentation,
@@ -104,8 +114,9 @@ public class Agent {
   public static String getStartupMessage(ConfigService configService, boolean initialized) {
     ConfigService.ReporterType reporterType = configService.getReporterType();
     StringBuilder infoMessage = new StringBuilder();
-    infoMessage.append(String.format("Initializing JInsight v[%s] with config [reporter: %s] ",
-        configService.getAgentVersion(), reporterType));
+    infoMessage.append(String.format("Initializing JInsight v[%s] with config "
+                    + "[BCI: %s] [reporter: %s] ", configService.getAgentVersion(),
+            isBciDisabled() ? "Disabled" : "Enabled", reporterType));
     if (reporterType == ConfigService.ReporterType.APPTUIT) {
       infoMessage.append(String.format("[mode: %s ] [frequency: %s seconds]",
           configService.getReportingMode(), (configService.getReportingFrequency() / 1000)));
