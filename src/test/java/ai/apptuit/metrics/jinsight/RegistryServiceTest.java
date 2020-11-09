@@ -57,6 +57,7 @@ public class RegistryServiceTest {
     mockConfigService = mock(ConfigService.class);
     when(mockConfigService.getGlobalTags()).thenReturn(ConfigService.getInstance().getGlobalTags());
     when(mockConfigService.getReporterType()).thenReturn(ConfigService.ReporterType.APPTUIT);
+    when(mockConfigService.getAgentVersion()).thenReturn("mock.version");
   }
 
   @Test
