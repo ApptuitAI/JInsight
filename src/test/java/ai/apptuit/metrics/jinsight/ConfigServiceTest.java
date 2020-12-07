@@ -226,7 +226,7 @@ public class ConfigServiceTest {
     p.setProperty("global_tags", "jvmid:${UUID}");
     ConfigService configService = new ConfigService(p);
     Map<String, String> globalTags = configService.getGlobalTags();
-    assertEquals(globalTags.size(), 1);
+    assertEquals(1, globalTags.size());
     assertEquals(36, globalTags.get("jvmid").length());
   }
 
