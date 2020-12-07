@@ -291,12 +291,12 @@ public class ConfigService {
         if (tagAndValue.length == 2) {
           String tag = tagAndValue[0].trim();
           String value = tagAndValue[1].trim();
+          if (value.equalsIgnoreCase(UUID_TEMPLATE_VARIABLE)) {
+            value = UUID.randomUUID().toString();
+          } else if (value.equalsIgnoreCase(PID_TEMPLATE_VARIABLE)) {
+            value = getThisJVMProcessID() + "";
+          }
           if (tag.length() > 0 && value.length() > 0) {
-            if (value.equalsIgnoreCase(UUID_TEMPLATE_VARIABLE)) {
-              value = UUID.randomUUID().toString();
-            } else if (value.equalsIgnoreCase(PID_TEMPLATE_VARIABLE)) {
-              value = getThisJVMProcessID() + "";
-            }
             loadedGlobalTags.put(tag, value);
             continue;
           }
@@ -317,11 +317,11 @@ public class ConfigService {
       jvm.setAccessible(true);
       sun.management.VMManagement mgmt =
               (sun.management.VMManagement) jvm.get(runtime);
-      java.lang.reflect.Method pid_method =
+      java.lang.reflect.Method pidMethod =
               mgmt.getClass().getDeclaredMethod("getProcessId");
-      pid_method.setAccessible(true);
+      pidMethod.setAccessible(true);
 
-      return (Integer) pid_method.invoke(mgmt);
+      return (Integer) pidMethod.invoke(mgmt);
     } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
       throw new ConfigurationException("Error fetching " + PID_TEMPLATE_VARIABLE + " of JVM", e);
     }
