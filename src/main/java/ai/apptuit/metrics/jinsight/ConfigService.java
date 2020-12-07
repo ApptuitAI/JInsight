@@ -25,17 +25,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -63,6 +60,8 @@ public class ConfigService {
   private static final String API_ENDPOINT_PROPERTY_NAME = "apptuit.api_url";
 
   private static final String HOST_TAG_NAME = "host";
+  private static final String UUID_TEMPLATE_VARIABLE = "${UUID}";
+  private static final String PID_TEMPLATE_VARIABLE = "${PID}";
 
   private static final File JINSIGHT_HOME = new File(System.getProperty("user.home"), ".jinsight");
   private static final File UNIX_JINSIGHT_CONF_DIR = new File("/etc/jinsight/");
@@ -293,6 +292,11 @@ public class ConfigService {
           String tag = tagAndValue[0].trim();
           String value = tagAndValue[1].trim();
           if (tag.length() > 0 && value.length() > 0) {
+            if (value.equalsIgnoreCase(UUID_TEMPLATE_VARIABLE)) {
+              value = UUID.randomUUID().toString();
+            } else if (value.equalsIgnoreCase(PID_TEMPLATE_VARIABLE)) {
+              value = getThisJVMProcessID() + "";
+            }
             loadedGlobalTags.put(tag, value);
             continue;
           }
@@ -302,6 +306,24 @@ public class ConfigService {
                 + "Expected format: " + GLOBAL_TAGS_PROPERTY_NAME
                 + "=key1:value1,key2:value2,key3:value3");
       }
+    }
+  }
+
+  static int getThisJVMProcessID() throws ConfigurationException {
+    try {
+      java.lang.management.RuntimeMXBean runtime =
+              java.lang.management.ManagementFactory.getRuntimeMXBean();
+      java.lang.reflect.Field jvm = runtime.getClass().getDeclaredField("jvm");
+      jvm.setAccessible(true);
+      sun.management.VMManagement mgmt =
+              (sun.management.VMManagement) jvm.get(runtime);
+      java.lang.reflect.Method pid_method =
+              mgmt.getClass().getDeclaredMethod("getProcessId");
+      pid_method.setAccessible(true);
+
+      return (Integer) pid_method.invoke(mgmt);
+    } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+      throw new ConfigurationException("Error fetching " + PID_TEMPLATE_VARIABLE + " of JVM", e);
     }
   }
 
