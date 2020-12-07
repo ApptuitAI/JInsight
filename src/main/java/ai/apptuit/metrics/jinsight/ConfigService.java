@@ -291,12 +291,12 @@ public class ConfigService {
         if (tagAndValue.length == 2) {
           String tag = tagAndValue[0].trim();
           String value = tagAndValue[1].trim();
+          if (value.equalsIgnoreCase(UUID_TEMPLATE_VARIABLE)) {
+            value = UUID.randomUUID().toString();
+          } else if (value.equalsIgnoreCase(PID_TEMPLATE_VARIABLE)) {
+            value = getThisJVMProcessID() + "";
+          }
           if (tag.length() > 0 && value.length() > 0) {
-            if (value.equalsIgnoreCase(UUID_TEMPLATE_VARIABLE)) {
-              value = UUID.randomUUID().toString();
-            } else if (value.equalsIgnoreCase(PID_TEMPLATE_VARIABLE)) {
-              value = getThisJVMProcessID() + "";
-            }
             loadedGlobalTags.put(tag, value);
             continue;
           }
