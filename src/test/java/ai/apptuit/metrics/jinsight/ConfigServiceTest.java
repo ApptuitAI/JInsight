@@ -16,9 +16,7 @@
 
 package ai.apptuit.metrics.jinsight;
 
-import static ai.apptuit.metrics.jinsight.ConfigService.REPORTER_PROPERTY_NAME;
-import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_FREQ_PROPERTY_NAME;
-import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_MODE_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -220,6 +218,26 @@ public class ConfigServiceTest {
     ConfigService configService = new ConfigService(p);
     Map<String, String> globalTags = configService.getGlobalTags();
     assertEquals(globalTags, Collections.emptyMap());
+  }
+
+  @Test
+  public void testGlobalUUIDTag() throws Exception {
+    Properties p = new Properties();
+    p.setProperty("global_tags", "jvmid:${UUID}");
+    ConfigService configService = new ConfigService(p);
+    Map<String, String> globalTags = configService.getGlobalTags();
+    assertEquals(globalTags.size(), 1);
+    assertEquals(globalTags.get("jvmid").length(), 36);
+  }
+
+  @Test
+  public void testGlobalProcessIDTag() throws Exception {
+    Properties p = new Properties();
+    p.setProperty("global_tags", "pid:${PID}");
+    ConfigService configService = new ConfigService(p);
+    Map<String, String> globalTags = configService.getGlobalTags();
+    assertEquals(globalTags.size(), 1);
+    assertEquals(globalTags.get("pid"), getThisJVMProcessID() + "");
   }
 
   @Test
