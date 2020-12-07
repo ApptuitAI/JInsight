@@ -317,11 +317,11 @@ public class ConfigService {
       jvm.setAccessible(true);
       sun.management.VMManagement mgmt =
               (sun.management.VMManagement) jvm.get(runtime);
-      java.lang.reflect.Method pid_method =
+      java.lang.reflect.Method pidMethod =
               mgmt.getClass().getDeclaredMethod("getProcessId");
-      pid_method.setAccessible(true);
+      pidMethod.setAccessible(true);
 
-      return (Integer) pid_method.invoke(mgmt);
+      return (Integer) pidMethod.invoke(mgmt);
     } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
       throw new ConfigurationException("Error fetching " + PID_TEMPLATE_VARIABLE + " of JVM", e);
     }

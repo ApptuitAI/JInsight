@@ -227,7 +227,7 @@ public class ConfigServiceTest {
     ConfigService configService = new ConfigService(p);
     Map<String, String> globalTags = configService.getGlobalTags();
     assertEquals(globalTags.size(), 1);
-    assertEquals(globalTags.get("jvmid").length(), 36);
+    assertEquals(36, globalTags.get("jvmid").length());
   }
 
   @Test
@@ -236,8 +236,8 @@ public class ConfigServiceTest {
     p.setProperty("global_tags", "pid:${PID}");
     ConfigService configService = new ConfigService(p);
     Map<String, String> globalTags = configService.getGlobalTags();
-    assertEquals(globalTags.size(), 1);
-    assertEquals(globalTags.get("pid"), getThisJVMProcessID() + "");
+    assertEquals(1, globalTags.size());
+    assertEquals(getThisJVMProcessID() + "", globalTags.get("pid"));
   }
 
   @Test
