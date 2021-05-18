@@ -107,7 +107,9 @@ public class MetricRegistryCollection {
 
       public Method getAccessor(Object delegate) throws NoSuchMethodException {
         Class<?> klass = delegate.getClass();
-        return klass.getMethod("get" + type + "s");
+        Method method = klass.getMethod("get" + type + "s");
+        method.setAccessible(true);
+        return method;
       }
 
       @SuppressWarnings("unchecked")
@@ -170,6 +172,7 @@ public class MetricRegistryCollection {
     private static Object invokeOnDelegate(Object delegate, String methodName, double arg) {
       try {
         Method method = delegate.getClass().getMethod(methodName, double.class);
+        method.setAccessible(true);
         return method.invoke(delegate, arg);
       } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
         throw new RuntimeException(e);
@@ -352,6 +355,7 @@ public class MetricRegistryCollection {
       public long getCount() {
         try {
           Method method = delegate.getClass().getMethod("getCount");
+          method.setAccessible(true);
           return (long) method.invoke(delegate);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
           throw new RuntimeException(e);
@@ -362,6 +366,7 @@ public class MetricRegistryCollection {
       public Snapshot getSnapshot() {
         try {
           Method method = delegate.getClass().getMethod("getSnapshot");
+          method.setAccessible(true);
           return new SnapshotWrapper(method.invoke(delegate));
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
           throw new RuntimeException(e);
