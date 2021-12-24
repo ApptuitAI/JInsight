@@ -15,7 +15,7 @@
 #
 
 sudo: false
-
+dist: bionic
 language: java
 
 jdk:
@@ -118,7 +118,7 @@ before_deploy:
 
 deploy:
   - provider: script
-    script: mvn -B deploy -DskipTests=true -DskipVerifications=true $COMMON_MVN_FLAGS
+    script: mvn -B deploy -DskipTests=true -DskipVerifications=true -Dskip.signing=false $COMMON_MVN_FLAGS
       && make -C pkg/deb
       && make -C pkg/rpm
     skip_cleanup: true
