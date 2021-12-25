@@ -15,7 +15,7 @@
 #
 
 sudo: false
-
+dist: bionic
 language: java
 
 jdk:
@@ -35,7 +35,7 @@ env:
 
 services:
   - memcached
-  - redis-server
+  - redis
 
 addons:
   sonarcloud:
@@ -55,6 +55,12 @@ before_install:
     wget -nv -O ~/.rpmlint/rpmlint-1.9.tar.gz https://github.com/rpm-software-management/rpmlint/archive/rpmlint-1.9.tar.gz;
     tar xvfz ~/.rpmlint/rpmlint-1.9.tar.gz -C ~/.rpmlint;
     BUILDER=$USER sudo make install -C ~$BUILDER/.rpmlint/rpmlint-rpmlint-1.9
+  - |
+    if [[ "$encrypted_8ef7f618d741_key" != "" ]]; then
+      openssl aes-256-cbc -K $encrypted_8ef7f618d741_key -iv $encrypted_8ef7f618d741_iv -in conf/signingkey.asc.enc -out conf/signingkey.asc -d
+      gpg2 --batch --keyring=$TRAVIS_BUILD_DIR/pubring.gpg --no-default-keyring --import conf/signingkey.asc;
+      gpg2 --batch --allow-secret-key-import --keyring=$TRAVIS_BUILD_DIR/secring.gpg --no-default-keyring --import conf/signingkey.asc;
+    fi
 
 
 install:
@@ -76,14 +82,19 @@ before_script:
   - echo $TRAVIS_TAG
   - echo $PACKAGE_VERSION
   - echo $IS_PRIMARY_MATRIX_JOB
+  - export LINUX_PACKAGE_PUBLISH="false"
+  - export COMMON_MVN_FLAGS="-s conf/maven-settings.xml
+    -Dgpg.executable=gpg2 -Dgpg.keyname=8A6106B5 -Dgpg.passphrase=$GPG_PASSPHRASE
+    -Dgpg.publicKeyring=$TRAVIS_BUILD_DIR/pubring.gpg -Dgpg.secretKeyring=$TRAVIS_BUILD_DIR/secring.gpg
+    -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
 
 script:
   - |
     if [[ "$SONAR_ENABLED" = "true" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && [[ "$IS_PRIMARY_MATRIX_JOB" = "true" ]]; then
-      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN \
+      mvn verify sonar:sonar -Denv.server.ip=127.0.0.1 -B $COMMON_MVN_FLAGS \
           -Dsonar.projectKey=${SONAR_PROJECT} -Dsonar.login=${SONAR_TOKEN} -Dsonar.organization=${SONAR_ORG} -Dsonar.host.url=https://sonarcloud.io
     else
-      mvn verify -Denv.server.ip=127.0.0.1 -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN
+      mvn verify -Denv.server.ip=127.0.0.1 -B $COMMON_MVN_FLAGS
     fi
   - make -C pkg/deb
   - make -C pkg/rpm
@@ -107,11 +118,13 @@ before_deploy:
 
 deploy:
   - provider: script
-    script: "mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -s .maven.settings.xml deploy -DskipTests=true -DskipVerifications=true && make -C pkg/deb && make -C pkg/rpm"
+    script: mvn -B deploy -DskipTests=true -DskipVerifications=true -Dskip.signing=false $COMMON_MVN_FLAGS
+      && make -C pkg/deb
+      && make -C pkg/rpm
     skip_cleanup: true
     on:
       tags: true
-      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
+      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $SONATYPE_USERNAME != ""
       jdk: openjdk8
   - edge:
       branch: v1.8.47
@@ -121,7 +134,7 @@ deploy:
     key: "$BINTRAY_API_KEY"
     on:
       tags: true
-      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
+      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != "" && LINUX_PACKAGE_PUBLISH != "false"
       jdk: openjdk8
   - edge:
           branch: v1.8.47
@@ -131,5 +144,5 @@ deploy:
     key: "$BINTRAY_API_KEY"
     on:
       tags: true
-      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != ""
+      condition: $PACKAGE_VERSION != "" && $IS_PRIMARY_MATRIX_JOB == "true" && $BINTRAY_API_KEY != "" && LINUX_PACKAGE_PUBLISH != "false"
       jdk: openjdk8

@@ -29,8 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Extracts Metric names, label values and label names from
- * dropwizardName and additionalLabels & additionalLabelValues.
+ * Extracts Metric names, label values and label names from dropwizardName, additionalLabels and additionalLabelValues.
  * dropwizard has format MetricName[labelName1:labelValue1,labelName2:labelValue2.....]
  */
 public class TagDecodingSampleBuilder implements SampleBuilder {
