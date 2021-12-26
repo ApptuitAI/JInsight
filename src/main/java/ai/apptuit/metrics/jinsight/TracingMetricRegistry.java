@@ -96,7 +96,7 @@ class TracingMetricRegistry extends MetricRegistry {
   }
 
   @Override
-  public Gauge gauge(String name, MetricSupplier<Gauge> supplier) {
+  public Gauge gauge(String name, MetricSupplier supplier) {
     throw new UnsupportedOperationException();
   }
 

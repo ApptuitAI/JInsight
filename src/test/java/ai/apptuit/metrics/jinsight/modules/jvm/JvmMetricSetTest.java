@@ -189,6 +189,12 @@ public class JvmMetricSetTest {
       expectedMetrics.addAll(Arrays.asList(JDK8_MEM_METRICS));
     }
 
+    String metricsPackageVersion = MetricRegistry.class.getPackage().getImplementationVersion();
+    if(!metricsPackageVersion.startsWith("3.")){
+      expectedMetrics.add("jvm.threads.peak.count");
+      expectedMetrics.add("jvm.threads.total_started.count");
+    }
+
     try {
       // https://openjdk.java.net/jeps/352
       Class.forName("jdk.nio.mapmode.ExtendedMapMode");
