@@ -19,7 +19,7 @@ CLASS org.apache.http.protocol.HttpRequestExecutor
 METHOD execute
 HELPER ai.apptuit.metrics.jinsight.modules.httpclient.HttpClientRuleHelper
 AT ENTRY
-IF TRUE
+IF canAccess($1)
 DO onExecuteStart($1)
 ENDRULE
 
@@ -29,6 +29,6 @@ CLASS org.apache.http.protocol.HttpRequestExecutor
 METHOD execute
 HELPER ai.apptuit.metrics.jinsight.modules.httpclient.HttpClientRuleHelper
 AT EXIT
-IF TRUE
+IF canAccess($1)
 DO onExecuteEnd($1, $!)
 ENDRULE

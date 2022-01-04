@@ -21,6 +21,8 @@ import ai.apptuit.metrics.jinsight.RegistryService;
 import com.codahale.metrics.Clock;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -30,6 +32,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
@@ -43,9 +46,38 @@ public class RuleHelper extends Helper {
 
   private static final Map<Object, Map<String, Object>> objectProperties = Collections
       .synchronizedMap(new WeakHashMap<>());
+  private static Method GET_MODULE_METHOD;
+  private static Method MODULE_GET_NAME_METHOD;
+  static {
+    try {
+      GET_MODULE_METHOD = Class.class.getMethod("getModule");
+    } catch (NoSuchMethodException e) {
+      LOGGER.log(Level.FINE, "Can't find Class.getModule method.", e);
+    }
+    try {
+      Class<?> clazz = Class.forName("java.lang.Module");
+      MODULE_GET_NAME_METHOD = clazz.getMethod("getName");
+    } catch (NoSuchMethodException e) {
+      LOGGER.log(Level.FINE, "Can't find Class.getModule method.", e);
+    } catch (ClassNotFoundException e) {
+      LOGGER.log(Level.FINE, "Can't find java.lang.Module class.", e);
+    }
+  }
 
   public RuleHelper(Rule rule) {
     super(rule);
+  }
+
+  public boolean canAccess(Object o) throws InvocationTargetException, IllegalAccessException {
+    if (GET_MODULE_METHOD ==null)
+            return true;
+
+    Class<?> clazz = o.getClass();
+    Object module = GET_MODULE_METHOD.invoke(clazz);
+    Object moduleName = MODULE_GET_NAME_METHOD.invoke(module);
+    if (moduleName!=null && moduleName.equals("inception.agent"))
+      return false;
+    return true;
   }
 
   public String setObjectProperty(Object o, String propertyName, String propertyValue) {
