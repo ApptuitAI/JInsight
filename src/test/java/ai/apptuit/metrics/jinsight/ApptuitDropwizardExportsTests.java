@@ -143,11 +143,11 @@ public class ApptuitDropwizardExportsTests {
       }
     };
 
-    Mockito.when(sampleBuilder.createSample("integer.gauge", "", Collections.emptyList(), Collections.emptyList(), 1234)).thenReturn(new Collector.MetricFamilySamples.Sample("integer_gauge", Collections.<String>emptyList(), Collections.<String>emptyList(), 1234));
-    Mockito.when(sampleBuilder.createSample("long.gauge", "", Collections.emptyList(), Collections.emptyList(), 1234)).thenReturn(new Collector.MetricFamilySamples.Sample("long_gauge", Collections.<String>emptyList(), Collections.<String>emptyList(), 1234));
-    Mockito.when(sampleBuilder.createSample("double.gauge", "", Collections.emptyList(), Collections.emptyList(), 1.234)).thenReturn(new Collector.MetricFamilySamples.Sample("double_gauge", Collections.<String>emptyList(), Collections.<String>emptyList(), 1.234));
-    Mockito.when(sampleBuilder.createSample("float.gauge", "", Collections.emptyList(), Collections.emptyList(), 0.1234F)).thenReturn(new Collector.MetricFamilySamples.Sample("float_gauge", Collections.<String>emptyList(), Collections.<String>emptyList(), 0.1234F));
-    Mockito.when(sampleBuilder.createSample("boolean.gauge", "", Collections.emptyList(), Collections.emptyList(), 1)).thenReturn(new Collector.MetricFamilySamples.Sample("boolean_gauge", Collections.<String>emptyList(), Collections.<String>emptyList(), 1));
+    Mockito.when(sampleBuilder.createSample("integer.gauge", "", null, null, 1234)).thenReturn(new Collector.MetricFamilySamples.Sample("integer_gauge", Collections.<String>emptyList(), Collections.<String>emptyList(), 1234));
+    Mockito.when(sampleBuilder.createSample("long.gauge", "", null, null, 1234)).thenReturn(new Collector.MetricFamilySamples.Sample("long_gauge", Collections.<String>emptyList(), Collections.<String>emptyList(), 1234));
+    Mockito.when(sampleBuilder.createSample("double.gauge", "", null, null, 1.234)).thenReturn(new Collector.MetricFamilySamples.Sample("double_gauge", Collections.<String>emptyList(), Collections.<String>emptyList(), 1.234));
+    Mockito.when(sampleBuilder.createSample("float.gauge", "", null, null, 0.1234F)).thenReturn(new Collector.MetricFamilySamples.Sample("float_gauge", Collections.<String>emptyList(), Collections.<String>emptyList(), 0.1234F));
+    Mockito.when(sampleBuilder.createSample("boolean.gauge", "", null, null, 1)).thenReturn(new Collector.MetricFamilySamples.Sample("boolean_gauge", Collections.<String>emptyList(), Collections.<String>emptyList(), 1));
 
     metricRegistry.register("double.gauge", doubleGauge);
     metricRegistry.register("long.gauge", longGauge);
@@ -202,7 +202,7 @@ public class ApptuitDropwizardExportsTests {
 
   @Test
   public void counterTest() throws Exception {
-    Mockito.when(sampleBuilder.createSample("foo.bar", "", Collections.<String>emptyList(), Collections.<String>emptyList(), 1d)).thenReturn(new Collector.MetricFamilySamples.Sample("foo_bar", Collections.<String>emptyList(), Collections.<String>emptyList(), 1d));
+    Mockito.when(sampleBuilder.createSample("foo.bar", "", null, null, 1d)).thenReturn(new Collector.MetricFamilySamples.Sample("foo_bar", Collections.<String>emptyList(), Collections.<String>emptyList(), 1d));
     metricRegistry.counter("foo.bar").inc();
     assertEquals(new Double(1),
             registry.getSampleValue("foo_bar")

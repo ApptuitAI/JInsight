@@ -58,8 +58,8 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
   }
 
   private static String getHelpMessage(String metricName, Metric metric) {
-    return String.format("Generated from Dropwizard metric import (metric=%s, type=%s)",
-            metricName, metric.getClass().getName());
+    return "Generated from Dropwizard metric import (metric=" + metricName +
+            ", type=" + metric.getClass().getName() + ")";
   }
 
   private MetricFamilySamples fromSnapshotAndCount(String dropwizardName, String durationSuffix, Sampling samplingObj, long count, double factor, String helpMessage) {
@@ -93,7 +93,7 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
                 Collections.singletonList("0.999"), snapshot.get999thPercentile() * factor),
 
             sampleBuilder.createSample(dropwizardName, "_count",
-                    new ArrayList<>(), new ArrayList<>(), count)
+                    null, null, count)
     );
     return new MetricFamilySamples(samples.get(0).name, Type.SUMMARY, helpMessage, samples);
   }
@@ -104,7 +104,7 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
   }
 
   private MetricFamilySamples fromCounter(String dropwizardName, Counter counter) {
-    MetricFamilySamples.Sample sample = sampleBuilder.createSample(dropwizardName, "", new ArrayList<>(), new ArrayList<>(),
+    MetricFamilySamples.Sample sample = sampleBuilder.createSample(dropwizardName, "", null, null,
             counter.getCount());
     return new MetricFamilySamples(sample.name, Type.GAUGE, getHelpMessage(dropwizardName, counter),
         Collections.singletonList(sample));
@@ -130,7 +130,7 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
       return null;
     }
     MetricFamilySamples.Sample sample = sampleBuilder.createSample(dropwizardName, "",
-            new ArrayList<>(), new ArrayList<>(), value);
+            null, null, value);
     return new MetricFamilySamples(sample.name, Type.GAUGE, getHelpMessage(dropwizardName, gauge),
         Collections.singletonList(sample));
   }
@@ -143,7 +143,7 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
                 Collections.singletonList(WINDOW_TAG_NAME), Collections.singletonList("5m"), meter.getFiveMinuteRate()),
             sampleBuilder.createSample(dropwizardName, RATE_SUFFIX,
                 Collections.singletonList(WINDOW_TAG_NAME), Collections.singletonList("15m"), meter.getFifteenMinuteRate()),
-            sampleBuilder.createSample(dropwizardName, "_total", new ArrayList<>(), new ArrayList<>(), meter.getCount())
+            sampleBuilder.createSample(dropwizardName, "_total", null, null, meter.getCount())
     );
     return new MetricFamilySamples(samples.get(0).name, Type.SUMMARY, getHelpMessage(dropwizardName, meter), samples);
   }
@@ -160,7 +160,7 @@ public class ApptuitDropwizardExports extends io.prometheus.client.Collector
   @Override
   public List<MetricFamilySamples> collect() {
 
-    Map<String, MetricFamilySamples> mfSamplesMap = new HashMap<>();
+    Map<String, MetricFamilySamples> mfSamplesMap = new HashMap<>(registry.getMetrics().size());
 
     for (SortedMap.Entry<String, Metric> entry : registry.getMetrics().entrySet()) {
       try {
