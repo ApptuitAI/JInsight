@@ -18,6 +18,7 @@ package ai.apptuit.metrics.jinsight;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import io.prometheus.client.Collector.MetricFamilySamples;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.HTTPServer;
 import io.prometheus.client.exporter.common.TextFormat;
@@ -28,6 +29,8 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Enumeration;
+import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 
@@ -85,7 +88,14 @@ public class PromHttpServer extends HTTPServer {
       baos.reset();
       OutputStreamWriter osw = new OutputStreamWriter(baos, StandardCharsets.UTF_8);
 
-      TextFormat.write004(osw, registry.filteredMetricFamilySamples(parseQuery(query)));
+      Set<String> includedNames = parseQuery(query);
+      Enumeration<MetricFamilySamples> mfs;
+      if(includedNames.isEmpty()) {
+        mfs = registry.metricFamilySamples();
+      }else {
+        mfs = registry.filteredMetricFamilySamples(includedNames);
+      }
+      TextFormat.write004(osw, mfs);
       osw.flush();
       osw.close();
       baos.flush();

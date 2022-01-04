@@ -19,7 +19,7 @@ CLASS org.apache.log4j.Category
 METHOD callAppenders
 HELPER ai.apptuit.metrics.jinsight.modules.log4j.Log4JRuleHelper
 AT ENTRY
-IF TRUE
+IF canAccess($1)
 DO appendersCalled($1)
 ENDRULE
 
@@ -28,6 +28,6 @@ CLASS org.apache.log4j.helpers.PatternParser$BasicPatternConverter
 METHOD convert
 HELPER ai.apptuit.metrics.jinsight.modules.log4j.Log4JRuleHelper
 AT EXIT
-IF $0.type == org.apache.log4j.helpers.PatternParser.MESSAGE_CONVERTER
+IF canAccess($1) && $0.type == org.apache.log4j.helpers.PatternParser.MESSAGE_CONVERTER
 DO return convertMessage($1, $!)
 ENDRULE

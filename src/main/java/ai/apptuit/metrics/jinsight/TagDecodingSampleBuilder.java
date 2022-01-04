@@ -19,10 +19,11 @@ package ai.apptuit.metrics.jinsight;
 import ai.apptuit.metrics.client.TagEncodedMetricName;
 import io.prometheus.client.Collector;
 import io.prometheus.client.dropwizard.samplebuilder.SampleBuilder;
-
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,64 +34,141 @@ import java.util.Set;
  * dropwizard has format MetricName[labelName1:labelValue1,labelName2:labelValue2.....]
  */
 public class TagDecodingSampleBuilder implements SampleBuilder {
-  private final Map<String, String> globalTags;
 
-  public TagDecodingSampleBuilder(Map<String, String> globalTags) {
-    this.globalTags = globalTags;
-  }
+    private final PrometheusTimeSeriesNameCache cache = new PrometheusTimeSeriesNameCache(250000);
+    private final Map<String, String> globalTags;
 
-  @Override
-  public Collector.MetricFamilySamples.Sample createSample(final String dropwizardName,
-                                                           final String nameSuffix,
-                                                           final List<String> additionalLabelNames,
-                                                           final List<String> additionalLabelValues,
-                                                           final double value) {
-
-    final String suffix = nameSuffix == null ? "" : nameSuffix;
-    TagEncodedMetricName mn = TagEncodedMetricName.decode(dropwizardName);
-    final String metric = mn.getMetricName() + suffix;
-    Map<String, String> tags = mn.getTags();
-
-    int labelCount = tags.size();
-    if (globalTags != null) {
-      labelCount += globalTags.size();
-    }
-    if (additionalLabelNames != null) {
-      labelCount += additionalLabelNames.size();
+    public TagDecodingSampleBuilder(Map<String, String> globalTags) {
+        this.globalTags = globalTags;
     }
 
-    Set<String> labelNames = new LinkedHashSet<>();
-    List<String> labelValues = new ArrayList<>(labelCount);
+    @Override
+    public Collector.MetricFamilySamples.Sample createSample(final String dropwizardName,
+            final String nameSuffix,
+            final List<String> additionalLabelNames,
+            final List<String> additionalLabelValues,
+            final double value) {
+        PrometheusTimeSeriesName timeSeries;
+        timeSeries = cache.getPrometheusTimeSeriesName(dropwizardName, nameSuffix, additionalLabelNames,
+                additionalLabelValues);
 
-    addLabels(labelNames, labelValues, tags.keySet(), tags.values(), false);
-    addLabels(labelNames, labelValues, additionalLabelNames, additionalLabelValues, false);
-    if (globalTags != null) {
-      addLabels(labelNames, labelValues, globalTags.keySet(), globalTags.values(), true);
-    }
-    return new Collector.MetricFamilySamples.Sample(
-            Collector.sanitizeMetricName(metric),
-            new ArrayList<>(labelNames),
-            labelValues,
-            value);
-  }
-
-  private void addLabels(Set<String> labelNames, List<String> labelValues, Collection<String> sourceNames,
-                         Collection<String> sourceValues, boolean skipDuplicate) {
-    if (sourceNames == null) {
-      return;
+        return new Collector.MetricFamilySamples.Sample(
+                timeSeries.metricName,
+                timeSeries.labelNames,
+                timeSeries.labelValues,
+                value);
     }
 
-    Iterator<String> values = sourceValues.iterator();
-    for (String tag : sourceNames) {
-      String value = values.next();
-      String sanitizedName = Collector.sanitizeMetricName(tag);
-      if (skipDuplicate && labelNames.contains(sanitizedName)) {
-        continue;
-      }
-      labelNames.add(sanitizedName);
-      labelValues.add(value);
+    private class PrometheusTimeSeriesNameCache {
+
+        private Map<String, PrometheusTimeSeriesName> cachedTSNs = null;
+
+        public PrometheusTimeSeriesNameCache(int capacity) {
+            if (capacity > 0) {
+                cachedTSNs = Collections.synchronizedMap(
+                        new LRUCache<>(capacity));
+            }
+        }
+
+        private PrometheusTimeSeriesName getPrometheusTimeSeriesName(String dropwizardName, String nameSuffix,
+                List<String> additionalLabelNames, List<String> additionalLabelValues) {
+            PrometheusTimeSeriesName timeSeries;
+            if (cachedTSNs != null && (additionalLabelNames == null || additionalLabelNames.size() <= 1)) {
+                String cacheKey = dropwizardName;
+                if (nameSuffix != null) {
+                    cacheKey += "\n" + nameSuffix;
+                }
+                if (additionalLabelNames != null && additionalLabelNames.size() == 1) {
+                    cacheKey += "\n" + additionalLabelNames.get(0);
+                    cacheKey += "\n" + additionalLabelValues.get(0);
+                }
+                timeSeries = cachedTSNs.get(cacheKey);
+                if (timeSeries == null) {
+                    timeSeries = new PrometheusTimeSeriesName(dropwizardName, nameSuffix, additionalLabelNames,
+                            additionalLabelValues);
+                    cachedTSNs.put(cacheKey, timeSeries);
+                }
+            } else {
+                timeSeries = new PrometheusTimeSeriesName(dropwizardName, nameSuffix, additionalLabelNames,
+                        additionalLabelValues);
+            }
+            return timeSeries;
+        }
+
     }
-  }
+
+    private static class LRUCache<K, V> extends LinkedHashMap<K, V> {
+
+        private final int capacity;
+
+        public LRUCache(int capacity) {
+            super(capacity + 1, 1.0f, true);
+            this.capacity = capacity;
+        }
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+            return (size() > this.capacity);
+        }
+
+    }
+
+    private class PrometheusTimeSeriesName {
+
+        private final String metricName;
+        private final List<String> labelNames;
+        private final List<String> labelValues;
+
+        public PrometheusTimeSeriesName(final String dropwizardName,
+                final String nameSuffix,
+                final List<String> additionalLabelNames,
+                final List<String> additionalLabelValues) {
+
+            final String suffix = nameSuffix == null ? "" : nameSuffix;
+            TagEncodedMetricName mn = TagEncodedMetricName.decode(dropwizardName);
+            final String metric = mn.getMetricName() + suffix;
+            Map<String, String> tags = mn.getTags();
+
+            int labelCount = tags.size();
+            if (globalTags != null) {
+                labelCount += globalTags.size();
+            }
+            if (additionalLabelNames != null) {
+                labelCount += additionalLabelNames.size();
+            }
+
+            Set<String> labelNames = new LinkedHashSet<>(labelCount);
+            List<String> labelValues = new ArrayList<>(labelCount);
+
+            addLabels(labelNames, labelValues, tags.keySet(), tags.values(), false);
+            addLabels(labelNames, labelValues, additionalLabelNames, additionalLabelValues, false);
+            if (globalTags != null) {
+                addLabels(labelNames, labelValues, globalTags.keySet(), globalTags.values(), true);
+            }
+
+            this.metricName = Collector.sanitizeMetricName(metric);
+            this.labelNames = new ArrayList<>(labelNames);
+            this.labelValues = labelValues;
+        }
+
+        private void addLabels(Set<String> labelNames, List<String> labelValues, Collection<String> sourceNames,
+                Collection<String> sourceValues, boolean skipDuplicate) {
+            if (sourceNames == null) {
+                return;
+            }
+
+            Iterator<String> values = sourceValues.iterator();
+            for (String tag : sourceNames) {
+                String value = values.next();
+                String sanitizedName = Collector.sanitizeMetricName(tag);
+                if (skipDuplicate && labelNames.contains(sanitizedName)) {
+                    continue;
+                }
+                labelNames.add(sanitizedName);
+                labelValues.add(value);
+            }
+        }
+    }
 }
 
 
