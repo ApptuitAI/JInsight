@@ -315,6 +315,13 @@ public class ConfigServiceTest {
     assertEquals(System.getProperty("project.version"), cs.getAgentVersion());
   }
 
+  @Test
+  public void testGetReporterFromSystemProperty() throws Exception {
+    System.setProperty("reporter", "APPTUIT");
+    ReporterType reporterType = ConfigService.getInstance().getReporterType();
+    assertEquals(ReporterType.APPTUIT, reporterType);
+  }
+
   private Properties getDefaultConfigProperties() {
     return new Properties();
   }
