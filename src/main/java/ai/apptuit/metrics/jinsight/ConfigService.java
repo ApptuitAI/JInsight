@@ -191,27 +191,35 @@ public class ConfigService {
 
   private static Map<String, Object> loadSystemProperties() {
     Map<String, Object> systemProperties = new HashMap<>();
-    String reporter = System.getProperty(REPORTER_PROPERTY_NAME);
+    String reporter = getProperty(REPORTER_PROPERTY_NAME);
     if(reporter != null && !reporter.equals("")){
       systemProperties.put(REPORTER_PROPERTY_NAME, reporter);
     }
 
-    String accessToken = System.getProperty(ACCESS_TOKEN_PROPERTY_NAME);
+    String accessToken = getProperty(ACCESS_TOKEN_PROPERTY_NAME);
     if(accessToken != null && !accessToken.equals("")){
       systemProperties.put(ACCESS_TOKEN_PROPERTY_NAME, accessToken);
     }
 
-    String apiEndpoint = System.getProperty(API_ENDPOINT_PROPERTY_NAME);
+    String apiEndpoint = getProperty(API_ENDPOINT_PROPERTY_NAME);
     if(apiEndpoint != null && !apiEndpoint.equals("")){
       systemProperties.put(API_ENDPOINT_PROPERTY_NAME, apiEndpoint);
     }
 
-    String globalTags = System.getProperty(GLOBAL_TAGS_PROPERTY_NAME);
+    String globalTags = getProperty(GLOBAL_TAGS_PROPERTY_NAME);
     if(globalTags != null && !globalTags.equals("")){
       systemProperties.put(GLOBAL_TAGS_PROPERTY_NAME, globalTags);
     }
 
     return systemProperties;
+  }
+
+  private static String getProperty(String propertyName) {
+    String propertyValue = System.getenv(propertyName);
+    if(propertyValue == null || propertyValue.equals("")){
+      propertyValue = System.getProperty(propertyName);
+    }
+    return propertyValue;
   }
 
   private Sanitizer readSanitizer(Properties config) {
