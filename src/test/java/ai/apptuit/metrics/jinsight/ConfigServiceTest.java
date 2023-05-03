@@ -316,10 +316,10 @@ public class ConfigServiceTest {
   }
 
   @Test
-  public void testGetReporterFromSystemProperty() throws Exception {
-    System.setProperty("reporter", "APPTUIT");
-    ReporterType reporterType = ConfigService.getInstance().getReporterType();
-    assertEquals(ReporterType.APPTUIT, reporterType);
+  public void testGetGlobalTagsFromSystemProperty() throws Exception {
+    System.setProperty("jinsight.global_tags", "env:dev");
+    Map<String, String> globalTags = ConfigService.getInstance().getGlobalTags();
+    assertEquals("dev", globalTags.get("env"));
   }
 
   private Properties getDefaultConfigProperties() {
