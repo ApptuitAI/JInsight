@@ -215,12 +215,13 @@ public class ConfigService {
   }
 
   private static String getProperty(String propertyName) {
+    String updatedPropertyName = propertyName;
     if(!propertyName.contains(".")) {
-      propertyName = "jinsight." + propertyName;
+      updatedPropertyName = "jinsight." + propertyName;
     }
-    String propertyValue = System.getenv(propertyName);
+    String propertyValue = System.getenv(updatedPropertyName);
     if(propertyValue == null || propertyValue.equals("")){
-      propertyValue = System.getProperty(propertyName);
+      propertyValue = System.getProperty(updatedPropertyName);
     }
     return propertyValue != null && !propertyValue.equals("") ? propertyValue : null;
   }

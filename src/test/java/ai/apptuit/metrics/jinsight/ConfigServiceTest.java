@@ -322,6 +322,7 @@ public class ConfigServiceTest {
     assertEquals(System.getProperty("project.version"), cs.getAgentVersion());
   }
 
+  @SuppressWarnings("all")
   @Test
   public void testLoadSystemProperties() throws Exception {
     // setup here since ConfigService.getInstance() has been initialized in several tests
@@ -335,7 +336,6 @@ public class ConfigServiceTest {
     initialize();
 
     ConfigService cs = ConfigService.getInstance();
-
     assertEquals("APPTUIT", cs.getReporterType().name());
     assertEquals("TEST_TOKEN", cs.getApiToken());
     assertEquals("http://api.test.bicycle.io", cs.getApiUrl().toString());
@@ -350,17 +350,10 @@ public class ConfigServiceTest {
     doPrivilegedAction();
   }
 
-  private void doPrivilegedAction() {
-    AccessController.doPrivileged((PrivilegedAction<String>) () -> {
-      try {
-        Field singletonField = ConfigService.class.getDeclaredField("singleton");
-        singletonField.setAccessible(true);
-        singletonField.set(null, null);
-        return "";
-      } catch (ReflectiveOperationException | SecurityException e) {
-        throw new RuntimeException(e);
-      }
-    });
+  private void doPrivilegedAction() throws  Exception {
+    Field singletonField  = ConfigService.class.getDeclaredField("singleton");
+    singletonField.setAccessible(true);
+    singletonField.set(null, null);
 
   }
 
