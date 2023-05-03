@@ -23,6 +23,8 @@ import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
@@ -324,13 +326,11 @@ public class ConfigServiceTest {
   public void testLoadSystemProperties() throws Exception {
     // setup here since ConfigService.getInstance() has been initialized in several tests
     System.setProperty("jinsight.reporter", "APPTUIT");
-    System.setProperty("jinsight.apptuit.access_token", "TEST_TOKEN");
-    System.setProperty("jinsight.apptuit.api_url", "http://api.test.bicycle.io");
+    System.setProperty("apptuit.access_token", "TEST_TOKEN");
+    System.setProperty("apptuit.api_url", "http://api.test.bicycle.io");
     System.setProperty("jinsight.global_tags", "env:dev");
 
-    Field singletonField = ConfigService.class.getDeclaredField("singleton");
-    singletonField.setAccessible(true);
-    singletonField.set(null, null);
+    doPrivilegedAction();
 
     initialize();
 
@@ -347,9 +347,21 @@ public class ConfigServiceTest {
     System.setProperty("jinsight.apptuit.access_token", "");
     System.setProperty("jinsight.apptuit.api_url", "");
     System.setProperty("jinsight.global_tags", "");
-    singletonField = ConfigService.class.getDeclaredField("singleton");
-    singletonField.setAccessible(true);
-    singletonField.set(null, null);
+    doPrivilegedAction();
+  }
+
+  private void doPrivilegedAction() {
+    AccessController.doPrivileged((PrivilegedAction<String>) () -> {
+      try {
+        Field singletonField = ConfigService.class.getDeclaredField("singleton");
+        singletonField.setAccessible(true);
+        singletonField.set(null, null);
+        return "";
+      } catch (ReflectiveOperationException | SecurityException e) {
+        throw new RuntimeException(e);
+      }
+    });
+
   }
 
   private Properties getDefaultConfigProperties() {

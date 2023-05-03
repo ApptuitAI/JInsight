@@ -50,18 +50,14 @@ public class ConfigService {
 
   public static final String REPORTING_FREQ_PROPERTY_NAME = "reporting_frequency";
   private static final String GLOBAL_TAGS_PROPERTY_NAME = "global_tags";
-  private static final String GLOBAL_TAGS_SYSTEM_PROPERTY_NAME = "jinsight.global_tags";
   public static final String REPORTER_PROPERTY_NAME = "reporter";
-  public static final String REPORTER_SYSTEM_PROPERTY_NAME = "jinsight.reporter";
 
   public static final String PROMETHEUS_EXPORTER_PORT = "prometheus.exporter_port";
   public static final String PROMETHEUS_METRICS_PATH = "prometheus.exporter_endpoint";
 
   public static final String REPORTING_MODE_PROPERTY_NAME = "apptuit.reporting_mode";
   private static final String ACCESS_TOKEN_PROPERTY_NAME = "apptuit.access_token";
-  private static final String ACCESS_TOKEN_SYSTEM_PROPERTY_NAME = "jinsight.apptuit.access_token";
   private static final String API_ENDPOINT_PROPERTY_NAME = "apptuit.api_url";
-  private static final String API_ENDPOINT_SYSTEM_PROPERTY_NAME = "jinsight.apptuit.api_url";
 
   private static final String HOST_TAG_NAME = "host";
   private static final String UUID_TEMPLATE_VARIABLE = "${UUID}";
@@ -195,22 +191,22 @@ public class ConfigService {
 
   private static Map<String, Object> loadSystemProperties() {
     Map<String, Object> systemProperties = new HashMap<>();
-    String reporter = getProperty(REPORTER_SYSTEM_PROPERTY_NAME);
+    String reporter = getProperty(REPORTER_PROPERTY_NAME);
     if(reporter != null){
       systemProperties.put(REPORTER_PROPERTY_NAME, reporter);
     }
 
-    String accessToken = getProperty(ACCESS_TOKEN_SYSTEM_PROPERTY_NAME);
+    String accessToken = getProperty(ACCESS_TOKEN_PROPERTY_NAME);
     if(accessToken != null){
       systemProperties.put(ACCESS_TOKEN_PROPERTY_NAME, accessToken);
     }
 
-    String apiEndpoint = getProperty(API_ENDPOINT_SYSTEM_PROPERTY_NAME);
+    String apiEndpoint = getProperty(API_ENDPOINT_PROPERTY_NAME);
     if(apiEndpoint != null){
       systemProperties.put(API_ENDPOINT_PROPERTY_NAME, apiEndpoint);
     }
 
-    String globalTags = getProperty(GLOBAL_TAGS_SYSTEM_PROPERTY_NAME);
+    String globalTags = getProperty(GLOBAL_TAGS_PROPERTY_NAME);
     if(globalTags != null){
       systemProperties.put(GLOBAL_TAGS_PROPERTY_NAME, globalTags);
     }
@@ -219,6 +215,9 @@ public class ConfigService {
   }
 
   private static String getProperty(String propertyName) {
+    if(!propertyName.contains(".")) {
+      propertyName = "jinsight." + propertyName;
+    }
     String propertyValue = System.getenv(propertyName);
     if(propertyValue == null || propertyValue.equals("")){
       propertyValue = System.getProperty(propertyName);
