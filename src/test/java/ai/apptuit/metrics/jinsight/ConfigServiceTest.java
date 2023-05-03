@@ -321,8 +321,11 @@ public class ConfigServiceTest {
   }
 
   @Test
-  public void testGetGlobalTags_SystemProperty() throws Exception {
+  public void testLoadSystemProperties() throws Exception {
     // setup here since ConfigService.getInstance() has been initialized in several tests
+    System.setProperty("jinsight.reporter", "APPTUIT");
+    System.setProperty("jinsight.apptuit.access_token", "TEST_TOKEN");
+    System.setProperty("jinsight.apptuit.api_url", "http://api.test.bicycle.io");
     System.setProperty("jinsight.global_tags", "env:dev");
 
     Field singletonField = ConfigService.class.getDeclaredField("singleton");
@@ -332,10 +335,17 @@ public class ConfigServiceTest {
     initialize();
 
     ConfigService cs = ConfigService.getInstance();
+
+    assertEquals("APPTUIT", cs.getReporterType().name());
+    assertEquals("TEST_TOKEN", cs.getApiToken());
+    assertEquals("http://api.test.bicycle.io", cs.getApiUrl().toString());
     Map<String, String> globalTags = cs.getGlobalTags();
     assertEquals("dev", globalTags.get("env"));
 
     // clean the setup
+    System.setProperty("jinsight.reporter", "");
+    System.setProperty("jinsight.apptuit.access_token", "");
+    System.setProperty("jinsight.apptuit.api_url", "");
     System.setProperty("jinsight.global_tags", "");
     singletonField = ConfigService.class.getDeclaredField("singleton");
     singletonField.setAccessible(true);
