@@ -16,21 +16,26 @@
 
 package ai.apptuit.metrics.jinsight;
 
-import static ai.apptuit.metrics.jinsight.ConfigService.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.jinsight.ConfigService.ReporterType;
+import org.junit.Test;
+
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
-import org.junit.Test;
+
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTER_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_FREQ_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_MODE_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.getThisJVMProcessID;
+import static ai.apptuit.metrics.jinsight.ConfigService.initialize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Rajiv Shivane
@@ -316,10 +321,25 @@ public class ConfigServiceTest {
   }
 
   @Test
-  public void testGetGlobalTagsFromSystemProperty() throws Exception {
+  public void testGetGlobalTags_SystemProperty() throws Exception {
+    // setup here since ConfigService.getInstance() has been initialized in several tests
     System.setProperty("jinsight.global_tags", "env:dev");
-    Map<String, String> globalTags = ConfigService.getInstance().getGlobalTags();
+
+    Field singletonField = ConfigService.class.getDeclaredField("singleton");
+    singletonField.setAccessible(true);
+    singletonField.set(null, null);
+
+    initialize();
+
+    ConfigService cs = ConfigService.getInstance();
+    Map<String, String> globalTags = cs.getGlobalTags();
     assertEquals("dev", globalTags.get("env"));
+
+    // clean the setup
+    System.setProperty("jinsight.global_tags", "");
+    singletonField = ConfigService.class.getDeclaredField("singleton");
+    singletonField.setAccessible(true);
+    singletonField.set(null, null);
   }
 
   private Properties getDefaultConfigProperties() {
