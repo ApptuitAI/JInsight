@@ -184,7 +184,46 @@ public class ConfigService {
     try (InputStream inputStream = new BufferedInputStream(new FileInputStream(configFilePath))) {
       config.load(inputStream);
     }
+    // override with system properties, if present
+    config.putAll(loadSystemProperties());
     return config;
+  }
+
+  private static Map<String, Object> loadSystemProperties() {
+    Map<String, Object> systemProperties = new HashMap<>();
+    String reporter = getProperty(REPORTER_PROPERTY_NAME);
+    if(reporter != null){
+      systemProperties.put(REPORTER_PROPERTY_NAME, reporter);
+    }
+
+    String accessToken = getProperty(ACCESS_TOKEN_PROPERTY_NAME);
+    if(accessToken != null){
+      systemProperties.put(ACCESS_TOKEN_PROPERTY_NAME, accessToken);
+    }
+
+    String apiEndpoint = getProperty(API_ENDPOINT_PROPERTY_NAME);
+    if(apiEndpoint != null){
+      systemProperties.put(API_ENDPOINT_PROPERTY_NAME, apiEndpoint);
+    }
+
+    String globalTags = getProperty(GLOBAL_TAGS_PROPERTY_NAME);
+    if(globalTags != null){
+      systemProperties.put(GLOBAL_TAGS_PROPERTY_NAME, globalTags);
+    }
+
+    return systemProperties;
+  }
+
+  private static String getProperty(String propertyName) {
+    String updatedPropertyName = propertyName;
+    if(!propertyName.contains(".")) {
+      updatedPropertyName = "jinsight." + propertyName;
+    }
+    String propertyValue = System.getenv(updatedPropertyName);
+    if(propertyValue == null || propertyValue.equals("")){
+      propertyValue = System.getProperty(updatedPropertyName);
+    }
+    return propertyValue != null && !propertyValue.equals("") ? propertyValue : null;
   }
 
   private Sanitizer readSanitizer(Properties config) {

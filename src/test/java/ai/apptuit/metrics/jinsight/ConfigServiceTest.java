@@ -16,21 +16,26 @@
 
 package ai.apptuit.metrics.jinsight;
 
-import static ai.apptuit.metrics.jinsight.ConfigService.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import ai.apptuit.metrics.client.Sanitizer;
 import ai.apptuit.metrics.dropwizard.ApptuitReporter.ReportingMode;
 import ai.apptuit.metrics.jinsight.ConfigService.ReporterType;
+import org.junit.Test;
+
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
-import org.junit.Test;
+
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTER_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_FREQ_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.REPORTING_MODE_PROPERTY_NAME;
+import static ai.apptuit.metrics.jinsight.ConfigService.getThisJVMProcessID;
+import static ai.apptuit.metrics.jinsight.ConfigService.initialize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Rajiv Shivane
@@ -313,6 +318,41 @@ public class ConfigServiceTest {
   public void testAgentVersion() throws Exception {
     ConfigService cs = ConfigService.getInstance();
     assertEquals(System.getProperty("project.version"), cs.getAgentVersion());
+  }
+
+  @SuppressWarnings("all")
+  @Test
+  public void testLoadSystemProperties() throws Exception {
+    // setup here since ConfigService.getInstance() has been initialized in several tests
+    System.setProperty("jinsight.reporter", "APPTUIT");
+    System.setProperty("apptuit.access_token", "TEST_TOKEN");
+    System.setProperty("apptuit.api_url", "http://api.test.bicycle.io");
+    System.setProperty("jinsight.global_tags", "env:dev");
+
+    doPrivilegedAction();
+
+    initialize();
+
+    ConfigService cs = ConfigService.getInstance();
+    assertEquals("APPTUIT", cs.getReporterType().name());
+    assertEquals("TEST_TOKEN", cs.getApiToken());
+    assertEquals("http://api.test.bicycle.io", cs.getApiUrl().toString());
+    Map<String, String> globalTags = cs.getGlobalTags();
+    assertEquals("dev", globalTags.get("env"));
+
+    // clean the setup
+    System.setProperty("jinsight.reporter", "");
+    System.setProperty("jinsight.apptuit.access_token", "");
+    System.setProperty("jinsight.apptuit.api_url", "");
+    System.setProperty("jinsight.global_tags", "");
+    doPrivilegedAction();
+  }
+
+  private void doPrivilegedAction() throws  Exception {
+    Field singletonField  = ConfigService.class.getDeclaredField("singleton");
+    singletonField.setAccessible(true);
+    singletonField.set(null, null);
+
   }
 
   private Properties getDefaultConfigProperties() {
